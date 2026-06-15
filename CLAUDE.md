@@ -189,9 +189,8 @@ algo, está bien dejarlo a medias y anotarlo en `ROADMAP.md` para la próxima.
 
 ## 10. Estado actual del proyecto
 
-(Claude Code: actualiza esta sección al final de cada sesión con un resumen de 2-3 líneas:
-en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
+- **Fase/Sesión actual:** Fase 1, Sesión 1.5 (pendiente) — falta completar README de 1.2
+- **Último checkpoint superado:** 1.1, 1.3, 1.4 completas
+- **Pendiente para la próxima sesión:** completar README con arquitectura (1.2), práctica de branches/PR (1.5)
 
-- **Fase/Sesión actual:** Fase 1, Sesión 1 (sin empezar)
-- **Último checkpoint superado:** ninguno todavía
-- **Pendiente para la próxima sesión:** —
+

@@ -45,7 +45,7 @@ actualizando (marcando checkboxes, agregando notas) al final de cada sesión.
 
 Ver `00-EMPEZAR-AQUI.md`. No se repite aquí.
 
-- [ ] Checklist de `00-EMPEZAR-AQUI.md` completo
+- [ +] Checklist de `00-EMPEZAR-AQUI.md` completo
 
 ---
 
@@ -63,9 +63,9 @@ corriendo en tu máquina.
 
 - **1.1 — Git básico**: `git init`, `git status`, `git add`, `git commit`. Crear el repo en
   GitHub y conectar tu carpeta local (`git remote add origin ...`, `git push`).
-  - [ ] Repo creado en GitHub
-  - [ ] Primer commit hecho y pusheado
-  - [ ] Entiendo qué es "staging area" (lo que hace `git add`) vs un commit
+  - [+ ] Repo creado en GitHub
+  - [ +] Primer commit hecho y pusheado
+  - [ +] Entiendo qué es "staging area" (lo que hace `git add`) vs un commit
 
 - **1.2 — Estructura del monorepo**: crear carpetas `apps/web`, `apps/recommender`,
   `packages/` (vacía por ahora), `.gitignore` raíz, `README.md` con descripción del
@@ -77,16 +77,16 @@ corriendo en tu máquina.
 - **1.3 — Hello World en Next.js**: usar `create-next-app` dentro de `apps/web`, correr
   `npm run dev`, ver la página por defecto en el navegador, y recorrer juntos qué archivos
   se generaron (qué es `app/`, `page.tsx`, `layout.tsx`, `package.json`, etc.)
-  - [ ] `apps/web` corre localmente (`npm run dev`)
-  - [ ] Entiendo para qué sirve `page.tsx` y `layout.tsx`
-  - [ ] Cambié el texto de la página de inicio por algo propio ("Aventuras")
+  - [ +] `apps/web` corre localmente (`npm run dev`)
+  - [ +] Entiendo para qué sirve `page.tsx` y `layout.tsx`
+  - [ +] Cambié el texto de la página de inicio por algo propio ("Aventuras")
 
 - **1.4 — Hello World en FastAPI**: crear un entorno virtual de Python dentro de
   `apps/recommender`, instalar FastAPI, crear un endpoint `/` que devuelva un JSON simple,
   correrlo localmente.
-  - [ ] Entorno virtual creado y activado (entiendo para qué sirve un venv)
-  - [ ] FastAPI instalado, endpoint `/` responde un JSON
-  - [ ] Entiendo qué es un "endpoint" y qué es un "servidor de desarrollo"
+  - [ +] Entorno virtual creado y activado (entiendo para qué sirve un venv)
+  - [ +] FastAPI instalado, endpoint `/` responde un JSON
+  - [ +] Entiendo qué es un "endpoint" y qué es un "servidor de desarrollo"
 
 - **1.5 — Práctica de flujo de ramas (branches)**: crear una rama, hacer un cambio pequeño
   (ej: agregar tu nombre al README), commit, push, y abrir un Pull Request en GitHub (aunque
@@ -394,6 +394,8 @@ Ideas para después del MVP (no es obligatorio hacerlas todas, ni en este orden)
 ---
 
 ## Registro de avance
+
+2026-06-15 — Fases 1.1, 1.3, 1.4 (y parte de 1.2) — Repo conectado a GitHub, apps/web (Next.js) y apps/recommender (FastAPI) corriendo con "hello world" personalizados. Resueltos: política de ejecución de PowerShell, error de placeholder/Ellipsis en Python. Pendiente: completar README con arquitectura (1.2), práctica de branches/PR (1.5).
 
 (Claude Code: agrega aquí una línea breve al final de cada sesión, formato:
 `AAAA-MM-DD — Fase X.Y — qué se hizo — qué quedó pendiente`)
