@@ -1,0 +1,1 @@
+Learning project full-stack: Python, JavaScript/TypeScript, Node.js, Next.js, PostgreSQL, Docker & CI/CD.
