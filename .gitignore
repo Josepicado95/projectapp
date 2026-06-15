@@ -1,0 +1,20 @@
+# Dependencias (se regeneran con npm install / pip install)
+node_modules/
+.venv/
+venv/
+__pycache__/
+*.pyc
+
+# Builds / archivos generados
+.next/
+out/
+build/
+
+# Variables de entorno (¡secretos! nunca se suben a git)
+.env
+.env.local
+.env*.local
+
+# Archivos del sistema operativo / editor
+.DS_Store
+Thumbs.db
