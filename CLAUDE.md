@@ -253,11 +253,15 @@ algo, está bien dejarlo a medias y anotarlo en `ROADMAP.md` para la próxima.
 (Claude Code: actualiza esta sección al final de cada sesión con un resumen de 2-3 líneas:
 en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
 
-- **Fase/Sesión actual:** Fase 2, en progreso (definiendo tipos y mock data) — Modo A vigente
-- **Último checkpoint superado:** Fase 1 completa (1.1 a 1.5)
-- **Cambio de plan importante:** a mitad de la Fase 2 se decidió adelantar el cambio a
-  Modo B ("delego y reviso", ver sección 1) a partir de la Fase 3, en vez de la Fase 4-5
-  originalmente sugerida. Motivo: preparación para una posible contratación que requiere
-  saber usar Superpowers con criterio, no solo escribir código a mano.
-- **Pendiente para la próxima sesión:** terminar mock data de Fase 2 (Modo A), seguir el
-  resto de Fase 2 en Modo A, y al llegar a Fase 3 aplicar Modo B desde el inicio.
+- **Fase/Sesión actual:** Fase 2 completa — listo para arrancar Fase 3
+- **Último checkpoint superado:** Fase 2 completa (tipos, mock data, AdventureCard,
+  Dashboard con `.map()`). Fase 1 completa también (1.1 a 1.5).
+- **Cambio de plan importante:** desde la Fase 3 en adelante se usa **Modo B** ("delego y
+  reviso", ver sección 1) en vez de Modo A. Motivo: preparación para una posible
+  contratación que requiere saber usar Superpowers con criterio, no solo escribir código a
+  mano. Este es el primer arranque de Fase 3 bajo Modo B — sé especialmente riguroso con el
+  ciclo completo (explicación previa, plan, código, explicación línea por línea, ejercicio
+  de revisión activa, checkpoint), ya que es la primera vez que se aplica.
+- **Pendiente para la próxima sesión:** completar README con arquitectura (tarea suelta de
+  Fase 1.2, sigue pendiente), y arrancar Fase 3 (modelado de datos, Postgres en Docker,
+  Prisma) en Modo B.
