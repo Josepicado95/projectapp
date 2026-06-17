@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id         Int         @id @default(autoincrement())
+  email      String      @unique
+  name       String
+  password   String
+  createdAt  DateTime    @default(now())
+  adventures Adventure[]
+  checkIns   CheckIn[]
+}
+
+model Adventure {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?
+  status      String    @default("active")
+  createdAt   DateTime  @default(now())
+  userId      Int
+  user        User      @relation(fields: [userId], references: [id])
+  missions    Mission[]
+}
+
+model Mission {
+  id          Int        @id @default(autoincrement())
+  title       String
+  description String?
+  difficulty  Int
+  completed   Boolean    @default(false)
+  completedAt DateTime?
+  createdAt   DateTime   @default(now())
+  adventureId Int
+  adventure   Adventure  @relation(fields: [adventureId], references: [id])
+}
+
+model CheckIn {
+  id        Int      @id @default(autoincrement())
+  energy    Int
+  mood      Int
+  stress    Int
+  sleep     Int
+  date      DateTime @default(now())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+}

@@ -253,15 +253,14 @@ algo, está bien dejarlo a medias y anotarlo en `ROADMAP.md` para la próxima.
 (Claude Code: actualiza esta sección al final de cada sesión con un resumen de 2-3 líneas:
 en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
 
-- **Fase/Sesión actual:** Fase 2 completa — listo para arrancar Fase 3
-- **Último checkpoint superado:** Fase 2 completa (tipos, mock data, AdventureCard,
-  Dashboard con `.map()`). Fase 1 completa también (1.1 a 1.5).
-- **Cambio de plan importante:** desde la Fase 3 en adelante se usa **Modo B** ("delego y
-  reviso", ver sección 1) en vez de Modo A. Motivo: preparación para una posible
-  contratación que requiere saber usar Superpowers con criterio, no solo escribir código a
-  mano. Este es el primer arranque de Fase 3 bajo Modo B — sé especialmente riguroso con el
-  ciclo completo (explicación previa, plan, código, explicación línea por línea, ejercicio
-  de revisión activa, checkpoint), ya que es la primera vez que se aplica.
+- **Fase/Sesión actual:** Fase 3 completa — listo para arrancar Fase 4
+- **Último checkpoint superado:** Fase 3 completa (PostgreSQL en Docker, Prisma 7 con
+  driver adapters, schema con 4 modelos, migración init, seed con datos de prueba,
+  Prisma Studio). Nota técnica: Prisma 7 requiere `@prisma/adapter-pg` + `PrismaPg`
+  en cada instancia de `PrismaClient` — distinto a Prisma 5/6.
+- **Deuda técnica conocida:** campo `date` en `CheckIn` usa `DateTime` completo (con hora),
+  la regla "un check-in por día" requiere manejo de timezone en Fase 6. `status` en
+  `Adventure` es `String` (no enum) intencionalmente — se validará con zod en Fase 4.
+  `ON DELETE RESTRICT` en todas las FK — soft delete pendiente para Fase 5.
 - **Pendiente para la próxima sesión:** completar README con arquitectura (tarea suelta de
-  Fase 1.2, sigue pendiente), y arrancar Fase 3 (modelado de datos, Postgres en Docker,
-  Prisma) en Modo B.
+  Fase 1.2, sigue pendiente), y arrancar Fase 4 (CRUD real conectado a la DB) en Modo B.

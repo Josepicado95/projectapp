@@ -153,17 +153,17 @@ visibles con Prisma Studio (y opcionalmente con una consulta SQL directa).
 
 ### Sub-tareas
 
-- [ ] Diseñar el modelo de datos en papel/diagrama primero: entidades (`User`, `Adventure`,
+- [x] Diseñar el modelo de datos en papel/diagrama primero: entidades (`User`, `Adventure`,
       `Mission`, `CheckIn`) y sus relaciones (1 usuario → muchas aventuras → muchas
       misiones; 1 usuario → muchos check-ins)
-- [ ] Levantar PostgreSQL con Docker (un `docker run` simple primero, para entender qué
+- [x] Levantar PostgreSQL con Docker (un `docker run` simple primero, para entender qué
       hace; luego lo migramos a `docker-compose` en la Fase 10)
-- [ ] Instalar Prisma en `apps/web`, inicializarlo (`prisma init`)
-- [ ] Escribir `schema.prisma` con los 4 modelos y sus relaciones
-- [ ] Primera migración (`prisma migrate dev`) — entender qué es una migración y por qué
+- [x] Instalar Prisma en `apps/web`, inicializarlo (`prisma init`)
+- [x] Escribir `schema.prisma` con los 4 modelos y sus relaciones
+- [x] Primera migración (`prisma migrate dev`) — entender qué es una migración y por qué
       no se edita la DB "a mano"
-- [ ] Crear un script de "seed" con datos de prueba (algunas aventuras y misiones)
-- [ ] Explorar los datos con Prisma Studio
+- [x] Crear un script de "seed" con datos de prueba (algunas aventuras y misiones)
+- [x] Explorar los datos con Prisma Studio
 - [ ] (Opcional, recomendado) ejecutar 2-3 consultas SQL crudas directamente contra la DB
       para entender qué está haciendo Prisma "por debajo"
 
@@ -407,4 +407,4 @@ Ideas para después del MVP (no es obligatorio hacerlas todas, ni en este orden)
 (Claude Code: agrega aquí una línea breve al final de cada sesión, formato:
 `AAAA-MM-DD — Fase X.Y — qué se hizo — qué quedó pendiente`)
 
--
+- 2026-06-17 — Fase 3 completa — PostgreSQL en Docker, Prisma 7 instalado, schema con 4 modelos, migración aplicada, seed con datos de prueba, Prisma Studio funcional — SQL crudo (3.8) omitido intencionalmente
