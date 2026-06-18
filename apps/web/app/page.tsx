@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { auth } from "@/auth";
 import AdventureCard from "@/components/AdventureCard";
 import NewAdventureForm from "@/components/NewAdventureForm";
@@ -29,6 +30,15 @@ export default async function Home() {
             </button>
           </form>
         </div>
+      </div>
+
+      <div className="mb-4">
+        <Link
+          href="/checkin"
+          className="text-sm bg-green-50 border border-green-200 text-green-700 px-3 py-1.5 rounded"
+        >
+          Check-in de hoy →
+        </Link>
       </div>
 
       <NewAdventureForm />
