@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { loginAction } from "@/app/actions/auth";
 
@@ -9,10 +10,18 @@ const initialState: LoginState = {};
 
 export default function LoginPage() {
   const [state, formAction, pending] = useActionState(loginAction, initialState);
+  const searchParams = useSearchParams();
+  const justRegistered = searchParams.get("registered") === "true";
 
   return (
     <main className="max-w-sm mx-auto p-8">
       <h1 className="text-2xl font-bold mb-6">Iniciar sesión</h1>
+
+      {justRegistered && (
+        <p className="text-green-600 text-sm bg-green-50 border border-green-200 rounded px-3 py-2 mb-4">
+          ¡Cuenta creada! Ya puedes iniciar sesión.
+        </p>
+      )}
 
       <form action={formAction} className="space-y-4">
         <div>

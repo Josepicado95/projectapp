@@ -52,7 +52,7 @@ export async function registerAction(
     },
   });
 
-  redirect("/login");
+  redirect("/login?registered=true");
 }
 
 export async function loginAction(
