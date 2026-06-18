@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { PrismaClient } from "../lib/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
@@ -13,11 +14,13 @@ async function main() {
   await prisma.adventure.deleteMany();
   await prisma.user.deleteMany();
 
+  const hashedPassword = await bcrypt.hash("aventuras123", 12);
+
   const user = await prisma.user.create({
     data: {
       email: "jose@aventuras.com",
       name: "Jose",
-      password: "placeholder-hasta-fase-5",
+      password: hashedPassword,
     },
   });
 
@@ -64,7 +67,7 @@ async function main() {
   });
 
   console.log("Seed completado:");
-  console.log(`  Usuario: ${user.email}`);
+  console.log(`  Usuario: ${user.email} / contraseña: aventuras123`);
   console.log(`  Aventura 1: ${adventure1.title}`);
   console.log(`  Aventura 2: ${adventure2.title}`);
   console.log("  3 check-ins creados");
