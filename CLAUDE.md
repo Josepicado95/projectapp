@@ -253,15 +253,14 @@ algo, está bien dejarlo a medias y anotarlo en `ROADMAP.md` para la próxima.
 (Claude Code: actualiza esta sección al final de cada sesión con un resumen de 2-3 líneas:
 en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
 
-- **Fase/Sesión actual:** Fase 4 completa — iniciando Fase 5 (Autenticación)
-- **Último checkpoint superado:** Fase 4 completa. CRUD completo de Aventuras y Misiones
-  funcionando con datos reales de PostgreSQL. Página /adventures/[id] con NewMissionForm,
-  MissionItem (toggle, edición inline, eliminar) y MissionList (agrupado pendientes/completadas).
+- **Fase/Sesión actual:** Fase 5 completa — iniciando Fase 6 (Check-in diario)
+- **Último checkpoint superado:** Fase 5 completa. Auth.js v5 con Credentials provider,
+  bcryptjs, páginas de login y registro, middleware protegiendo todas las rutas privadas,
+  userId real en todas las Server Actions y el Dashboard.
 - **Deuda técnica conocida:** campo `date` en `CheckIn` usa `DateTime` completo (con hora),
   la regla "un check-in por día" requiere manejo de timezone en Fase 6. `status` en
-  `Adventure` es `String` (no enum) intencionalmente — se validará con zod. `ON DELETE
-  RESTRICT` en todas las FK — soft delete pendiente para Fase 5. `userId: 1` hardcodeado
-  en todas las acciones hasta Fase 5. Sprint de diseño visual (Tailwind completo para
-  app de burnout) pendiente para sesión dedicada post-Fase 4.
-- **Pendiente para la próxima sesión:** Fase 5 — Autenticación (Auth.js, login/registro,
-  rutas protegidas, reemplazar userId hardcodeado).
+  `Adventure` es `String` (no enum) intencionalmente — se validará con zod. Sprint de
+  diseño visual (Tailwind completo para app de burnout) pendiente para sesión dedicada.
+- **Credenciales de prueba:** jose@aventuras.com / aventuras123
+- **Pendiente para la próxima sesión:** Fase 6 — Check-in diario (Server Action que guarda
+  energía/ánimo/estrés/sueño, regla de un check-in por día, historial de check-ins).
