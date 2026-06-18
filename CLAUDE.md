@@ -253,14 +253,18 @@ algo, está bien dejarlo a medias y anotarlo en `ROADMAP.md` para la próxima.
 (Claude Code: actualiza esta sección al final de cada sesión con un resumen de 2-3 líneas:
 en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
 
-- **Fase/Sesión actual:** Fase 3 completa — listo para arrancar Fase 4
-- **Último checkpoint superado:** Fase 3 completa (PostgreSQL en Docker, Prisma 7 con
-  driver adapters, schema con 4 modelos, migración init, seed con datos de prueba,
-  Prisma Studio). Nota técnica: Prisma 7 requiere `@prisma/adapter-pg` + `PrismaPg`
-  en cada instancia de `PrismaClient` — distinto a Prisma 5/6.
+- **Fase/Sesión actual:** Fase 4 en progreso — Tasks 3-6 pendientes
+- **Último checkpoint superado:** Fase 4 Tasks 1-2 completos. Task 1: fix updateAdventure
+  (ahora lanza Error en vez de fallar silenciosamente), enlace "Ver misiones →" en
+  AdventureCard con Link de Next.js, fix de tipos pre-existentes en NewAdventureForm y
+  seed.ts. Task 2: missions.ts con 4 Server Actions (createMission, updateMission,
+  toggleMission, deleteMission) + validación zod + revalidatePath.
 - **Deuda técnica conocida:** campo `date` en `CheckIn` usa `DateTime` completo (con hora),
   la regla "un check-in por día" requiere manejo de timezone en Fase 6. `status` en
-  `Adventure` es `String` (no enum) intencionalmente — se validará con zod en Fase 4.
-  `ON DELETE RESTRICT` en todas las FK — soft delete pendiente para Fase 5.
-- **Pendiente para la próxima sesión:** completar README con arquitectura (tarea suelta de
-  Fase 1.2, sigue pendiente), y arrancar Fase 4 (CRUD real conectado a la DB) en Modo B.
+  `Adventure` es `String` (no enum) intencionalmente — se validará con zod. `ON DELETE
+  RESTRICT` en todas las FK — soft delete pendiente para Fase 5. `userId: 1` hardcodeado
+  en todas las acciones hasta Fase 5. Sprint de diseño visual (Tailwind completo para
+  app de burnout) pendiente para sesión dedicada post-Fase 4.
+- **Pendiente para la próxima sesión:** Tasks 3-6 del plan en
+  `docs/superpowers/plans/2026-06-18-fase4-mission-crud.md` — página de detalle
+  `/adventures/[id]`, componentes NewMissionForm, MissionItem y MissionList.

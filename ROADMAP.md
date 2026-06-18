@@ -408,3 +408,4 @@ Ideas para después del MVP (no es obligatorio hacerlas todas, ni en este orden)
 `AAAA-MM-DD — Fase X.Y — qué se hizo — qué quedó pendiente`)
 
 - 2026-06-17 — Fase 3 completa — PostgreSQL en Docker, Prisma 7 instalado, schema con 4 modelos, migración aplicada, seed con datos de prueba, Prisma Studio funcional — SQL crudo (3.8) omitido intencionalmente
+- 2026-06-18 — Fase 4 en progreso — spec y plan escritos, Task 1 (fix updateAdventure + link AdventureCard) y Task 2 (Server Actions de misiones) completos — pendiente Tasks 3-6 (página de detalle + componentes de misiones)
