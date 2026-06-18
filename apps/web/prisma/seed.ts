@@ -58,11 +58,17 @@ async function main() {
     },
   });
 
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  const twoDaysAgo = new Date(today);
+  twoDaysAgo.setDate(today.getDate() - 2);
+
   await prisma.checkIn.createMany({
     data: [
-      { userId: user.id, energy: 4, mood: 5, stress: 2, sleep: 8 },
-      { userId: user.id, energy: 3, mood: 3, stress: 3, sleep: 6 },
-      { userId: user.id, energy: 5, mood: 4, stress: 1, sleep: 7 },
+      { userId: user.id, energy: 4, mood: 5, stress: 2, sleep: 4, date: twoDaysAgo },
+      { userId: user.id, energy: 3, mood: 3, stress: 3, sleep: 3, date: yesterday },
+      { userId: user.id, energy: 5, mood: 4, stress: 1, sleep: 4, date: today },
     ],
   });
 
