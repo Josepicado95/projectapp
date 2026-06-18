@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
 
 type ActionState = {
   errors?: { title?: string[]; difficulty?: string[] };
@@ -28,6 +29,9 @@ export async function createMission(
   prevState: ActionState,
   formData: FormData
 ): Promise<ActionState> {
+  const session = await auth();
+  if (!session?.user?.id) throw new Error("No autorizado");
+
   const result = CreateMissionSchema.safeParse({
     adventureId: formData.get("adventureId"),
     title: formData.get("title"),
@@ -53,6 +57,9 @@ export async function createMission(
 }
 
 export async function updateMission(formData: FormData): Promise<void> {
+  const session = await auth();
+  if (!session?.user?.id) return;
+
   const result = UpdateMissionSchema.safeParse({
     id: formData.get("id"),
     adventureId: formData.get("adventureId"),
@@ -76,6 +83,9 @@ export async function updateMission(formData: FormData): Promise<void> {
 }
 
 export async function toggleMission(formData: FormData): Promise<void> {
+  const session = await auth();
+  if (!session?.user?.id) return;
+
   const id = Number(formData.get("id"));
   const adventureId = Number(formData.get("adventureId"));
   if (!id || !adventureId) return;
@@ -95,6 +105,9 @@ export async function toggleMission(formData: FormData): Promise<void> {
 }
 
 export async function deleteMission(formData: FormData): Promise<void> {
+  const session = await auth();
+  if (!session?.user?.id) return;
+
   const id = Number(formData.get("id"));
   const adventureId = Number(formData.get("adventureId"));
   if (!id || !adventureId) return;
