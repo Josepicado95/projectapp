@@ -65,7 +65,7 @@ async function main() {
 
   console.log("Seed completado:");
   console.log(`  Usuario: ${user.email}`);
-  console.log(`  Aventura 1: ${adventure1.title} (${adventure1.missions} misiones)`);
+  console.log(`  Aventura 1: ${adventure1.title}`);
   console.log(`  Aventura 2: ${adventure2.title}`);
   console.log("  3 check-ins creados");
 }

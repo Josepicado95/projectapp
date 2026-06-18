@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import { createAdventure } from "@/app/actions/adventures";
 
-const initialState = {};
+const initialState: { errors?: { title?: string[] }; message?: string } = {};
 
 export default function NewAdventureForm() {
   const [state, formAction, pending] = useActionState(createAdventure, initialState);

@@ -54,7 +54,9 @@ export async function updateAdventure(formData: FormData): Promise<void> {
     status: formData.get("status"),
   });
 
-  if (!result.success) return;
+  if (!result.success) {
+    throw new Error("Datos inválidos al actualizar la aventura");
+  }
 
   await prisma.adventure.update({
     where: { id: result.data.id },
