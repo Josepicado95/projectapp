@@ -253,14 +253,14 @@ algo, está bien dejarlo a medias y anotarlo en `ROADMAP.md` para la próxima.
 (Claude Code: actualiza esta sección al final de cada sesión con un resumen de 2-3 líneas:
 en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
 
-- **Fase/Sesión actual:** Fase 5 completa — iniciando Fase 6 (Check-in diario)
-- **Último checkpoint superado:** Fase 5 completa. Auth.js v5 con Credentials provider,
-  bcryptjs, páginas de login y registro, middleware protegiendo todas las rutas privadas,
-  userId real en todas las Server Actions y el Dashboard.
+- **Fase/Sesión actual:** Fase 6 completa — iniciando Fase 7 (Motor de recomendaciones Python)
+- **Último checkpoint superado:** Fase 6 completa. Página /checkin con sliders 1-5,
+  upsert (un check-in por día por usuario), historial de últimos 7 días con badges
+  de color (verde/amarillo/rojo), enlace desde el Dashboard.
 - **Deuda técnica conocida:** campo `date` en `CheckIn` usa `DateTime` completo (con hora),
   la regla "un check-in por día" requiere manejo de timezone en Fase 6. `status` en
   `Adventure` es `String` (no enum) intencionalmente — se validará con zod. Sprint de
   diseño visual (Tailwind completo para app de burnout) pendiente para sesión dedicada.
 - **Credenciales de prueba:** jose@aventuras.com / aventuras123
-- **Pendiente para la próxima sesión:** Fase 6 — Check-in diario (Server Action que guarda
-  energía/ánimo/estrés/sueño, regla de un check-in por día, historial de check-ins).
+- **Pendiente para la próxima sesión:** Fase 7 — Motor de recomendaciones Python (FastAPI
+  en apps/recommender, lógica de reglas basada en energía/estrés, pytest).
