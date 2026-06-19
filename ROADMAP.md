@@ -415,3 +415,4 @@ Ideas para después del MVP (no es obligatorio hacerlas todas, ni en este orden)
 - 2026-06-18 — Fase 7 completa — FastAPI en apps/recommender, modelos Pydantic, lógica de recomendación con reglas (energía/estrés/dificultad), 11 tests pytest pasando, endpoint POST /recommendations funcional
 - 2026-06-18 — Fase 8 completa — lib/recommender.ts, fetch desde Dashboard a servicio Python, sección "Recomendado para hoy" con 3 estados, RECOMMENDER_URL en variable de entorno
 - 2026-06-18 — Fase 9 completa — página /progress con barras de progreso por aventura y gráfica nivo de check-ins últimos 14 días, fix de timezone en labels del eje X
+- 2026-06-18 — Fase 10 completa — Dockerfile (python:3.11-slim, caché de capas), docker-compose.yml con db y recommender, volumen persistente, `docker compose up` reemplaza docker run manual
