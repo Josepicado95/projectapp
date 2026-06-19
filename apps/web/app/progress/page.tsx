@@ -26,7 +26,7 @@ export default async function ProgressPage() {
   });
 
   const chartData = checkIns.map((c) => ({
-    date: c.date.toLocaleDateString("es-ES", { month: "short", day: "numeric" }),
+    date: c.date.toISOString().slice(0, 10),
     energy: c.energy,
     mood: c.mood,
     stress: c.stress,
