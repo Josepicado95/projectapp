@@ -51,18 +51,18 @@ export default function AdventureCard({ adventure }: AdventureCardProps) {
             name="title"
             defaultValue={adventure.title}
             required
-            className="border border-slate-200 rounded-lg px-3 py-2 w-full text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+            className="border border-slate-200 rounded-lg px-3 py-2 w-full text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-300"
           />
           <input
             name="description"
             defaultValue={adventure.description ?? ""}
             placeholder="Descripción (opcional)"
-            className="border border-slate-200 rounded-lg px-3 py-2 w-full text-sm text-slate-700 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+            className="border border-slate-200 rounded-lg px-3 py-2 w-full text-sm text-slate-600 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-300"
           />
           <select
             name="status"
             defaultValue={adventure.status}
-            className="border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+            className="border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-300"
           >
             <option value="active">Activa</option>
             <option value="paused">Pausada</option>

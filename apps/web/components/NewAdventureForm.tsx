@@ -16,7 +16,7 @@ export default function NewAdventureForm() {
           name="title"
           placeholder="¿Qué quieres lograr?"
           required
-          className="border border-slate-200 rounded-lg px-3 py-2 w-full text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 placeholder:text-slate-400"
+          className="border border-slate-200 rounded-lg px-3 py-2 w-full text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-300 placeholder:text-slate-400"
         />
         {state.errors?.title && (
           <p className="text-rose-500 text-xs">{state.errors.title[0]}</p>
@@ -24,7 +24,7 @@ export default function NewAdventureForm() {
         <input
           name="description"
           placeholder="Descripción (opcional)"
-          className="border border-slate-200 rounded-lg px-3 py-2 w-full text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 placeholder:text-slate-400"
+          className="border border-slate-200 rounded-lg px-3 py-2 w-full text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-300 placeholder:text-slate-400"
         />
       </div>
       <div className="flex items-center gap-3 mt-3">
