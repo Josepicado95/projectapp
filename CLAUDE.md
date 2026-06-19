@@ -253,14 +253,15 @@ algo, está bien dejarlo a medias y anotarlo en `ROADMAP.md` para la próxima.
 (Claude Code: actualiza esta sección al final de cada sesión con un resumen de 2-3 líneas:
 en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
 
-- **Fase/Sesión actual:** Fase 6 completa — iniciando Fase 7 (Motor de recomendaciones Python)
-- **Último checkpoint superado:** Fase 6 completa. Página /checkin con sliders 1-5,
-  upsert (un check-in por día por usuario), historial de últimos 7 días con badges
-  de color (verde/amarillo/rojo), enlace desde el Dashboard.
+- **Fase/Sesión actual:** Fase 7 completa — iniciando Fase 8 (Integración Next.js ↔ Python)
+- **Último checkpoint superado:** Fase 7 completa. FastAPI en apps/recommender, modelos
+  Pydantic, lógica de recomendación por reglas (energía/estrés → dificultad/cantidad),
+  11 tests pytest pasando (7 unitarios + 4 de integración), endpoint POST /recommendations
+  funcional y documentación interactiva en /docs.
 - **Deuda técnica conocida:** campo `date` en `CheckIn` usa `DateTime` completo (con hora),
-  la regla "un check-in por día" requiere manejo de timezone en Fase 6. `status` en
-  `Adventure` es `String` (no enum) intencionalmente — se validará con zod. Sprint de
-  diseño visual (Tailwind completo para app de burnout) pendiente para sesión dedicada.
+  la regla "un check-in por día" requiere manejo de timezone. `status` en `Adventure` es
+  `String` (no enum) intencionalmente. Sprint de diseño visual (Tailwind completo) pendiente.
+  Warning de deprecación httpx/starlette en tests — ignorable por ahora.
 - **Credenciales de prueba:** jose@aventuras.com / aventuras123
-- **Pendiente para la próxima sesión:** Fase 7 — Motor de recomendaciones Python (FastAPI
-  en apps/recommender, lógica de reglas basada en energía/estrés, pytest).
+- **Pendiente para la próxima sesión:** Fase 8 — desde Next.js hacer fetch al servicio
+  Python y mostrar "Recomendado para hoy" en el Dashboard.

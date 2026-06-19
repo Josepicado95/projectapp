@@ -412,3 +412,4 @@ Ideas para después del MVP (no es obligatorio hacerlas todas, ni en este orden)
 - 2026-06-18 — Fase 4 completa — Tasks 3-6 implementados: página /adventures/[id], NewMissionForm, MissionItem, MissionList — CRUD completo de misiones funcional
 - 2026-06-18 — Fase 5 completa — Auth.js v5 con Credentials, bcryptjs, login/registro, middleware de protección, userId real en todas las acciones
 - 2026-06-18 — Fase 6 completa — página /checkin con sliders, upsert de un check-in por día, historial de últimos 7 días con colores, enlace desde Dashboard
+- 2026-06-18 — Fase 7 completa — FastAPI en apps/recommender, modelos Pydantic, lógica de recomendación con reglas (energía/estrés/dificultad), 11 tests pytest pasando, endpoint POST /recommendations funcional
