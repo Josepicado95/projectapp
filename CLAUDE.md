@@ -253,10 +253,10 @@ algo, está bien dejarlo a medias y anotarlo en `ROADMAP.md` para la próxima.
 (Claude Code: actualiza esta sección al final de cada sesión con un resumen de 2-3 líneas:
 en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
 
-- **Fase/Sesión actual:** Fase 8 completa — iniciando Fase 9 (Visualización de progreso)
-- **Último checkpoint superado:** Fase 8 completa. lib/recommender.ts con fetch al servicio
-  Python y manejo de fallos (null si caído), Dashboard muestra "Recomendado para hoy" con
-  3 estados (sin check-in, servicio caído, recomendaciones normales), RECOMMENDER_URL en .env.
+- **Fase/Sesión actual:** Fase 9 completa — iniciando Fase 10 (Docker Compose completo)
+- **Último checkpoint superado:** Fase 9 completa. Página /progress con barras de progreso
+  por aventura (CSS puro) y gráfica de líneas nivo con energía/ánimo/estrés/sueño últimos
+  14 días. Fix de timezone en fechas del chart (toISOString en vez de toLocaleDateString).
 - **Deuda técnica conocida:** campo `date` en `CheckIn` usa `DateTime` completo (con hora).
   `status` en `Adventure` es `String` (no enum) intencionalmente. Sprint de diseño visual
   (Tailwind completo) pendiente. Warning de deprecación httpx/starlette en tests — ignorable.

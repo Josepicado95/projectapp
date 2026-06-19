@@ -414,3 +414,4 @@ Ideas para después del MVP (no es obligatorio hacerlas todas, ni en este orden)
 - 2026-06-18 — Fase 6 completa — página /checkin con sliders, upsert de un check-in por día, historial de últimos 7 días con colores, enlace desde Dashboard
 - 2026-06-18 — Fase 7 completa — FastAPI en apps/recommender, modelos Pydantic, lógica de recomendación con reglas (energía/estrés/dificultad), 11 tests pytest pasando, endpoint POST /recommendations funcional
 - 2026-06-18 — Fase 8 completa — lib/recommender.ts, fetch desde Dashboard a servicio Python, sección "Recomendado para hoy" con 3 estados, RECOMMENDER_URL en variable de entorno
+- 2026-06-18 — Fase 9 completa — página /progress con barras de progreso por aventura y gráfica nivo de check-ins últimos 14 días, fix de timezone en labels del eje X
