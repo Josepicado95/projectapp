@@ -253,15 +253,13 @@ algo, está bien dejarlo a medias y anotarlo en `ROADMAP.md` para la próxima.
 (Claude Code: actualiza esta sección al final de cada sesión con un resumen de 2-3 líneas:
 en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
 
-- **Fase/Sesión actual:** Fase 7 completa — iniciando Fase 8 (Integración Next.js ↔ Python)
-- **Último checkpoint superado:** Fase 7 completa. FastAPI en apps/recommender, modelos
-  Pydantic, lógica de recomendación por reglas (energía/estrés → dificultad/cantidad),
-  11 tests pytest pasando (7 unitarios + 4 de integración), endpoint POST /recommendations
-  funcional y documentación interactiva en /docs.
-- **Deuda técnica conocida:** campo `date` en `CheckIn` usa `DateTime` completo (con hora),
-  la regla "un check-in por día" requiere manejo de timezone. `status` en `Adventure` es
-  `String` (no enum) intencionalmente. Sprint de diseño visual (Tailwind completo) pendiente.
-  Warning de deprecación httpx/starlette en tests — ignorable por ahora.
+- **Fase/Sesión actual:** Fase 8 completa — iniciando Fase 9 (Visualización de progreso)
+- **Último checkpoint superado:** Fase 8 completa. lib/recommender.ts con fetch al servicio
+  Python y manejo de fallos (null si caído), Dashboard muestra "Recomendado para hoy" con
+  3 estados (sin check-in, servicio caído, recomendaciones normales), RECOMMENDER_URL en .env.
+- **Deuda técnica conocida:** campo `date` en `CheckIn` usa `DateTime` completo (con hora).
+  `status` en `Adventure` es `String` (no enum) intencionalmente. Sprint de diseño visual
+  (Tailwind completo) pendiente. Warning de deprecación httpx/starlette en tests — ignorable.
 - **Credenciales de prueba:** jose@aventuras.com / aventuras123
-- **Pendiente para la próxima sesión:** Fase 8 — desde Next.js hacer fetch al servicio
-  Python y mostrar "Recomendado para hoy" en el Dashboard.
+- **Pendiente para la próxima sesión:** Fase 9 — visualización de progreso (% misiones
+  completadas por aventura, gráfico de energía/ánimo en el tiempo con recharts).
