@@ -253,10 +253,10 @@ algo, está bien dejarlo a medias y anotarlo en `ROADMAP.md` para la próxima.
 (Claude Code: actualiza esta sección al final de cada sesión con un resumen de 2-3 líneas:
 en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
 
-- **Fase/Sesión actual:** Fase 10 completa — iniciando Fase 11 (CI con GitHub Actions)
-- **Último checkpoint superado:** Fase 10 completa. Dockerfile para recommender (python:3.11-slim,
-  capa de dependencias separada para caché), docker-compose.yml con servicios db y recommender,
-  volumen postgres_data para persistencia. Flujo: docker compose up levanta todo excepto Next.js.
+- **Fase/Sesión actual:** Fase 11 completa — iniciando Fase 12 (Deploy a producción)
+- **Último checkpoint superado:** Fase 11 completa. GitHub Actions: web.yml (tsc en Node 24)
+  y recommender.yml (pytest en Python 3.11), filtro paths: por monorepo, postinstall para
+  generar cliente Prisma en CI. Ambos workflows en verde en GitHub.
 - **Deuda técnica conocida:** campo `date` en `CheckIn` usa `DateTime` completo (con hora).
   `status` en `Adventure` es `String` (no enum) intencionalmente. Sprint de diseño visual
   (Tailwind completo) pendiente. Warning de deprecación httpx/starlette en tests — ignorable.
