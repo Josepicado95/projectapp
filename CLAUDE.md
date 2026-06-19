@@ -253,13 +253,17 @@ algo, está bien dejarlo a medias y anotarlo en `ROADMAP.md` para la próxima.
 (Claude Code: actualiza esta sección al final de cada sesión con un resumen de 2-3 líneas:
 en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
 
-- **Fase/Sesión actual:** Fase 11 completa — iniciando Fase 12 (Deploy a producción)
-- **Último checkpoint superado:** Fase 11 completa. GitHub Actions: web.yml (tsc en Node 24)
-  y recommender.yml (pytest en Python 3.11), filtro paths: por monorepo, postinstall para
-  generar cliente Prisma en CI. Ambos workflows en verde en GitHub.
+- **Fase/Sesión actual:** Fase 12 completa — app en producción
+- **Último checkpoint superado:** Fase 12 completa. Deploy funcional: Next.js en Vercel,
+  PostgreSQL en Neon, recommender Python en Railway. CI/CD automático: cada push a main
+  despliega a producción. Next.js 16 breaking changes resueltos: middleware→proxy.ts,
+  useSearchParams envuelto en Suspense.
+- **URLs de producción:** Vercel (projectapp-6wqde3z63-josepicado95s-projects.vercel.app),
+  Railway recommender (projectapp-production-164a.up.railway.app).
 - **Deuda técnica conocida:** campo `date` en `CheckIn` usa `DateTime` completo (con hora).
   `status` en `Adventure` es `String` (no enum) intencionalmente. Sprint de diseño visual
   (Tailwind completo) pendiente. Warning de deprecación httpx/starlette en tests — ignorable.
 - **Credenciales de prueba:** jose@aventuras.com / aventuras123
-- **Pendiente para la próxima sesión:** Fase 9 — visualización de progreso (% misiones
-  completadas por aventura, gráfico de energía/ánimo en el tiempo con recharts).
+- **Pendiente para la próxima sesión:** Fase 13 — Polish visual (Tailwind, diseño, UX).
+  También acordada una sesión de revisión profunda de componentes (leer y desmenuzar el
+  código existente para consolidar aprendizaje).
