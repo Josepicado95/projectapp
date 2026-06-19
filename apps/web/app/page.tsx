@@ -43,75 +43,106 @@ export default async function Home() {
     ? await getRecommendations(todayCheckIn, pendingMissions)
     : null;
 
-  return (
-    <main className="max-w-2xl mx-auto p-4">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Mis Aventuras</h1>
-        <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-500">Hola, {session.user.name}</span>
-          <form action={logoutAction}>
-            <button type="submit" className="text-sm border px-3 py-1 rounded">
-              Cerrar sesión
-            </button>
-          </form>
-        </div>
-      </div>
+  const firstName = session.user.name?.split(" ")[0] ?? session.user.name;
 
-      <div className="mb-4 flex gap-2">
+  return (
+    <main className="max-w-2xl mx-auto px-4 py-8">
+
+      {/* Header */}
+      <header className="flex items-center justify-between mb-8">
+        <div>
+          <p className="text-sm text-slate-400 mb-0.5">Bienvenido de vuelta</p>
+          <h1 className="text-2xl font-bold text-slate-800">{firstName} ✦</h1>
+        </div>
+        <form action={logoutAction}>
+          <button
+            type="submit"
+            className="text-sm text-slate-500 hover:text-slate-700 border border-slate-200 px-3 py-1.5 rounded-lg transition-colors"
+          >
+            Cerrar sesión
+          </button>
+        </form>
+      </header>
+
+      {/* Nav pills */}
+      <div className="flex gap-2 mb-8">
         <Link
           href="/checkin"
-          className="text-sm bg-green-50 border border-green-200 text-green-700 px-3 py-1.5 rounded"
+          className="flex items-center gap-1.5 text-sm bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 px-4 py-2 rounded-full font-medium transition-colors"
         >
-          Check-in de hoy →
+          <span>☀️</span> Check-in de hoy
         </Link>
         <Link
           href="/progress"
-          className="text-sm bg-blue-50 border border-blue-200 text-blue-700 px-3 py-1.5 rounded"
+          className="flex items-center gap-1.5 text-sm bg-violet-50 hover:bg-violet-100 border border-violet-200 text-violet-700 px-4 py-2 rounded-full font-medium transition-colors"
         >
-          Mi progreso →
+          <span>📈</span> Mi progreso
         </Link>
       </div>
 
-      <div className="mb-6">
-        <h2 className="text-lg font-semibold mb-3">Recomendado para hoy</h2>
+      {/* Recomendaciones */}
+      <section className="mb-8">
+        <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-3">
+          Recomendado para hoy
+        </h2>
+
         {!todayCheckIn ? (
-          <div className="bg-yellow-50 border border-yellow-200 rounded p-3 text-sm text-yellow-700">
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-sm text-amber-700">
             Haz tu{" "}
-            <Link href="/checkin" className="underline">
+            <Link href="/checkin" className="font-semibold underline underline-offset-2">
               check-in de hoy
             </Link>{" "}
-            para ver misiones recomendadas.
+            para ver qué misiones te vienen mejor ahora mismo.
           </div>
         ) : !recommendations ? (
-          <div className="bg-gray-50 border rounded p-3 text-sm text-gray-500">
+          <div className="bg-slate-100 rounded-2xl p-4 text-sm text-slate-500">
             Las recomendaciones no están disponibles en este momento.
           </div>
         ) : recommendations.recommendations.length === 0 ? (
-          <div className="bg-blue-50 border border-blue-200 rounded p-3 text-sm text-blue-700">
+          <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-4 text-sm text-indigo-700">
             {recommendations.message}
           </div>
         ) : (
           <div className="space-y-2">
-            <p className="text-sm text-gray-500 italic">{recommendations.message}</p>
+            <p className="text-sm text-slate-400 italic mb-3">{recommendations.message}</p>
             {recommendations.recommendations.map((rec) => (
-              <div key={rec.id} className="bg-green-50 border border-green-200 rounded p-3">
-                <p className="font-medium text-sm">{rec.title}</p>
-                <p className="text-xs text-gray-500 mt-1">{rec.reason}</p>
+              <div
+                key={rec.id}
+                className="bg-white border border-slate-100 rounded-2xl p-4 shadow-sm flex items-start gap-3"
+              >
+                <span className="text-rose-400 text-lg mt-0.5">✦</span>
+                <div>
+                  <p className="font-semibold text-slate-800 text-sm">{rec.title}</p>
+                  <p className="text-xs text-slate-400 mt-0.5">{rec.reason}</p>
+                </div>
               </div>
             ))}
           </div>
         )}
-      </div>
+      </section>
 
-      <NewAdventureForm />
+      {/* Aventuras */}
+      <section>
+        <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-4">
+          Mis aventuras
+        </h2>
 
-      {adventures.length === 0 ? (
-        <p className="text-gray-400 text-center py-8">No tienes aventuras todavía.</p>
-      ) : (
-        adventures.map((adventure) => (
-          <AdventureCard key={adventure.id} adventure={adventure} />
-        ))
-      )}
+        <NewAdventureForm />
+
+        {adventures.length === 0 ? (
+          <div className="text-center py-12 text-slate-400">
+            <p className="text-3xl mb-2">🗺️</p>
+            <p className="text-sm">Todavía no tienes aventuras.</p>
+            <p className="text-sm">¡Crea la primera arriba!</p>
+          </div>
+        ) : (
+          <div className="space-y-3 mt-4">
+            {adventures.map((adventure) => (
+              <AdventureCard key={adventure.id} adventure={adventure} />
+            ))}
+          </div>
+        )}
+      </section>
     </main>
   );
 }
