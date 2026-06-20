@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect, useActionState } from "react";
+import { useState, useEffect, useRef, useActionState } from "react";
+import { createPortal } from "react-dom";
 import { Adventure, Mission } from "@/lib/generated/prisma/client";
 import { updateAdventure, deleteAdventure } from "@/app/actions/adventures";
 import { toggleMission, createMission } from "@/app/actions/missions";
@@ -49,7 +50,10 @@ export default function AdventureCard({ adventure, index }: AdventureCardProps) 
   const [editing, setEditing] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [showAddMission, setShowAddMission] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const [menuPos, setMenuPos] = useState<{ top: number; left: number } | null>(null);
   const [updateError, setUpdateError] = useState<string | null>(null);
+  const kebabRef = useRef<HTMLButtonElement>(null);
 
   const [missionState, missionAction, missionPending] = useActionState(
     createMission,
@@ -159,49 +163,109 @@ export default function AdventureCard({ adventure, index }: AdventureCardProps) 
           ) : <div style={{ marginBottom: 10 }} />}
 
           {total > 0 && (
-            <div style={{ position: "relative", height: 7, borderRadius: 999, background: "#E4DCCB" }}>
+            <div style={{ height: 7, borderRadius: 999, background: "#E4DCCB", overflow: "hidden" }}>
               <div style={{
-                position: "absolute", left: 0, top: 0, height: 7,
-                width: `${progress}%`, borderRadius: 999,
+                height: 7, width: `${progress}%`, borderRadius: 999,
                 background: progressGradient(progress),
                 transition: "width .4s ease",
               }} />
-              {progress > 4 && progress < 98 && (
-                <div style={{
-                  position: "absolute", left: `${progress}%`, top: "50%",
-                  transform: "translate(-50%,-50%)",
-                  width: 13, height: 13, borderRadius: "50%",
-                  background: "#FBF8F1", border: "2.5px solid #93B7CC",
-                }} />
-              )}
             </div>
           )}
         </div>
 
         {/* Acciones */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end", flexShrink: 0 }}>
+        <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
+
+          {/* Kebab menu ⋮ */}
           <button
-            onClick={() => setExpanded(!expanded)}
-            title={expanded ? "Cerrar misiones" : "Ver misiones"}
+            ref={kebabRef}
+            onClick={() => {
+              if (showMenu) {
+                setShowMenu(false);
+                setMenuPos(null);
+              } else {
+                const rect = kebabRef.current!.getBoundingClientRect();
+                setMenuPos({ top: rect.bottom + 4, left: rect.right - 130 });
+                setShowMenu(true);
+              }
+            }}
+            title="Más opciones"
             style={{
-              background: "none", border: "none", fontSize: 22,
-              color: expanded ? "#7E9A86" : "#B9C2B6",
-              cursor: "pointer", padding: 0, lineHeight: 1,
-              transform: expanded ? "rotate(90deg)" : "none",
-              transition: "transform .2s, color .2s",
+              background: "none", border: "none",
+              width: 30, height: 30, borderRadius: "50%",
+              color: "#B9C2B6", cursor: "pointer",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 18, letterSpacing: 1,
             }}
           >
-            →
+            ⋮
           </button>
-          <button onClick={() => setEditing(true)} style={{ background: "none", border: "none", fontSize: 11, color: "#8A8D85", cursor: "pointer", padding: 0 }}>
-            editar
+
+          {/* Portal: se monta en document.body, escapa del backdrop-filter del card */}
+          {showMenu && menuPos && createPortal(
+            <>
+              <div onClick={() => { setShowMenu(false); setMenuPos(null); }} style={{ position: "fixed", inset: 0, zIndex: 99 }} />
+              <div style={{
+                position: "fixed",
+                top: menuPos.top,
+                left: menuPos.left,
+                background: "rgba(251,248,241,.97)",
+                border: "1px solid rgba(255,255,255,.7)",
+                borderRadius: 12,
+                boxShadow: "0 8px 24px rgba(42,51,45,.15)",
+                overflow: "hidden",
+                zIndex: 100,
+                minWidth: 130,
+              }}>
+                <button
+                  onClick={() => { setEditing(true); setShowMenu(false); setMenuPos(null); }}
+                  style={{
+                    display: "block", width: "100%", textAlign: "left",
+                    padding: "11px 16px", background: "none", border: "none",
+                    fontSize: 13, color: "#2A332D", cursor: "pointer",
+                  }}
+                >
+                  Editar
+                </button>
+                <div style={{ height: 1, background: "rgba(42,51,45,.07)", margin: "0 10px" }} />
+                <form action={deleteAdventure}>
+                  <input type="hidden" name="id" value={adventure.id} />
+                  <button
+                    type="submit"
+                    onClick={() => { setShowMenu(false); setMenuPos(null); }}
+                    style={{
+                      display: "block", width: "100%", textAlign: "left",
+                      padding: "11px 16px", background: "none", border: "none",
+                      fontSize: 13, color: "#C97B7B", cursor: "pointer",
+                    }}
+                  >
+                    Eliminar
+                  </button>
+                </form>
+              </div>
+            </>,
+            document.body
+          )}
+
+          {/* Chevron expandir/colapsar */}
+          <button
+            onClick={() => setExpanded(!expanded)}
+            title={expanded ? "Colapsar" : "Ver misiones"}
+            style={{
+              background: "none", border: "none",
+              width: 30, height: 30, borderRadius: "50%",
+              color: expanded ? "#7E9A86" : "#B9C2B6",
+              cursor: "pointer", padding: 0,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              transform: expanded ? "rotate(180deg)" : "rotate(0deg)",
+              transition: "transform .25s ease, color .2s",
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
           </button>
-          <form action={deleteAdventure}>
-            <input type="hidden" name="id" value={adventure.id} />
-            <button type="submit" style={{ background: "none", border: "none", fontSize: 11, color: "#C97B7B", cursor: "pointer", padding: 0 }}>
-              eliminar
-            </button>
-          </form>
+
         </div>
       </div>
 
