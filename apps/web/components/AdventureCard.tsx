@@ -1,38 +1,77 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
+import { useState, useEffect, useActionState } from "react";
 import { Adventure, Mission } from "@/lib/generated/prisma/client";
 import { updateAdventure, deleteAdventure } from "@/app/actions/adventures";
+import { toggleMission, createMission } from "@/app/actions/missions";
 
 type AdventureWithMissions = Adventure & { missions: Mission[] };
-type AdventureCardProps = { adventure: AdventureWithMissions };
+type AdventureCardProps = { adventure: AdventureWithMissions; index: number };
 
-const STATUS_LABELS: Record<string, string> = {
-  active: "Activa",
-  paused: "Pausada",
-  completed: "Completada",
+const GRADIENTS = [
+  "linear-gradient(180deg,#2C3A52 0%,#5E5670 60%,#A88098 100%)",
+  "linear-gradient(180deg,#F0C9A8 0%,#E3A878 55%,#C98A6A 100%)",
+  "linear-gradient(180deg,#C9DCE3 0%,#AFC3B4 52%,#8BA893 78%,#6E8C78 100%)",
+  "linear-gradient(180deg,#1B2330 0%,#2C3340 55%,#3A5A5E 100%)",
+];
+
+const ACCENT_COLORS = ["#F3E7D2", "#FBEFD9", "#F3ECDF", "#E3C9A0"];
+
+function progressGradient(pct: number) {
+  if (pct >= 75) return "linear-gradient(90deg,#7E9A86,#93B7CC)";
+  if (pct >= 35) return "linear-gradient(90deg,#E3A878,#F0C9A8)";
+  return "linear-gradient(90deg,#93B7CC,#C2DAE6)";
+}
+
+const GLASS: React.CSSProperties = {
+  background: "rgba(251,248,241,.84)",
+  backdropFilter: "blur(10px)",
+  WebkitBackdropFilter: "blur(10px)",
+  border: "1px solid rgba(255,255,255,.55)",
+  borderRadius: 18,
+  padding: "20px 22px",
+  boxShadow: "0 10px 30px rgba(42,51,45,.10)",
 };
 
-const STATUS_STYLES: Record<string, string> = {
-  active: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  paused: "bg-amber-50 text-amber-700 border-amber-200",
-  completed: "bg-slate-100 text-slate-500 border-slate-200",
+const INPUT_STYLE: React.CSSProperties = {
+  border: "1px solid #D8D1C4",
+  borderRadius: 10,
+  padding: "9px 12px",
+  fontSize: 14,
+  color: "#2A332D",
+  outline: "none",
+  background: "rgba(251,248,241,.9)",
+  width: "100%",
+  boxSizing: "border-box",
 };
 
-export default function AdventureCard({ adventure }: AdventureCardProps) {
+export default function AdventureCard({ adventure, index }: AdventureCardProps) {
   const [editing, setEditing] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [showAddMission, setShowAddMission] = useState(false);
   const [updateError, setUpdateError] = useState<string | null>(null);
 
+  const [missionState, missionAction, missionPending] = useActionState(
+    createMission,
+    {}
+  );
+
+  useEffect(() => {
+    if (missionState.message) setShowAddMission(false);
+  }, [missionState.message]);
+
   const total = adventure.missions.length;
-  const completed = adventure.missions.filter((m) => m.completed).length;
-  const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+  const done = adventure.missions.filter((m) => m.completed).length;
+  const progress = total > 0 ? Math.round((done / total) * 100) : 0;
+  const nextMission = adventure.missions.find((m) => !m.completed);
+
+  const gi = index % GRADIENTS.length;
 
   if (editing) {
     return (
-      <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm">
+      <div style={GLASS}>
         {updateError && (
-          <p className="text-red-500 text-sm mb-3">{updateError}</p>
+          <p style={{ color: "#C97B7B", fontSize: 13, marginBottom: 10 }}>{updateError}</p>
         )}
         <form
           action={async (formData) => {
@@ -44,42 +83,26 @@ export default function AdventureCard({ adventure }: AdventureCardProps) {
               setUpdateError("Error al guardar. Verifica los datos.");
             }
           }}
-          className="space-y-3"
+          style={{ display: "flex", flexDirection: "column", gap: 10 }}
         >
           <input type="hidden" name="id" value={adventure.id} />
-          <input
-            name="title"
-            defaultValue={adventure.title}
-            required
-            className="border border-slate-200 rounded-lg px-3 py-2 w-full text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-300"
-          />
+          <input name="title" defaultValue={adventure.title} required style={INPUT_STYLE} />
           <input
             name="description"
             defaultValue={adventure.description ?? ""}
             placeholder="Descripción (opcional)"
-            className="border border-slate-200 rounded-lg px-3 py-2 w-full text-sm text-slate-600 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+            style={INPUT_STYLE}
           />
-          <select
-            name="status"
-            defaultValue={adventure.status}
-            className="border border-slate-200 rounded-lg px-3 py-2 text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-300"
-          >
+          <select name="status" defaultValue={adventure.status} style={INPUT_STYLE}>
             <option value="active">Activa</option>
             <option value="paused">Pausada</option>
             <option value="completed">Completada</option>
           </select>
-          <div className="flex gap-2 pt-1">
-            <button
-              type="submit"
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 rounded-lg text-sm font-medium transition-colors"
-            >
+          <div style={{ display: "flex", gap: 8, marginTop: 2 }}>
+            <button type="submit" style={{ background: "#2A332D", color: "#FBF8F1", border: "none", borderRadius: 999, padding: "9px 18px", fontSize: 14, fontWeight: 600, cursor: "pointer" }}>
               Guardar
             </button>
-            <button
-              type="button"
-              onClick={() => setEditing(false)}
-              className="border border-slate-200 text-slate-600 px-4 py-1.5 rounded-lg text-sm transition-colors hover:bg-slate-50"
-            >
+            <button type="button" onClick={() => setEditing(false)} style={{ background: "transparent", color: "#5C665E", border: "1px solid #D8D1C4", borderRadius: 999, padding: "9px 18px", fontSize: 14, cursor: "pointer" }}>
               Cancelar
             </button>
           </div>
@@ -89,61 +112,212 @@ export default function AdventureCard({ adventure }: AdventureCardProps) {
   }
 
   return (
-    <div className="bg-white border border-slate-100 rounded-2xl p-5 shadow-sm">
-      {/* Title + status badge */}
-      <div className="flex items-start justify-between gap-2 mb-1">
-        <h2 className="font-semibold text-slate-800">{adventure.title}</h2>
-        <span
-          className={`text-xs border px-2 py-0.5 rounded-full shrink-0 ${STATUS_STYLES[adventure.status] ?? "bg-slate-100 text-slate-500"}`}
-        >
-          {STATUS_LABELS[adventure.status] ?? adventure.status}
-        </span>
+    <div style={GLASS}>
+
+      {/* ── Fila principal ── */}
+      <div style={{ display: "flex", gap: 18, alignItems: "center" }}>
+
+        {/* Miniatura paisaje */}
+        <div style={{
+          flexShrink: 0, width: 78, height: 78, borderRadius: 14,
+          background: GRADIENTS[gi], position: "relative", overflow: "hidden",
+        }}>
+          <div style={{
+            position: "absolute", right: 10, top: 10,
+            width: 17, height: 17, borderRadius: "50%",
+            background: ACCENT_COLORS[gi],
+          }} />
+          <svg viewBox="0 0 78 78" style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}>
+            <path d="M8 70 C 26 58, 24 42, 46 32 S 68 14, 72 7" fill="none" stroke="rgba(251,248,241,.5)" strokeWidth="2.5" strokeDasharray="2 6" strokeLinecap="round" />
+          </svg>
+          <div style={{
+            position: "absolute", left: 0, right: 0, bottom: 0, height: 26,
+            background: "rgba(0,0,0,.22)",
+            clipPath: "polygon(0 70%,30% 45%,60% 65%,100% 50%,100% 100%,0 100%)",
+          }} />
+        </div>
+
+        {/* Contenido */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 4 }}>
+            <div style={{ fontFamily: "var(--font-schibsted)", fontWeight: 600, fontSize: 18, color: "#2A332D", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {adventure.title}
+            </div>
+            {total > 0 && (
+              <div style={{ fontSize: 12, color: "#8A8D85", flexShrink: 0 }}>{done} de {total}</div>
+            )}
+          </div>
+
+          {nextMission ? (
+            <div style={{ fontSize: 13, color: "#5C665E", marginBottom: 10, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              Siguiente: {nextMission.title}
+            </div>
+          ) : adventure.description ? (
+            <div style={{ fontSize: 13, color: "#8A8D85", marginBottom: 10, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {adventure.description}
+            </div>
+          ) : <div style={{ marginBottom: 10 }} />}
+
+          {total > 0 && (
+            <div style={{ position: "relative", height: 7, borderRadius: 999, background: "#E4DCCB" }}>
+              <div style={{
+                position: "absolute", left: 0, top: 0, height: 7,
+                width: `${progress}%`, borderRadius: 999,
+                background: progressGradient(progress),
+                transition: "width .4s ease",
+              }} />
+              {progress > 4 && progress < 98 && (
+                <div style={{
+                  position: "absolute", left: `${progress}%`, top: "50%",
+                  transform: "translate(-50%,-50%)",
+                  width: 13, height: 13, borderRadius: "50%",
+                  background: "#FBF8F1", border: "2.5px solid #93B7CC",
+                }} />
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Acciones */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end", flexShrink: 0 }}>
+          <button
+            onClick={() => setExpanded(!expanded)}
+            title={expanded ? "Cerrar misiones" : "Ver misiones"}
+            style={{
+              background: "none", border: "none", fontSize: 22,
+              color: expanded ? "#7E9A86" : "#B9C2B6",
+              cursor: "pointer", padding: 0, lineHeight: 1,
+              transform: expanded ? "rotate(90deg)" : "none",
+              transition: "transform .2s, color .2s",
+            }}
+          >
+            →
+          </button>
+          <button onClick={() => setEditing(true)} style={{ background: "none", border: "none", fontSize: 11, color: "#8A8D85", cursor: "pointer", padding: 0 }}>
+            editar
+          </button>
+          <form action={deleteAdventure}>
+            <input type="hidden" name="id" value={adventure.id} />
+            <button type="submit" style={{ background: "none", border: "none", fontSize: 11, color: "#C97B7B", cursor: "pointer", padding: 0 }}>
+              eliminar
+            </button>
+          </form>
+        </div>
       </div>
 
-      {adventure.description && (
-        <p className="text-sm text-slate-400 mb-3">{adventure.description}</p>
-      )}
+      {/* ── Misiones expandibles ── */}
+      {expanded && (
+        <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid rgba(42,51,45,.08)" }}>
 
-      {/* Progress bar */}
-      {total > 0 && (
-        <div className="mb-4">
-          <div className="flex justify-between text-xs text-slate-400 mb-1">
-            <span>{completed} de {total} misiones</span>
-            <span>{progress}%</span>
-          </div>
-          <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-indigo-400 rounded-full transition-all"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
+          {/* Lista de misiones */}
+          {adventure.missions.length === 0 ? (
+            <p style={{ fontSize: 13, color: "#8A8D85", margin: "0 0 12px" }}>
+              Sin misiones todavía.
+            </p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", marginBottom: 12 }}>
+              {[...adventure.missions]
+                .sort((a, b) => {
+                  if (a.completed !== b.completed) return a.completed ? -1 : 1;
+                  return a.id - b.id;
+                })
+                .map((m) => (
+                <form key={m.id} action={toggleMission} style={{
+                  display: "flex", gap: 12, alignItems: "center",
+                  padding: "9px 4px",
+                  borderBottom: "1px solid rgba(42,51,45,.05)",
+                }}>
+                  <input type="hidden" name="id" value={m.id} />
+                  <input type="hidden" name="adventureId" value={adventure.id} />
+                  <button type="submit" style={{
+                    flexShrink: 0, width: 22, height: 22, borderRadius: "50%",
+                    border: m.completed ? "none" : "2px solid #7E9A86",
+                    background: m.completed ? "#7E9A86" : "transparent",
+                    cursor: "pointer",
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                  }}>
+                    {m.completed && <span style={{ color: "#FBF8F1", fontSize: 11, lineHeight: 1 }}>✓</span>}
+                  </button>
+                  <span style={{
+                    flex: 1, fontSize: 14,
+                    color: m.completed ? "#8A8D85" : "#2A332D",
+                    textDecoration: m.completed ? "line-through" : "none",
+                  }}>
+                    {m.title}
+                  </span>
+                  <div style={{ display: "flex", gap: 3, flexShrink: 0 }}>
+                    {[1, 2, 3].map((d) => (
+                      <div key={d} style={{
+                        width: 6, height: 6, borderRadius: "50%",
+                        background: d <= m.difficulty ? "#E3A878" : "#E4DCCB",
+                      }} />
+                    ))}
+                  </div>
+                </form>
+              ))}
+            </div>
+          )}
+
+          {/* Form nueva misión */}
+          {showAddMission ? (
+            <form action={missionAction} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+              <input type="hidden" name="adventureId" value={adventure.id} />
+              <input
+                name="title"
+                placeholder="Nombre de la misión"
+                required
+                autoFocus
+                style={{ ...INPUT_STYLE, fontSize: 13, padding: "8px 10px" }}
+              />
+              {missionState.errors?.title && (
+                <p style={{ fontSize: 11, color: "#C97B7B", margin: 0 }}>{missionState.errors.title[0]}</p>
+              )}
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                <select
+                  name="difficulty"
+                  defaultValue="1"
+                  style={{ ...INPUT_STYLE, width: "auto", fontSize: 13, padding: "8px 10px" }}
+                >
+                  <option value="1">● Fácil</option>
+                  <option value="2">●● Media</option>
+                  <option value="3">●●● Difícil</option>
+                </select>
+                <button
+                  type="submit"
+                  disabled={missionPending}
+                  style={{
+                    background: "#2A332D", color: "#FBF8F1", border: "none",
+                    borderRadius: 999, padding: "8px 16px", fontSize: 13,
+                    fontWeight: 600, cursor: missionPending ? "not-allowed" : "pointer",
+                    opacity: missionPending ? 0.6 : 1,
+                  }}
+                >
+                  {missionPending ? "..." : "Agregar"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowAddMission(false)}
+                  style={{ background: "none", border: "none", fontSize: 13, color: "#8A8D85", cursor: "pointer" }}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          ) : (
+            <button
+              onClick={() => setShowAddMission(true)}
+              style={{
+                background: "none", border: "1px dashed #C9C2B4",
+                borderRadius: 10, padding: "7px 14px",
+                fontSize: 13, color: "#8A8D85", cursor: "pointer",
+                width: "100%", textAlign: "left",
+              }}
+            >
+              + Agregar misión
+            </button>
+          )}
         </div>
       )}
-
-      {/* Actions */}
-      <div className="flex gap-2 flex-wrap">
-        <Link
-          href={`/adventures/${adventure.id}`}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
-        >
-          Ver misiones →
-        </Link>
-        <button
-          onClick={() => setEditing(true)}
-          className="border border-slate-200 text-slate-600 hover:bg-slate-50 px-3 py-1.5 rounded-lg text-xs transition-colors"
-        >
-          Editar
-        </button>
-        <form action={deleteAdventure}>
-          <input type="hidden" name="id" value={adventure.id} />
-          <button
-            type="submit"
-            className="text-rose-500 hover:text-rose-600 border border-rose-200 hover:bg-rose-50 px-3 py-1.5 rounded-lg text-xs transition-colors"
-          >
-            Eliminar
-          </button>
-        </form>
-      </div>
     </div>
   );
 }

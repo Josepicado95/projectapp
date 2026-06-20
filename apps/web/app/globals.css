@@ -1,17 +1,40 @@
 @import "tailwindcss";
 
-/* Force light mode — dark mode design is not implemented yet */
 :root {
   color-scheme: light;
 }
 
-body {
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+@theme {
+  /* Paleta calming-hope */
+  --color-salvia: #7E9A86;
+  --color-salvia-soft: #AFC3B4;
+  --color-cielo: #93B7CC;
+  --color-cielo-soft: #C2DAE6;
+  --color-golden: #E3A878;
+  --color-golden-soft: #F0C9A8;
+  --color-marfil: #F4EFE6;
+  --color-marfil-bright: #FBF8F1;
+  --color-tierra: #2A332D;
+  --color-tierra-mid: #5C665E;
+  --color-tierra-muted: #8A8D85;
 }
 
-/* Inputs always show dark text on white background regardless of OS theme */
+body {
+  font-family: var(--font-hanken), Arial, Helvetica, sans-serif;
+}
+
 input,
 select,
 textarea {
   color-scheme: light;
+}
+
+@keyframes av-glow {
+  0%, 100% { opacity: 0.85; filter: blur(0px); }
+  50%       { opacity: 1;    filter: blur(1.5px); }
+}
+
+@keyframes av-drift {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(22px); }
 }

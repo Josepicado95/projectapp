@@ -52,6 +52,7 @@ export async function createMission(
     },
   });
 
+  revalidatePath("/");
   revalidatePath(`/adventures/${result.data.adventureId}`);
   return { message: "¡Misión creada!" };
 }
@@ -101,6 +102,7 @@ export async function toggleMission(formData: FormData): Promise<void> {
     },
   });
 
+  revalidatePath("/");
   revalidatePath(`/adventures/${adventureId}`);
 }
 

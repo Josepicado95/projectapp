@@ -54,5 +54,6 @@ export async function saveCheckIn(
   }
 
   revalidatePath("/checkin");
+  revalidatePath("/");
   return { message: existing ? "¡Check-in actualizado!" : "¡Check-in guardado!" };
 }
