@@ -25,13 +25,13 @@ function progressGradient(pct: number) {
 }
 
 const GLASS: React.CSSProperties = {
-  background: "rgba(251,248,241,.84)",
-  backdropFilter: "blur(10px)",
-  WebkitBackdropFilter: "blur(10px)",
-  border: "1px solid rgba(255,255,255,.55)",
+  background: "rgba(251,248,241,.78)",
+  backdropFilter: "blur(12px)",
+  WebkitBackdropFilter: "blur(12px)",
+  border: "1px solid rgba(255,255,255,.65)",
   borderRadius: 18,
   padding: "20px 22px",
-  boxShadow: "0 10px 30px rgba(42,51,45,.10)",
+  boxShadow: "0 4px 6px rgba(42,51,45,.04), 0 12px 32px rgba(42,51,45,.14)",
 };
 
 const INPUT_STYLE: React.CSSProperties = {

@@ -179,10 +179,13 @@ export default async function Home() {
             padding: "0 44px 20px",
             scrollbarWidth: "none",
           }}>
-            <div style={{ maxWidth: 676, display: "flex", flexDirection: "column", gap: 14, marginBottom: 16 }}>
-
+            {/* Grid de aventuras: 1 columna en mobile, 2 en desktop (lg = 1024px+) */}
+            <div
+              className="grid grid-cols-1 lg:grid-cols-2 items-start"
+              style={{ maxWidth: 760, gap: 22, marginBottom: 22 }}
+            >
               {activeAdventures.length === 0 ? (
-                <div style={{
+                <div className="lg:col-span-2" style={{
                   background: "rgba(251,248,241,.84)",
                   backdropFilter: "blur(10px)",
                   WebkitBackdropFilter: "blur(10px)",
@@ -197,8 +200,11 @@ export default async function Home() {
                   <AdventureCard key={adventure.id} adventure={adventure} index={i} />
                 ))
               )}
+            </div>
 
-              {/* Recomendaciones */}
+            {/* Recomendaciones y banners: siempre 1 columna, ancho completo */}
+            <div style={{ maxWidth: 760, display: "flex", flexDirection: "column", gap: 14, marginBottom: 16 }}>
+
               {recommendations && recommendations.recommendations.length > 0 && (
                 <div style={{
                   background: "rgba(227,168,120,.16)",
@@ -254,8 +260,8 @@ export default async function Home() {
                   Check-in registrado ✓ — Las recomendaciones no están disponibles en este momento.
                 </div>
               )}
-            </div>
-          </div>
+            </div>{/* /recomendaciones */}
+          </div>{/* /scrollable */}
 
           {/* ── Botones inferiores (no crecen, siempre visibles) ── */}
           <div style={{ flexShrink: 0, padding: "12px 44px 30px", display: "flex", gap: 10, alignItems: "center" }}>
