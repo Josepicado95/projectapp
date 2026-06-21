@@ -25,13 +25,13 @@ function progressGradient(pct: number) {
 }
 
 const GLASS: React.CSSProperties = {
-  background: "rgba(251,248,241,.78)",
-  backdropFilter: "blur(12px)",
-  WebkitBackdropFilter: "blur(12px)",
-  border: "1px solid rgba(255,255,255,.65)",
+  background: "rgba(251,248,241,.68)",
+  backdropFilter: "blur(14px) saturate(1.2)",
+  WebkitBackdropFilter: "blur(14px) saturate(1.2)",
+  border: "1px solid rgba(255,255,255,.7)",
   borderRadius: 18,
   padding: "20px 22px",
-  boxShadow: "0 4px 6px rgba(42,51,45,.04), 0 12px 32px rgba(42,51,45,.14)",
+  boxShadow: "0 4px 6px rgba(42,51,45,.04), 0 12px 32px rgba(42,51,45,.13), inset 0 1px 0 rgba(255,255,255,.8)",
 };
 
 const INPUT_STYLE: React.CSSProperties = {
@@ -143,12 +143,12 @@ export default function AdventureCard({ adventure, index }: AdventureCardProps) 
 
         {/* Contenido */}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 4 }}>
-            <div style={{ fontFamily: "var(--font-schibsted)", fontWeight: 600, fontSize: 18, color: "#2A332D", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <div style={{ marginBottom: 4 }}>
+            <div style={{ fontFamily: "var(--font-schibsted)", fontWeight: 600, fontSize: 18, color: "#2A332D", lineHeight: 1.25 }}>
               {adventure.title}
             </div>
             {total > 0 && (
-              <div style={{ fontSize: 12, color: "#8A8D85", flexShrink: 0 }}>{done} de {total}</div>
+              <div style={{ fontSize: 12, color: "#8A8D85", marginTop: 2 }}>{done} de {total}</div>
             )}
           </div>
 
@@ -157,7 +157,7 @@ export default function AdventureCard({ adventure, index }: AdventureCardProps) 
               Siguiente: {nextMission.title}
             </div>
           ) : adventure.description ? (
-            <div style={{ fontSize: 13, color: "#8A8D85", marginBottom: 10, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <div style={{ fontSize: 13, color: "#8A8D85", marginBottom: 10 }}>
               {adventure.description}
             </div>
           ) : <div style={{ marginBottom: 10 }} />}
