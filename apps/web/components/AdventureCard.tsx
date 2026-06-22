@@ -5,9 +5,10 @@ import { createPortal } from "react-dom";
 import { Adventure, Mission } from "@/lib/generated/prisma/client";
 import { updateAdventure, deleteAdventure } from "@/app/actions/adventures";
 import { toggleMission, createMission } from "@/app/actions/missions";
+import { CardTheme } from "@/lib/theme";
 
 type AdventureWithMissions = Adventure & { missions: Mission[] };
-type AdventureCardProps = { adventure: AdventureWithMissions; index: number };
+type AdventureCardProps = { adventure: AdventureWithMissions; index: number; theme: CardTheme };
 
 const GRADIENTS = [
   "linear-gradient(180deg,#2C3A52 0%,#5E5670 60%,#A88098 100%)",
@@ -24,15 +25,6 @@ function progressGradient(pct: number) {
   return "linear-gradient(90deg,#93B7CC,#C2DAE6)";
 }
 
-const GLASS: React.CSSProperties = {
-  background: "rgba(251,248,241,.68)",
-  backdropFilter: "blur(14px) saturate(1.2)",
-  WebkitBackdropFilter: "blur(14px) saturate(1.2)",
-  border: "1px solid rgba(255,255,255,.7)",
-  borderRadius: 18,
-  padding: "20px 22px",
-  boxShadow: "0 4px 6px rgba(42,51,45,.04), 0 12px 32px rgba(42,51,45,.13), inset 0 1px 0 rgba(255,255,255,.8)",
-};
 
 const INPUT_STYLE: React.CSSProperties = {
   border: "1px solid #D8D1C4",
@@ -46,7 +38,16 @@ const INPUT_STYLE: React.CSSProperties = {
   boxSizing: "border-box",
 };
 
-export default function AdventureCard({ adventure, index }: AdventureCardProps) {
+export default function AdventureCard({ adventure, index, theme }: AdventureCardProps) {
+  const glass: React.CSSProperties = {
+    background: theme.glassBg,
+    backdropFilter: "blur(18px) saturate(1.3)",
+    WebkitBackdropFilter: "blur(18px) saturate(1.3)",
+    border: `1px solid ${theme.glassBorder}`,
+    borderRadius: 18,
+    padding: "20px 22px",
+    boxShadow: `0 4px 6px rgba(42,51,45,.04), 0 14px 36px ${theme.glassShadow}, inset 0 1px 0 ${theme.glassInner}`,
+  };
   const [editing, setEditing] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [showAddMission, setShowAddMission] = useState(false);
@@ -73,7 +74,7 @@ export default function AdventureCard({ adventure, index }: AdventureCardProps) 
 
   if (editing) {
     return (
-      <div style={GLASS}>
+      <div style={glass}>
         {updateError && (
           <p style={{ color: "#C97B7B", fontSize: 13, marginBottom: 10 }}>{updateError}</p>
         )}
@@ -116,7 +117,7 @@ export default function AdventureCard({ adventure, index }: AdventureCardProps) 
   }
 
   return (
-    <div style={GLASS}>
+    <div style={glass}>
 
       {/* ── Fila principal ── */}
       <div style={{ display: "flex", gap: 18, alignItems: "center" }}>
@@ -144,26 +145,26 @@ export default function AdventureCard({ adventure, index }: AdventureCardProps) 
         {/* Contenido */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ marginBottom: 4 }}>
-            <div style={{ fontFamily: "var(--font-schibsted)", fontWeight: 600, fontSize: 18, color: "#2A332D", lineHeight: 1.25 }}>
+            <div style={{ fontFamily: "var(--font-schibsted)", fontWeight: 600, fontSize: 18, color: theme.cardInk, lineHeight: 1.25 }}>
               {adventure.title}
             </div>
             {total > 0 && (
-              <div style={{ fontSize: 12, color: "#8A8D85", marginTop: 2 }}>{done} de {total}</div>
+              <div style={{ fontSize: 12, color: theme.cardSub, marginTop: 2 }}>{done} de {total}</div>
             )}
           </div>
 
           {nextMission ? (
-            <div style={{ fontSize: 13, color: "#5C665E", marginBottom: 10, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            <div style={{ fontSize: 13, color: theme.cardSub, marginBottom: 10, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               Siguiente: {nextMission.title}
             </div>
           ) : adventure.description ? (
-            <div style={{ fontSize: 13, color: "#8A8D85", marginBottom: 10 }}>
+            <div style={{ fontSize: 13, color: theme.cardSub, marginBottom: 10 }}>
               {adventure.description}
             </div>
           ) : <div style={{ marginBottom: 10 }} />}
 
           {total > 0 && (
-            <div style={{ height: 7, borderRadius: 999, background: "#E4DCCB", overflow: "hidden" }}>
+            <div style={{ height: 7, borderRadius: 999, background: theme.trackBg, overflow: "hidden" }}>
               <div style={{
                 height: 7, width: `${progress}%`, borderRadius: 999,
                 background: progressGradient(progress),
@@ -193,7 +194,7 @@ export default function AdventureCard({ adventure, index }: AdventureCardProps) 
             style={{
               background: "none", border: "none",
               width: 30, height: 30, borderRadius: "50%",
-              color: "#B9C2B6", cursor: "pointer",
+              color: theme.cardSub, cursor: "pointer",
               display: "flex", alignItems: "center", justifyContent: "center",
               fontSize: 18, letterSpacing: 1,
             }}
@@ -271,11 +272,11 @@ export default function AdventureCard({ adventure, index }: AdventureCardProps) 
 
       {/* ── Misiones expandibles ── */}
       {expanded && (
-        <div style={{ marginTop: 16, paddingTop: 16, borderTop: "1px solid rgba(42,51,45,.08)" }}>
+        <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${theme.trackBg}` }}>
 
           {/* Lista de misiones */}
           {adventure.missions.length === 0 ? (
-            <p style={{ fontSize: 13, color: "#8A8D85", margin: "0 0 12px" }}>
+            <p style={{ fontSize: 13, color: theme.cardSub, margin: "0 0 12px" }}>
               Sin misiones todavía.
             </p>
           ) : (
@@ -289,7 +290,7 @@ export default function AdventureCard({ adventure, index }: AdventureCardProps) 
                 <form key={m.id} action={toggleMission} style={{
                   display: "flex", gap: 12, alignItems: "center",
                   padding: "9px 4px",
-                  borderBottom: "1px solid rgba(42,51,45,.05)",
+                  borderBottom: `1px solid ${theme.trackBg}`,
                 }}>
                   <input type="hidden" name="id" value={m.id} />
                   <input type="hidden" name="adventureId" value={adventure.id} />
@@ -304,7 +305,7 @@ export default function AdventureCard({ adventure, index }: AdventureCardProps) 
                   </button>
                   <span style={{
                     flex: 1, fontSize: 14,
-                    color: m.completed ? "#8A8D85" : "#2A332D",
+                    color: m.completed ? theme.cardSub : theme.cardInk,
                     textDecoration: m.completed ? "line-through" : "none",
                   }}>
                     {m.title}
@@ -313,7 +314,7 @@ export default function AdventureCard({ adventure, index }: AdventureCardProps) 
                     {[1, 2, 3].map((d) => (
                       <div key={d} style={{
                         width: 6, height: 6, borderRadius: "50%",
-                        background: d <= m.difficulty ? "#E3A878" : "#E4DCCB",
+                        background: d <= m.difficulty ? "#E3A878" : theme.trackBg,
                       }} />
                     ))}
                   </div>

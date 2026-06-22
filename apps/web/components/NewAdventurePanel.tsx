@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import NewAdventureForm from "./NewAdventureForm";
 
 const GLASS: React.CSSProperties = {
@@ -12,19 +12,39 @@ const GLASS: React.CSSProperties = {
   boxShadow: "0 16px 48px rgba(42,51,45,.18)",
 };
 
-export default function NewAdventurePanel() {
+type Props = { fullWidth?: boolean };
+
+export default function NewAdventurePanel({ fullWidth }: Props) {
   const [open, setOpen] = useState(false);
+  const [panelPos, setPanelPos] = useState({ bottom: 90, left: 44 });
+  const btnRef = useRef<HTMLButtonElement>(null);
+
+  function handleOpen() {
+    if (btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      setPanelPos({
+        bottom: window.innerHeight - rect.top + 8,
+        left: Math.max(8, rect.right - 380),
+      });
+    }
+    setOpen(true);
+  }
 
   return (
     <>
       <button
-        onClick={() => setOpen(true)}
+        ref={btnRef}
+        onClick={handleOpen}
         style={{
           fontFamily: "var(--font-hanken)", fontWeight: 600, fontSize: 14,
           color: "#FBF8F1", background: "#2A332D",
-          border: "none", borderRadius: 999, padding: "11px 22px",
+          border: "none", borderRadius: 999,
+          padding: fullWidth ? "13px" : "11px 22px",
+          width: fullWidth ? "100%" : undefined,
           cursor: "pointer", boxShadow: "0 8px 24px rgba(42,51,45,.28)",
-          display: "flex", alignItems: "center", gap: 8,
+          display: "flex", alignItems: "center",
+          justifyContent: fullWidth ? "center" : "flex-start",
+          gap: 8,
         }}
       >
         <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#E3A878", flexShrink: 0 }} />
@@ -33,17 +53,15 @@ export default function NewAdventurePanel() {
 
       {open && (
         <>
-          {/* Backdrop: click fuera para cerrar */}
           <div
             onClick={() => setOpen(false)}
             style={{ position: "fixed", inset: 0, zIndex: 49 }}
           />
-          {/* Panel flotante */}
           <div style={{
             ...GLASS,
             position: "fixed",
-            left: 44,
-            bottom: 90,
+            left: panelPos.left,
+            bottom: panelPos.bottom,
             width: 380,
             padding: "20px 22px",
             zIndex: 50,

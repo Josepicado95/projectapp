@@ -38,3 +38,18 @@ textarea {
   0%   { transform: translateX(0); }
   100% { transform: translateX(22px); }
 }
+
+@keyframes av-twinkle {
+  0%, 100% { opacity: .25; }
+  50%       { opacity: .9; }
+}
+
+@keyframes av-riseA {
+  from { opacity: 0; transform: translateY(7px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes av-riseB {
+  from { opacity: 0; transform: translateY(7px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
