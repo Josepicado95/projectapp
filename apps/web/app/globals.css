@@ -53,3 +53,25 @@ textarea {
   from { opacity: 0; transform: translateY(7px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+@keyframes av-orb-pulse {
+  0%, 100% { opacity: .72; transform: translateX(-50%) scale(1); }
+  50%       { opacity: 1;   transform: translateX(-50%) scale(1.14); }
+}
+
+/* ── Nav responsive ── */
+.av-bottom-nav { display: none; }
+
+@media (max-width: 960px) {
+  .av-nav-rail   { display: none !important; }
+  .av-bottom-nav { display: flex !important; }
+}
+
+/* ── Accesibilidad: sin animaciones si el usuario lo prefiere ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

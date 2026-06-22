@@ -30,17 +30,23 @@ const INPUT_STYLE: React.CSSProperties = {
   background: "rgba(251,248,241,.9)", width: "100%", boxSizing: "border-box",
 };
 
+type WeekDay = { done: boolean; label: string; isToday: boolean };
+
 type Props = {
   adventures: AdventureWithMissions[];
   todayCheckIn: CheckIn | null;
   recommendations: RecsResult;
   theme: MomentTheme;
   firstName: string;
+  streak: number;
+  doneMissions: number;
+  totalMissions: number;
+  weekDays: WeekDay[];
 };
 
 type EditorTarget = { adventureId: number; mission: Mission | null };
 
-export default function DashboardBody({ adventures, todayCheckIn, recommendations, theme, firstName }: Props) {
+export default function DashboardBody({ adventures, todayCheckIn, recommendations, theme, firstName, streak, doneMissions, totalMissions, weekDays }: Props) {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [fadeTick, setFadeTick] = useState(0);
   const [editorTarget, setEditorTarget] = useState<EditorTarget | null>(null);
@@ -74,12 +80,12 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
   return (
     <>
       <div style={{
-        flex: 1, display: "flex", gap: 20, overflow: "hidden",
-        padding: "30px 34px 28px",
+        flex: 1, display: "flex", justifyContent: "space-between", gap: 24, overflow: "hidden",
+        padding: "30px 34px",
       }}>
 
         {/* ── Columna izquierda: saludo + mini-tarjetas ── */}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
+        <div style={{ flexShrink: 0, width: 438, display: "flex", flexDirection: "column", minHeight: 0 }}>
           {/* Greeting header */}
           <div style={{ flexShrink: 0, marginBottom: 18 }}>
             <div style={{ fontFamily: "var(--font-schibsted)", fontWeight: 600, fontSize: 25, color: theme.headerInk, lineHeight: 1.1 }}>
@@ -91,7 +97,8 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
           </div>
 
           {/* Cards */}
-          <div style={{ flex: 1, overflowY: "auto", scrollbarWidth: "none" }}>
+          <div style={{ position: "relative", flex: 1, minHeight: 0 }}>
+          <div style={{ height: "100%", overflowY: "auto", scrollbarWidth: "none" }}>
           {activeAdventures.length === 0 ? (
             <div style={{
               background: theme.glassBg,
@@ -104,7 +111,7 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
               <span style={{ color: theme.cardInk, fontWeight: 500 }}>Crea la primera con el panel de la derecha.</span>
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2" style={{ gap: 13, alignContent: "start" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
               {activeAdventures.map((adventure, i) => {
                 const done = adventure.missions.filter((m) => m.completed).length;
                 const total = adventure.missions.length;
@@ -161,22 +168,64 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
               })}
             </div>
           )}
-          </div>{/* /cards scroll */}
+          </div>{/* /cards scroll inner */}
+          {/* fade bottom */}
+          <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 40, background: `linear-gradient(180deg, rgba(14,22,48,0), ${theme.key === "noche" ? "rgba(15,21,38,.5)" : "rgba(0,0,0,.08)"})`, pointerEvents: "none" }} />
+          </div>{/* /cards scroll outer */}
+
+          {/* ── Footer: racha + progreso general ── */}
+          <div style={{
+            flexShrink: 0, marginTop: 14,
+            background: theme.glassBg,
+            backdropFilter: "blur(14px)",
+            WebkitBackdropFilter: "blur(14px)",
+            border: `1px solid ${theme.glassBorder}`,
+            borderRadius: 16,
+            padding: "14px 16px",
+            display: "flex", alignItems: "center", gap: 16,
+          }}>
+            {/* Racha */}
+            <div style={{ flexShrink: 0, textAlign: "center" }}>
+              <div style={{ fontFamily: "var(--font-schibsted)", fontWeight: 600, fontSize: 22, color: theme.cardInk, lineHeight: 1 }}>
+                {streak}
+              </div>
+              <div style={{ fontSize: 11, color: theme.cardSub, marginTop: 3 }}>días de racha</div>
+            </div>
+            {/* Divisor */}
+            <div style={{ width: 1, height: 36, background: "rgba(236,230,216,.12)", flexShrink: 0 }} />
+            {/* Barra de progreso */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
+                <span style={{ fontSize: 12, color: theme.headerSub }}>Progreso general</span>
+                <span style={{ fontSize: 12, color: theme.cardSub }}>{doneMissions}/{totalMissions} misiones</span>
+              </div>
+              <div style={{ height: 6, borderRadius: 999, background: theme.trackBg }}>
+                <div style={{
+                  height: 6, borderRadius: 999,
+                  width: totalMissions > 0 ? `${Math.round(doneMissions / totalMissions * 100)}%` : "0%",
+                  background: "linear-gradient(90deg,#7E9A86,#5B9BD1)",
+                  transition: "width .4s ease",
+                }} />
+              </div>
+            </div>
+          </div>
         </div>{/* /columna izquierda */}
 
-        {/* ── Rail derecho: panel contextual ── */}
+        {/* ── Rail derecho: panel contextual (altura = contenido, máx = 100% del contenedor) ── */}
         <div style={{
-          flexShrink: 0, width: 352,
+          flexShrink: 0, width: 372,
+          alignSelf: "flex-start",
+          maxHeight: "100%",
           background: theme.glassBg,
           backdropFilter: "blur(20px) saturate(1.15)",
           WebkitBackdropFilter: "blur(20px) saturate(1.15)",
           border: glassBorder, borderRadius: 24,
           boxShadow: `0 18px 48px ${theme.glassShadow}, inset 0 1px 0 ${theme.glassInner}`,
-          overflow: "hidden", display: "flex", flexDirection: "column",
+          overflow: "hidden",
         }}>
           <div
             key={fadeTick}
-            style={{ flex: 1, padding: 24, display: "flex", flexDirection: "column", overflow: "hidden", animation: panelAnim }}
+            style={{ maxHeight: "100%", overflowY: "auto", scrollbarWidth: "none", padding: 24, display: "flex", flexDirection: "column", animation: panelAnim }}
           >
 
             {/* ═══ ESTADO HOY ═══ */}
@@ -187,7 +236,7 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
                     Hoy
                   </div>
                   {todayCheckIn && (
-                    <Link href="/checkin" style={{ display: "flex", alignItems: "center", gap: 7, background: theme.trackBg, border: glassBorder, padding: "5px 10px", borderRadius: 999, textDecoration: "none" }}>
+                    <Link href="/checkin" style={{ display: "flex", alignItems: "center", gap: 7, background: "rgba(91,155,209,.16)", border: "1px solid rgba(146,199,230,.35)", padding: "5px 10px", borderRadius: 999, textDecoration: "none" }}>
                       <span style={{ fontSize: 12, color: theme.cardSub }}>Energía</span>
                       <div style={{ display: "flex", gap: 3, alignItems: "flex-end", height: 15 }}>
                         {([todayCheckIn.energy, todayCheckIn.mood, todayCheckIn.sleep, 10 - todayCheckIn.stress] as number[]).map((val, i) => (
@@ -198,46 +247,66 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
                   )}
                 </div>
 
-                <div style={{ flex: 1, overflowY: "auto", scrollbarWidth: "none" }}>
-                  {!todayCheckIn && (
-                    <>
-                      <div style={{ fontSize: 13.5, color: theme.cardSub, fontStyle: "italic", marginBottom: 16, lineHeight: 1.6 }}>
-                        Registra cómo llegás hoy para ver qué misiones se adaptan mejor a tu momento.
-                      </div>
-                      <Link href="/checkin" style={{ display: "block", textAlign: "center", fontFamily: "var(--font-hanken)", fontWeight: 600, fontSize: 14, color: "#FBF8F1", background: "#2A332D", borderRadius: 999, padding: "12px", textDecoration: "none" }}>
-                        Hacer check-in →
-                      </Link>
-                    </>
-                  )}
-                  {todayCheckIn && recommendations && recommendations.recommendations.length > 0 && (
-                    <>
-                      <div style={{ fontSize: 13.5, color: theme.cardSub, fontStyle: "italic", marginBottom: 14, lineHeight: 1.5 }}>{recommendations.message}</div>
-                      <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".14em", textTransform: "uppercase", color: theme.cardSub, marginBottom: 12 }}>Recomendado para hoy</div>
-                      <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-                        {recommendations.recommendations.slice(0, 3).map((rec) => (
-                          <div key={rec.id} style={{ display: "flex", gap: 11, alignItems: "flex-start", background: theme.trackBg, border: glassBorder, borderRadius: 13, padding: "13px 14px" }}>
-                            <span style={{ color: "#E3A878", marginTop: 1, flexShrink: 0 }}>✦</span>
-                            <div>
-                              <div style={{ fontWeight: 600, fontSize: 14.5, color: theme.cardInk }}>{rec.title}</div>
-                              <div style={{ fontSize: 12, color: theme.cardSub, marginTop: 2 }}>{rec.reason}</div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </>
-                  )}
-                  {todayCheckIn && !recommendations && (
-                    <div style={{ fontSize: 13, color: theme.cardSub, lineHeight: 1.5 }}>
-                      Check-in registrado ✓ — Las recomendaciones no están disponibles en este momento.
+                {/* Sin check-in: mensaje + botón */}
+                {!todayCheckIn && (
+                  <>
+                    <div style={{ fontSize: 13.5, color: theme.cardSub, fontStyle: "italic", marginBottom: 16, lineHeight: 1.6 }}>
+                      Registra cómo llegás hoy para ver qué misiones se adaptan mejor a tu momento.
                     </div>
-                  )}
+                    <Link href="/checkin" style={{ display: "block", textAlign: "center", fontFamily: "var(--font-hanken)", fontWeight: 600, fontSize: 14, color: "#FBF8F1", background: "#2A332D", borderRadius: 999, padding: "12px", textDecoration: "none" }}>
+                      Hacer check-in →
+                    </Link>
+                  </>
+                )}
+
+                {/* Tu semana */}
+                <div style={{ margin: "18px 0 6px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span style={{ fontSize: 11, letterSpacing: ".14em", textTransform: "uppercase", color: "#7FA8C4", fontWeight: 600 }}>Tu semana</span>
+                  <span style={{ fontSize: 12, color: theme.cardSub }}>{weekDays.filter((d) => d.done).length}/7 días</span>
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 18 }}>
+                  {weekDays.map((d, i) => (
+                    <div key={i} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+                      <div style={{
+                        width: 24, height: 24, borderRadius: "50%",
+                        background: d.done ? "#7E9A86" : "transparent",
+                        border: d.isToday ? "2px solid #E3A878" : (d.done ? "2px solid #7E9A86" : "2px solid rgba(236,230,216,.18)"),
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        color: d.done ? "#16202A" : "transparent", fontSize: 12, fontWeight: 600,
+                      }}>
+                        {d.done ? "✓" : ""}
+                      </div>
+                      <span style={{ fontSize: 10.5, color: d.isToday ? "#E3A878" : "#93A0A0" }}>{d.label}</span>
+                    </div>
+                  ))}
                 </div>
 
-                <div style={{ flexShrink: 0, paddingTop: 18, display: "flex", flexDirection: "column", gap: 10 }}>
+                {/* Recomendaciones */}
+                {todayCheckIn && recommendations && recommendations.recommendations.length > 0 && (
+                  <>
+                    <div style={{ fontSize: 13.5, color: theme.cardSub, fontStyle: "italic", marginBottom: 14, lineHeight: 1.5 }}>{recommendations.message}</div>
+                    <div style={{ fontSize: 11, fontWeight: 600, letterSpacing: ".14em", textTransform: "uppercase", color: theme.cardSub, marginBottom: 12 }}>Recomendado para hoy</div>
+                    <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+                      {recommendations.recommendations.slice(0, 3).map((rec) => (
+                        <div key={rec.id} style={{ display: "flex", gap: 11, alignItems: "flex-start", background: theme.trackBg, border: glassBorder, borderRadius: 13, padding: "13px 14px" }}>
+                          <span style={{ color: "#E3A878", marginTop: 1, flexShrink: 0 }}>✦</span>
+                          <div>
+                            <div style={{ fontWeight: 600, fontSize: 14.5, color: theme.cardInk }}>{rec.title}</div>
+                            <div style={{ fontSize: 12, color: theme.cardSub, marginTop: 2 }}>{rec.reason}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+                {todayCheckIn && !recommendations && (
+                  <div style={{ fontSize: 13, color: theme.cardSub, lineHeight: 1.5, marginBottom: 14 }}>
+                    Check-in registrado ✓ — Las recomendaciones no están disponibles en este momento.
+                  </div>
+                )}
+
+                <div style={{ flexShrink: 0, paddingTop: 18 }}>
                   <NewAdventurePanel fullWidth />
-                  <Link href="/progress" style={{ display: "block", textAlign: "center", fontFamily: "var(--font-hanken)", fontWeight: 600, fontSize: 15, color: theme.cardInk, background: theme.trackBg, border: glassBorder, borderRadius: 999, padding: "14px", textDecoration: "none" }}>
-                    Mi progreso
-                  </Link>
                 </div>
               </>
             )}
@@ -274,7 +343,7 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
                       <div style={{ fontFamily: "var(--font-schibsted)", fontWeight: 600, fontSize: 21, color: theme.cardInk, lineHeight: 1.2, maxWidth: 220 }}>
                         {selected.title}
                       </div>
-                      <div style={{ flexShrink: 0, fontSize: 12.5, color: theme.cardSub, background: theme.trackBg, border: glassBorder, padding: "5px 11px", borderRadius: 999, marginLeft: 8, marginTop: 2, whiteSpace: "nowrap" }}>
+                      <div style={{ flexShrink: 0, fontSize: 12.5, color: "#9FB4C6", background: "rgba(91,155,209,.16)", border: "1px solid rgba(146,199,230,.35)", padding: "5px 11px", borderRadius: 999, marginLeft: 8, marginTop: 2, whiteSpace: "nowrap" }}>
                         {selected.missions.filter((m) => m.completed).length} de {selected.missions.length} misiones
                       </div>
                     </div>
@@ -304,8 +373,7 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
                 )}
 
                 {/* Lista de misiones */}
-                <div style={{ flex: 1, overflowY: "auto", scrollbarWidth: "none" }}>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
                     {selected.missions.map((m) => {
                       const lv = MISSION_LEVELS[Math.min(Math.max(m.difficulty - 1, 0), 2)];
                       return (
@@ -387,7 +455,6 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
                       <div style={{ fontWeight: 600, fontSize: 14.5 }}>Agregar misión</div>
                     </div>
                   </div>
-                </div>
 
                 {/* CTA pinned */}
                 <div style={{ flexShrink: 0, paddingTop: 18 }}>

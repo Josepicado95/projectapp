@@ -402,6 +402,45 @@ Ideas para después del MVP (no es obligatorio hacerlas todas, ni en este orden)
 
 ---
 
+## Fase 14 — Fondo cinematográfico con escenas animadas
+
+**Objetivo:** convertir el paisaje de fondo en una experiencia visual viva que acompaña
+al usuario mientras avanza en sus aventuras — sin tocar la UI (tarjetas, header, botones),
+que permanece estática y flotando sobre las escenas.
+
+**Entregable:** el fondo se desplaza suavemente hacia la izquierda mostrando una secuencia
+de escenas con clima animado. La sensación es de "caminar hacia algo", en sintonía con el
+concepto de aventuras y progreso.
+
+### Escenas propuestas (de izquierda a derecha)
+
+1. Montañas verdes — viento suave entre hierbas
+2. Cerezos — hojas cayendo en espiral
+3. Mirador con ciudad al fondo — nubes lentas
+4. Playa — olas que suben y bajan
+5. Montaña nevada — nieve ligera cayendo
+
+### Sub-tareas (a definir cuando llegue el momento)
+
+- [ ] Diseñar cada escena como una capa SVG/CSS independiente, con sus proporciones
+      para que encajen en el scroll horizontal (cada escena ≈ 100vw)
+- [ ] Animación de desplazamiento horizontal: CSS `@keyframes` o JS scroll (decidir
+      si el avance es automático/lento, o responde a algún evento — ej. nuevas misiones
+      completadas)
+- [ ] Clima animado por escena: hojas (SVG + keyframes), olas (clip-path animado),
+      nieve (partículas CSS o canvas ligero)
+- [ ] Transición entre escenas: crossfade por opacidad de capas, o parallax por velocidad
+      diferente entre elementos del fondo y primer plano
+- [ ] Asegurarse de que `backdrop-filter` en las tarjetas siga funcionando con el fondo
+      en movimiento (puede haber issues de performance en mobile)
+- [ ] Test de rendimiento: la animación no debe bajar de 60fps en hardware normal
+
+**Nota técnica a considerar:** el fondo en movimiento + `backdrop-filter` en las tarjetas
+es costoso para el GPU. Evaluar si vale la práctica reducir el blur durante la transición
+y recuperarlo cuando la escena está quieta.
+
+---
+
 ## Registro de avance
 
 (Claude Code: agrega aquí una línea breve al final de cada sesión, formato:
