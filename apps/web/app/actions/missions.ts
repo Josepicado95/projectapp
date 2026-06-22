@@ -80,7 +80,34 @@ export async function updateMission(formData: FormData): Promise<void> {
     },
   });
 
+  revalidatePath("/");
   revalidatePath(`/adventures/${result.data.adventureId}`);
+}
+
+type SaveState = { errors?: { title?: string[] }; message?: string };
+
+export async function saveMission(
+  prevState: SaveState,
+  formData: FormData
+): Promise<SaveState> {
+  const session = await auth();
+  if (!session?.user?.id) return { message: "error" };
+
+  const id = formData.get("id") ? Number(formData.get("id")) : null;
+  const adventureId = Number(formData.get("adventureId"));
+  const title = String(formData.get("title") ?? "").trim();
+  const difficulty = Math.min(3, Math.max(1, Number(formData.get("difficulty")) || 2));
+
+  if (title.length < 3) return { errors: { title: ["El título debe tener al menos 3 caracteres"] } };
+
+  if (id) {
+    await prisma.mission.update({ where: { id }, data: { title, difficulty } });
+  } else {
+    await prisma.mission.create({ data: { title, difficulty, adventureId, completed: false } });
+  }
+
+  revalidatePath("/");
+  return { message: "ok" };
 }
 
 export async function toggleMission(formData: FormData): Promise<void> {
@@ -115,5 +142,6 @@ export async function deleteMission(formData: FormData): Promise<void> {
   if (!id || !adventureId) return;
 
   await prisma.mission.delete({ where: { id } });
+  revalidatePath("/");
   revalidatePath(`/adventures/${adventureId}`);
 }

@@ -32,11 +32,23 @@ export async function createAdventure(
     return { errors: result.error.flatten().fieldErrors };
   }
 
+  const initialMissionNames = (formData.getAll("initialMission") as string[]).map((n) => n.trim()).filter(Boolean);
+  const initialMissionDiffs = (formData.getAll("initialMissionDiff") as string[]).map((d) => Math.min(3, Math.max(1, Number(d) || 2)));
+
+  const missionData = initialMissionNames.map((title, i) => ({
+    title,
+    difficulty: initialMissionDiffs[i] ?? 2,
+    completed: false,
+  }));
+
   await prisma.adventure.create({
     data: {
       title: result.data.title,
       description: result.data.description,
       userId,
+      ...(missionData.length > 0 && {
+        missions: { create: missionData },
+      }),
     },
   });
 
