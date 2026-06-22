@@ -28,8 +28,6 @@ export default async function Home() {
     where: { userId, date: { gte: startOfDay, lte: endOfDay } },
   });
 
-  const activeAdventures = adventures.filter((a) => a.status !== "completed");
-
   const pendingMissions = adventures.flatMap((a) =>
     a.missions
       .filter((m) => !m.completed)
@@ -50,12 +48,7 @@ export default async function Home() {
   const theme = getMoment(new Date().getHours());
 
   return (
-    /* Outer shell — fija el viewport, sin scroll en body */
     <div style={{ height: "100vh", overflow: "hidden" }}>
-
-      {/* ══════════════════════════════════════════
-          ESCENA DEL PAISAJE — altura fija = 100vh
-      ══════════════════════════════════════════ */}
       <div style={{
         position: "relative",
         height: "100%",
@@ -63,9 +56,7 @@ export default async function Home() {
         overflow: "hidden",
       }}>
 
-        {/* ── Elementos decorativos (siempre detrás del contenido) ── */}
-
-        {/* Estrellas — solo visibles de noche */}
+        {/* ── Elementos decorativos ── */}
         <div style={{ position: "absolute", inset: 0, opacity: theme.starOpacity, pointerEvents: "none", transition: "opacity 1s" }}>
           {[
             { left: "14%", top: "12%", size: 2, delay: "0s" },
@@ -86,25 +77,18 @@ export default async function Home() {
           ))}
         </div>
 
-        {/* Sol / Luna */}
         <div style={{
-          position: "absolute",
-          right: theme.sunRight, top: theme.sunTop,
+          position: "absolute", right: theme.sunRight, top: theme.sunTop,
           width: 160, height: 160, borderRadius: "50%",
-          background: theme.sunGlow,
-          animation: "av-glow 8s ease-in-out infinite",
+          background: theme.sunGlow, animation: "av-glow 8s ease-in-out infinite",
           pointerEvents: "none",
         }} />
 
-        {/* Haze sobre el horizonte */}
         <div style={{
           position: "absolute", left: 0, right: 0, bottom: 230, height: 120,
-          background: theme.hazeBand,
-          filter: "blur(28px)",
-          pointerEvents: "none",
+          background: theme.hazeBand, filter: "blur(28px)", pointerEvents: "none",
         }} />
 
-        {/* Colinas — 3 capas para dar profundidad */}
         <div style={{
           position: "absolute", left: 0, right: 0, bottom: 0, height: 300,
           background: theme.hillFar,
@@ -123,7 +107,6 @@ export default async function Home() {
           clipPath: "polygon(0 62%,24% 46%,48% 60%,70% 42%,100% 56%,100% 100%,0 100%)",
           pointerEvents: "none",
         }} />
-        {/* Sheen (brillo en la cima de la colina cercana) */}
         <div style={{
           position: "absolute", left: 0, right: 0, bottom: 0, height: 210,
           background: `linear-gradient(180deg, ${theme.hillSheen} 0%, rgba(255,255,255,0) 38%)`,
@@ -131,72 +114,109 @@ export default async function Home() {
           pointerEvents: "none",
         }} />
 
-        {/* ══════════════════════════════════════════
-            CAPA DE CONTENIDO — flex column, ocupa todo
-        ══════════════════════════════════════════ */}
+        {/* ── Capa de contenido: nav rail + dashboard ── */}
         <div style={{
           position: "absolute", inset: 0,
-          display: "flex", flexDirection: "column",
+          display: "flex",
         }}>
 
-          {/* ── Encabezado (no crece, altura fija) ── */}
-          <div style={{ flexShrink: 0, padding: "36px 44px 20px" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-              <div>
-                <div style={{ fontFamily: "var(--font-schibsted)", fontWeight: 600, fontSize: 28, color: theme.headerInk, lineHeight: 1.1 }}>
-                  {theme.greeting}, {firstName}
-                </div>
-                <div style={{ fontSize: 15, color: theme.headerSub, marginTop: 6 }}>{theme.subtext}</div>
-              </div>
+          {/* ── Nav Rail ── */}
+          <div style={{
+            flexShrink: 0, width: 84,
+            background: "rgba(10,15,26,.66)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            borderRight: "1px solid rgba(236,230,216,.1)",
+            display: "flex", flexDirection: "column", alignItems: "center",
+            padding: "22px 0",
+          }}>
+            {/* Logo */}
+            <div style={{
+              width: 38, height: 38, borderRadius: 11,
+              background: "radial-gradient(circle at 60% 35%, #F0EAD8, #9DB6A4)",
+              boxShadow: "0 0 18px rgba(240,234,216,.3)",
+              marginBottom: 24, flexShrink: 0,
+            }} />
 
-              {/* Pill derecha: estado check-in + avatar */}
-              <div style={{
-                display: "flex", alignItems: "center", gap: 10,
-                background: theme.glassBg,
-                backdropFilter: "blur(14px) saturate(1.1)",
-                WebkitBackdropFilter: "blur(14px) saturate(1.1)",
-                border: `1px solid ${theme.glassBorder}`,
-                borderRadius: 999, padding: "9px 9px 9px 16px",
-                boxShadow: `0 8px 24px ${theme.glassShadow}, inset 0 1px 0 ${theme.glassInner}`,
-              }}>
-                <Link
-                  href="/checkin"
+            {/* Nav items */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "center" }}>
+              {/* Aventuras — active */}
+              <Link href="/" style={{ textDecoration: "none" }}>
+                <div style={{
+                  width: 56, height: 56, borderRadius: 15,
+                  background: "rgba(91,155,209,.2)", border: "1px solid rgba(146,199,230,.45)",
+                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                  gap: 4, color: "#CDE6F5", cursor: "pointer",
+                }}>
+                  <span style={{ fontSize: 18, lineHeight: 1 }}>⛰</span>
+                  <span style={{ fontSize: 9, fontWeight: 600 }}>Aventuras</span>
+                </div>
+              </Link>
+
+              {/* Check-in */}
+              <Link href="/checkin" style={{ textDecoration: "none" }}>
+                <div style={{
+                  position: "relative",
+                  width: 56, height: 56, borderRadius: 15,
+                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                  gap: 4, color: "#9FB4C6", cursor: "pointer",
+                }}>
+                  <span style={{ fontSize: 18, lineHeight: 1 }}>♡</span>
+                  <span style={{ fontSize: 9, fontWeight: 600 }}>Check-in</span>
+                  {!todayCheckIn && (
+                    <span style={{
+                      position: "absolute", top: 9, right: 13,
+                      width: 9, height: 9, borderRadius: "50%",
+                      background: "#7E9A86", border: "2px solid rgba(10,15,26,.9)",
+                    }} />
+                  )}
+                </div>
+              </Link>
+
+              {/* Progreso */}
+              <Link href="/progress" style={{ textDecoration: "none" }}>
+                <div style={{
+                  width: 56, height: 56, borderRadius: 15,
+                  display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                  gap: 4, color: "#9FB4C6", cursor: "pointer",
+                }}>
+                  <span style={{ fontSize: 17, lineHeight: 1 }}>◷</span>
+                  <span style={{ fontSize: 9, fontWeight: 600 }}>Progreso</span>
+                </div>
+              </Link>
+            </div>
+
+            {/* Avatar / logout */}
+            <div style={{ marginTop: "auto" }}>
+              <form action={logoutAction}>
+                <button
+                  type="submit"
+                  title="Cerrar sesión"
                   style={{
-                    fontSize: 13, color: theme.cardInk, fontWeight: 500,
-                    textDecoration: "none", whiteSpace: "nowrap",
+                    width: 38, height: 38, borderRadius: "50%",
+                    background: theme.avatarBg, color: theme.avatarInk,
+                    border: "none", cursor: "pointer",
+                    fontWeight: 600, fontSize: 14,
+                    display: "flex", alignItems: "center", justifyContent: "center",
                   }}
                 >
-                  {todayCheckIn ? "✓ Check-in hecho" : "Check-in de hoy →"}
-                </Link>
-                <form action={logoutAction} style={{ margin: 0 }}>
-                  <button
-                    type="submit"
-                    title="Cerrar sesión"
-                    style={{
-                      width: 36, height: 36, borderRadius: "50%",
-                      background: theme.avatarBg, color: theme.avatarInk,
-                      border: "none", cursor: "pointer",
-                      fontWeight: 600, fontSize: 14,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                    }}
-                  >
-                    {initial}
-                  </button>
-                </form>
-              </div>
+                  {initial}
+                </button>
+              </form>
             </div>
           </div>
 
-          {/* ── Cuerpo: delega todo al componente cliente ── */}
+          {/* ── Dashboard body ── */}
           <DashboardBody
             adventures={adventures}
             todayCheckIn={todayCheckIn}
             recommendations={recommendations}
             theme={theme}
+            firstName={firstName ?? ""}
           />
 
-        </div>{/* /capa contenido */}
-      </div>{/* /escena */}
+        </div>
+      </div>
     </div>
   );
 }

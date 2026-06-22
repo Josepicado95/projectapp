@@ -35,11 +35,12 @@ type Props = {
   todayCheckIn: CheckIn | null;
   recommendations: RecsResult;
   theme: MomentTheme;
+  firstName: string;
 };
 
 type EditorTarget = { adventureId: number; mission: Mission | null };
 
-export default function DashboardBody({ adventures, todayCheckIn, recommendations, theme }: Props) {
+export default function DashboardBody({ adventures, todayCheckIn, recommendations, theme, firstName }: Props) {
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [fadeTick, setFadeTick] = useState(0);
   const [editorTarget, setEditorTarget] = useState<EditorTarget | null>(null);
@@ -74,11 +75,23 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
     <>
       <div style={{
         flex: 1, display: "flex", gap: 20, overflow: "hidden",
-        padding: "0 34px 28px",
+        padding: "30px 34px 28px",
       }}>
 
-        {/* ── Columna izquierda: mini-tarjetas ── */}
-        <div style={{ flex: 1, overflowY: "auto", scrollbarWidth: "none" }}>
+        {/* ── Columna izquierda: saludo + mini-tarjetas ── */}
+        <div style={{ flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
+          {/* Greeting header */}
+          <div style={{ flexShrink: 0, marginBottom: 18 }}>
+            <div style={{ fontFamily: "var(--font-schibsted)", fontWeight: 600, fontSize: 25, color: theme.headerInk, lineHeight: 1.1 }}>
+              {theme.greeting}, {firstName}
+            </div>
+            <div style={{ fontSize: 13.5, color: theme.headerSub, marginTop: 5, fontStyle: "italic" }}>
+              {theme.subtext}
+            </div>
+          </div>
+
+          {/* Cards */}
+          <div style={{ flex: 1, overflowY: "auto", scrollbarWidth: "none" }}>
           {activeAdventures.length === 0 ? (
             <div style={{
               background: theme.glassBg,
@@ -97,6 +110,12 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
                 const total = adventure.missions.length;
                 const pct = total > 0 ? Math.round((done / total) * 100) : 0;
                 const isSel = adventure.id === selectedId;
+                const nextMission = adventure.missions.find((m) => !m.completed);
+                const nextText = total === 0
+                  ? "Aún sin misiones"
+                  : nextMission
+                    ? `Siguiente: ${nextMission.title}`
+                    : "¡Aventura completada!";
 
                 return (
                   <div
@@ -126,9 +145,14 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
                       <div style={{ fontFamily: "var(--font-schibsted)", fontWeight: 600, fontSize: 15, color: theme.cardInk, lineHeight: 1.15, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {adventure.title}
                       </div>
-                      <div style={{ fontSize: 12, color: theme.cardSub, marginTop: 2 }}>{done} de {total}</div>
-                      <div style={{ marginTop: 8, height: 5, borderRadius: 999, background: theme.trackBg }}>
-                        <div style={{ height: 5, borderRadius: 999, width: `${pct}%`, background: "linear-gradient(90deg,#7E9A86,#5B9BD1)", transition: "width .3s ease" }} />
+                      <div style={{ fontSize: 12, color: "#93A0A0", marginTop: 3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {nextText}
+                      </div>
+                      <div style={{ marginTop: 9, display: "flex", alignItems: "center", gap: 9 }}>
+                        <div style={{ flex: 1, height: 5, borderRadius: 999, background: theme.trackBg }}>
+                          <div style={{ height: 5, borderRadius: 999, width: `${pct}%`, background: "linear-gradient(90deg,#7E9A86,#5B9BD1)", transition: "width .3s ease" }} />
+                        </div>
+                        <span style={{ fontSize: 11, color: "#8593A0", whiteSpace: "nowrap" }}>{done} de {total}</span>
                       </div>
                     </div>
                     <div style={{ flexShrink: 0, fontSize: 20, lineHeight: 1, color: isSel ? "#92C7E6" : theme.cardSub, transition: "color .2s ease" }}>›</div>
@@ -137,7 +161,8 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
               })}
             </div>
           )}
-        </div>
+          </div>{/* /cards scroll */}
+        </div>{/* /columna izquierda */}
 
         {/* ── Rail derecho: panel contextual ── */}
         <div style={{
