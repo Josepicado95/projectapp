@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useActionState, useEffect } from "react";
+import { useState, useActionState, useEffect, useTransition } from "react";
 import { createPortal } from "react-dom";
 import { saveMission, deleteMission } from "@/app/actions/missions";
 import type { Mission } from "@/lib/generated/prisma/client";
@@ -32,10 +32,22 @@ export default function MissionEditorModal({ adventureId, mission, onClose }: Pr
   const [difficulty, setDifficulty] = useState<number>(mission?.difficulty ?? 2);
 
   const [state, formAction, pending] = useActionState(saveMission, {});
+  const [deletePending, startDelete] = useTransition();
 
   useEffect(() => {
     if (state.message === "ok") onClose();
   }, [state.message]);
+
+  function handleDelete() {
+    if (!mission) return;
+    const fd = new FormData();
+    fd.set("id", String(mission.id));
+    fd.set("adventureId", String(adventureId));
+    startDelete(async () => {
+      await deleteMission(fd);
+      onClose();
+    });
+  }
 
   const canSave = name.trim().length > 0;
 
@@ -163,17 +175,18 @@ export default function MissionEditorModal({ adventureId, mission, onClose }: Pr
           <div style={{ display: "flex", gap: 11, alignItems: "center" }}>
             {!isNew && (
               <button
-                type="submit"
-                formAction={deleteMission}
-                onClick={() => onClose()}
+                type="button"
+                onClick={handleDelete}
+                disabled={deletePending}
                 style={{
                   flexShrink: 0, fontFamily: "var(--font-hanken)", fontWeight: 600, fontSize: 14,
                   color: "#D89C92", background: "rgba(216,156,146,.1)",
                   border: "1px solid rgba(216,156,146,.3)", borderRadius: 999,
-                  padding: "13px 18px", cursor: "pointer",
+                  padding: "13px 18px", cursor: deletePending ? "not-allowed" : "pointer",
+                  opacity: deletePending ? 0.6 : 1,
                 }}
               >
-                Eliminar
+                {deletePending ? "..." : "Eliminar"}
               </button>
             )}
             <button
