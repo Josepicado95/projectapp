@@ -162,21 +162,19 @@ export default function MissionEditorModal({ adventureId, mission, onClose }: Pr
           {/* Acciones */}
           <div style={{ display: "flex", gap: 11, alignItems: "center" }}>
             {!isNew && (
-              <form action={deleteMission} onSubmit={() => onClose()} style={{ flexShrink: 0 }}>
-                <input type="hidden" name="id" value={mission!.id} />
-                <input type="hidden" name="adventureId" value={adventureId} />
-                <button
-                  type="submit"
-                  style={{
-                    fontFamily: "var(--font-hanken)", fontWeight: 600, fontSize: 14,
-                    color: "#D89C92", background: "rgba(216,156,146,.1)",
-                    border: "1px solid rgba(216,156,146,.3)", borderRadius: 999,
-                    padding: "13px 18px", cursor: "pointer",
-                  }}
-                >
-                  Eliminar
-                </button>
-              </form>
+              <button
+                type="submit"
+                formAction={deleteMission}
+                onClick={() => onClose()}
+                style={{
+                  flexShrink: 0, fontFamily: "var(--font-hanken)", fontWeight: 600, fontSize: 14,
+                  color: "#D89C92", background: "rgba(216,156,146,.1)",
+                  border: "1px solid rgba(216,156,146,.3)", borderRadius: 999,
+                  padding: "13px 18px", cursor: "pointer",
+                }}
+              >
+                Eliminar
+              </button>
             )}
             <button
               type="submit"
