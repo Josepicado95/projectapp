@@ -95,6 +95,16 @@ textarea {
   100% { transform:translateX(-280px); opacity:0; }
 }
 
+@keyframes av-fly {
+  0%   { transform:translateX(1420px); }
+  100% { transform:translateX(-260px); }
+}
+
+@keyframes av-glide {
+  0%,100% { transform:translateY(0); }
+  50%     { transform:translateY(-5px); }
+}
+
 @keyframes av-riseA {
   from { opacity:0; transform:translateY(7px); }
   to   { opacity:1; transform:translateY(0); }
