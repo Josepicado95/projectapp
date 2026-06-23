@@ -25,6 +25,13 @@ export interface MomentTheme {
   avatarBg: string;
   avatarInk: string;
   starOpacity: number;
+  // Parallax landscape layers (far → near)
+  parallaxL1: string; // distant mountains
+  parallaxL2: string; // mid hills
+  parallaxL3: string; // near ridge
+  parallaxL4: string; // trees / foreground (solid)
+  parallaxSea: string;
+  parallaxScenery: string;
 }
 
 export type CardTheme = Pick<
@@ -48,6 +55,12 @@ const MOMENTS: Record<MomentKey, MomentTheme> = {
     glassShadow: "rgba(42,51,45,.14)", glassInner: "rgba(255,255,255,.55)",
     cardInk: "#2A332D", cardSub: "#6A746C", trackBg: "rgba(42,51,45,.12)",
     avatarBg: "#2A332D", avatarInk: "#FBF8F1", starOpacity: 0,
+    parallaxL1: "linear-gradient(180deg,#C8D9E2,#AECAD6)",
+    parallaxL2: "linear-gradient(180deg,#A9BFA8,#94AD9A)",
+    parallaxL3: "linear-gradient(180deg,#7E9A86,#6A8672)",
+    parallaxL4: "#4D7558",
+    parallaxSea: "linear-gradient(180deg,#9ABACB,#7EAABE)",
+    parallaxScenery: "#8BAAA2",
   },
   tarde: {
     key: "tarde",
@@ -64,6 +77,12 @@ const MOMENTS: Record<MomentKey, MomentTheme> = {
     glassShadow: "rgba(20,40,60,.18)", glassInner: "rgba(255,255,255,.6)",
     cardInk: "#1E2A2C", cardSub: "#5E6B6E", trackBg: "rgba(20,40,50,.12)",
     avatarBg: "#1E2A2C", avatarInk: "#FBF8F1", starOpacity: 0,
+    parallaxL1: "linear-gradient(180deg,#7AAFC4,#6899B0)",
+    parallaxL2: "linear-gradient(180deg,#8AAE9A,#769888)",
+    parallaxL3: "linear-gradient(180deg,#6A8E78,#587864)",
+    parallaxL4: "#3A5C46",
+    parallaxSea: "linear-gradient(180deg,#5AAACB,#3E94B8)",
+    parallaxScenery: "#5A8090",
   },
   atardecer: {
     key: "atardecer",
@@ -80,6 +99,12 @@ const MOMENTS: Record<MomentKey, MomentTheme> = {
     glassShadow: "rgba(60,30,40,.22)", glassInner: "rgba(255,250,240,.5)",
     cardInk: "#2C2522", cardSub: "#6E5F55", trackBg: "rgba(60,40,30,.14)",
     avatarBg: "#3A2A30", avatarInk: "#FBF2E6", starOpacity: 0,
+    parallaxL1: "linear-gradient(180deg,#9A8E72,#887E64)",
+    parallaxL2: "linear-gradient(180deg,#7A8062,#6A7052)",
+    parallaxL3: "linear-gradient(180deg,#6A6850,#5A5840)",
+    parallaxL4: "#3A3828",
+    parallaxSea: "linear-gradient(180deg,#9A7860,#884C44)",
+    parallaxScenery: "#6A5C48",
   },
   noche: {
     key: "noche",
@@ -96,6 +121,12 @@ const MOMENTS: Record<MomentKey, MomentTheme> = {
     glassShadow: "rgba(0,0,0,.4)", glassInner: "rgba(236,230,216,.1)",
     cardInk: "#ECE6D8", cardSub: "#93A0A0", trackBg: "rgba(236,230,216,.14)",
     avatarBg: "#E3A878", avatarInk: "#1E282A", starOpacity: 1,
+    parallaxL1: "linear-gradient(180deg,#3A5774,#2C4358)",
+    parallaxL2: "linear-gradient(180deg,#2E4742,#274039)",
+    parallaxL3: "linear-gradient(180deg,#1F332F,#16241F)",
+    parallaxL4: "#0F1B17",
+    parallaxSea: "linear-gradient(180deg,#26405E,#1A2D44)",
+    parallaxScenery: "#22384A",
   },
 };
 

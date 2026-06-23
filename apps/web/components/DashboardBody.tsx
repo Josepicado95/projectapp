@@ -231,21 +231,44 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
             {/* ═══ ESTADO HOY ═══ */}
             {!selected && (
               <>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, flexShrink: 0 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4, flexShrink: 0 }}>
                   <div style={{ fontFamily: "var(--font-schibsted)", fontWeight: 600, fontSize: 20, color: theme.cardInk }}>
                     Hoy
                   </div>
-                  {todayCheckIn && (
-                    <Link href="/checkin" style={{ display: "flex", alignItems: "center", gap: 7, background: "rgba(91,155,209,.16)", border: "1px solid rgba(146,199,230,.35)", padding: "5px 10px", borderRadius: 999, textDecoration: "none" }}>
-                      <span style={{ fontSize: 12, color: theme.cardSub }}>Energía</span>
-                      <div style={{ display: "flex", gap: 3, alignItems: "flex-end", height: 15 }}>
-                        {([todayCheckIn.energy, todayCheckIn.mood, todayCheckIn.sleep, 10 - todayCheckIn.stress] as number[]).map((val, i) => (
-                          <div key={i} style={{ width: 4, borderRadius: 2, height: Math.max(3, Math.round((val / 10) * 15)), background: i < 2 ? "#7E9A86" : i === 2 ? "#E3A878" : theme.cardSub }} />
-                        ))}
-                      </div>
-                    </Link>
-                  )}
+                  <div style={{ fontSize: 12, color: "#9FB4C6" }}>
+                    {new Date().toLocaleDateString("es-ES", { weekday: "short", day: "numeric", month: "short" })}
+                  </div>
                 </div>
+
+                {/* Tarjeta de estado del check-in */}
+                {todayCheckIn && (() => {
+                  const energy = todayCheckIn.energy ?? 3;
+                  const LABELS: Record<number, { label: string; msg: string; grad: string }> = {
+                    1: { label: "Poca energía",  msg: "Un día para ir suave y con calma.", grad: "radial-gradient(circle at 38% 32%,#C6BEE2 0%,#7A6EA0 100%)" },
+                    2: { label: "Algo cansado",  msg: "Misiones suaves para hoy.",         grad: "radial-gradient(circle at 38% 32%,#C6C8E0 0%,#7A8AB0 100%)" },
+                    3: { label: "Energía media", msg: "Buen momento para avanzar.",        grad: "radial-gradient(circle at 38% 32%,#CBE6E0 0%,#6E9A94 100%)" },
+                    4: { label: "Con energía",   msg: "¡Tienes energía! Aprovéchala.",     grad: "radial-gradient(circle at 38% 32%,#CBE6C2 0%,#7E9A86 100%)" },
+                    5: { label: "¡A tope!",      msg: "Al máximo. Prueba algo que te rete.", grad: "radial-gradient(circle at 38% 32%,#F0E8C2 0%,#C0A840 100%)" },
+                  };
+                  const lv = LABELS[Math.min(Math.max(energy, 1), 5)];
+                  return (
+                    <Link href="/checkin" style={{ display: "block", textDecoration: "none", margin: "12px 0 4px", background: "rgba(91,155,209,.1)", border: "1px solid rgba(146,199,230,.28)", borderRadius: 16, padding: 14, cursor: "pointer" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        <div style={{ flexShrink: 0, width: 42, height: 42, borderRadius: 12, background: lv.grad, boxShadow: "inset 0 1px 4px rgba(255,255,255,.4)" }} />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontFamily: "var(--font-schibsted)", fontWeight: 600, fontSize: 15, color: "#ECE6D8" }}>{lv.label}</div>
+                          <div style={{ fontSize: 12, color: "#9FB4C6" }}>Registrado hoy · toca para editar</div>
+                        </div>
+                        <div style={{ flexShrink: 0, display: "flex", gap: 3, alignItems: "flex-end", height: 18 }}>
+                          {[8, 13, 18, 11].map((h, i) => (
+                            <div key={i} style={{ width: 4, height: h, background: i === 2 ? "#E3A878" : i < 2 ? "#7E9A86" : "#5C665E", borderRadius: 2 }} />
+                          ))}
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 12.5, color: "#A7B2AE", fontStyle: "italic", marginTop: 11 }}>{lv.msg}</div>
+                    </Link>
+                  );
+                })()}
 
                 {/* Sin check-in: mensaje + botón */}
                 {!todayCheckIn && (
@@ -305,7 +328,7 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
                   </div>
                 )}
 
-                <div style={{ flexShrink: 0, paddingTop: 18 }}>
+                <div style={{ marginTop: 20, paddingTop: 18, borderTop: "1px solid rgba(236,230,216,.1)" }}>
                   <NewAdventurePanel fullWidth />
                 </div>
               </>
@@ -456,8 +479,8 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
                     </div>
                   </div>
 
-                {/* CTA pinned */}
-                <div style={{ flexShrink: 0, paddingTop: 18 }}>
+                {/* CTA */}
+                <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid rgba(236,230,216,.1)" }}>
                   <form action={toggleMission}>
                     <input type="hidden" name="id" value={selected.missions.find((m) => !m.completed)?.id ?? ""} />
                     <input type="hidden" name="adventureId" value={selected.id} />
@@ -467,8 +490,8 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
                       style={{
                         width: "100%", fontFamily: "var(--font-hanken)", fontWeight: 600, fontSize: 15,
                         color: "#1E282A", background: "#E3A878",
-                        border: "none", borderRadius: 999, padding: "14px",
-                        cursor: "pointer", boxShadow: "0 10px 26px rgba(227,168,120,.25)",
+                        border: "none", borderRadius: 14, padding: "15px",
+                        cursor: "pointer", boxShadow: "0 10px 26px rgba(227,168,120,.28)",
                         opacity: selected.missions.find((m) => !m.completed) ? 1 : 0.4,
                       }}
                     >

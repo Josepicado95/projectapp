@@ -52,16 +52,16 @@ export default function NewAdventurePanel({ fullWidth }: Props) {
         style={{
           fontFamily: "var(--font-hanken)", fontWeight: 600, fontSize: 15,
           color: "#1E282A", background: "#E3A878",
-          border: "none", borderRadius: 999,
-          padding: fullWidth ? "14px" : "11px 22px",
+          border: "none", borderRadius: 14,
+          padding: fullWidth ? "15px" : "11px 22px",
           width: fullWidth ? "100%" : undefined,
-          cursor: "pointer", boxShadow: "0 10px 26px rgba(227,168,120,.25)",
+          cursor: "pointer", boxShadow: "0 10px 26px rgba(227,168,120,.28)",
           display: "flex", alignItems: "center",
           justifyContent: fullWidth ? "center" : "flex-start",
           gap: 9,
         }}
       >
-        <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#2A332D", flexShrink: 0 }} />
+        <span style={{ fontSize: 16, lineHeight: 1, flexShrink: 0 }}>+</span>
         Nueva aventura
       </button>
 

@@ -30,33 +30,79 @@ textarea {
 }
 
 @keyframes av-glow {
-  0%, 100% { opacity: 0.85; filter: blur(0px); }
-  50%       { opacity: 1;    filter: blur(1.5px); }
+  0%,100% { opacity:.9;  transform:scale(1); }
+  50%      { opacity:1;  transform:scale(1.04); }
 }
 
 @keyframes av-drift {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(22px); }
+  from { transform:translateX(-14%); }
+  to   { transform:translateX(14%); }
+}
+
+@keyframes av-driftBack {
+  from { transform:translateX(12%); }
+  to   { transform:translateX(-12%); }
 }
 
 @keyframes av-twinkle {
-  0%, 100% { opacity: .25; }
-  50%       { opacity: .9; }
+  0%,100% { opacity:.2; transform:scale(.7); }
+  50%      { opacity:1;  transform:scale(1); }
+}
+
+@keyframes av-aurora {
+  0%   { transform:translateX(-8%) skewY(-6deg) scaleY(1);    opacity:.5; }
+  50%  { transform:translateX(8%)  skewY(-6deg) scaleY(1.25); opacity:.85; }
+  100% { transform:translateX(-8%) skewY(-6deg) scaleY(1);    opacity:.5; }
+}
+
+@keyframes av-shoot {
+  0%   { transform:translate(0,0) rotate(18deg);         opacity:0; }
+  2%   { opacity:1; }
+  9%   { opacity:1; }
+  14%  { transform:translate(420px,135px) rotate(18deg); opacity:0; }
+  100% { transform:translate(420px,135px) rotate(18deg); opacity:0; }
+}
+
+@keyframes av-bob {
+  0%,100% { transform:translateY(0); }
+  50%     { transform:translateY(-9px); }
+}
+
+@keyframes av-ring {
+  0%   { transform:scale(.8); opacity:.6; }
+  100% { transform:scale(2.1); opacity:0; }
+}
+
+@keyframes av-pan {
+  from { transform:translateX(0); }
+  to   { transform:translateX(-50%); }
+}
+
+@keyframes av-cross {
+  from { transform:translateX(60px); }
+  to   { transform:translateX(-60px); }
+}
+
+@keyframes av-sway {
+  0%,100% { transform:rotate(-1.8deg); }
+  50%     { transform:rotate(1.8deg); }
+}
+
+@keyframes av-wind {
+  0%   { transform:translateX(1320px); opacity:0; }
+  10%  { opacity:.5; }
+  88%  { opacity:.5; }
+  100% { transform:translateX(-280px); opacity:0; }
 }
 
 @keyframes av-riseA {
-  from { opacity: 0; transform: translateY(7px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { opacity:0; transform:translateY(7px); }
+  to   { opacity:1; transform:translateY(0); }
 }
 
 @keyframes av-riseB {
-  from { opacity: 0; transform: translateY(7px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes av-orb-pulse {
-  0%, 100% { opacity: .72; transform: translateX(-50%) scale(1); }
-  50%       { opacity: 1;   transform: translateX(-50%) scale(1.14); }
+  from { opacity:0; transform:translateY(7px); }
+  to   { opacity:1; transform:translateY(0); }
 }
 
 /* ── Nav responsive ── */
