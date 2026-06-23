@@ -137,7 +137,7 @@ export default async function Home() {
             ))}
           </div>
           {/* Shooting star */}
-          <div style={{ position: "absolute", left: "18%", top: "8%", width: 90, height: 2, borderRadius: 2, background: "linear-gradient(90deg,rgba(243,236,223,0) 0%,rgba(243,236,223,.95) 100%)", filter: "drop-shadow(0 0 4px rgba(243,236,223,.7))", animation: "av-shoot 11s ease-in infinite", pointerEvents: "none" }} />
+          <div style={{ position: "absolute", left: "74%", top: "7%", width: 90, height: 2, borderRadius: 2, background: "linear-gradient(90deg,rgba(243,236,223,.95) 0%,rgba(243,236,223,0) 100%)", filter: "drop-shadow(0 0 4px rgba(243,236,223,.7))", animation: "av-shoot 11s ease-in infinite", pointerEvents: "none" }} />
         </div>
 
         {/* Moon / sun crossing the sky */}

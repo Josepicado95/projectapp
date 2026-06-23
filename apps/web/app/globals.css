@@ -56,11 +56,11 @@ textarea {
 }
 
 @keyframes av-shoot {
-  0%   { transform:translate(0,0) rotate(18deg);         opacity:0; }
+  0%   { transform:translate(0,0) rotate(-18deg);           opacity:0; }
   2%   { opacity:1; }
   9%   { opacity:1; }
-  14%  { transform:translate(420px,135px) rotate(18deg); opacity:0; }
-  100% { transform:translate(420px,135px) rotate(18deg); opacity:0; }
+  14%  { transform:translate(-420px,135px) rotate(-18deg);  opacity:0; }
+  100% { transform:translate(-420px,135px) rotate(-18deg);  opacity:0; }
 }
 
 @keyframes av-bob {
@@ -104,6 +104,13 @@ textarea {
   from { opacity:0; transform:translateY(7px); }
   to   { opacity:1; transform:translateY(0); }
 }
+
+/* ── Scrollbar global ── */
+* { scrollbar-width: thin; scrollbar-color: rgba(236,230,216,.22) transparent; }
+*::-webkit-scrollbar { width: 5px; height: 5px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb { background: rgba(236,230,216,.22); border-radius: 999px; }
+*::-webkit-scrollbar-thumb:hover { background: rgba(236,230,216,.42); }
 
 /* ── Nav responsive ── */
 .av-bottom-nav { display: none; }

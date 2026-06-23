@@ -23,6 +23,20 @@ const GRADIENTS = [
 
 const DIM = "rgba(236,230,216,.18)";
 
+const FILTER_CHIPS: { key: "all" | "active" | "done"; label: string }[] = [
+  { key: "all", label: "Todas" },
+  { key: "active", label: "En curso" },
+  { key: "done", label: "Listas" },
+];
+
+const LEVELS = [
+  { name: "Caminante",  min: 0,    max: 99,    color: "#7E9A86" },
+  { name: "Explorador", min: 100,  max: 249,   color: "#5B9BD1" },
+  { name: "Aventurero", min: 250,  max: 499,   color: "#9B7ED1" },
+  { name: "Héroe",      min: 500,  max: 999,   color: "#E3A878" },
+  { name: "Leyenda",    min: 1000, max: 99999, color: "#E36878" },
+];
+
 const INPUT_STYLE: React.CSSProperties = {
   border: "1px solid rgba(236,230,216,.3)",
   borderRadius: 10, padding: "9px 12px", fontSize: 13,
@@ -54,9 +68,29 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
   const [kebabPos, setKebabPos] = useState<{ top: number; right: number } | null>(null);
   const [editing, setEditing] = useState(false);
   const kebabRef = useRef<HTMLButtonElement>(null);
+  const [search, setSearch] = useState("");
+  const [activeFilter, setActiveFilter] = useState<"all" | "active" | "done">("all");
 
   const activeAdventures = adventures.filter((a) => a.status !== "completed");
   const selected = activeAdventures.find((a) => a.id === selectedId) ?? null;
+
+  const filteredAdventures = activeAdventures.filter((a) => {
+    const q = search.toLowerCase().trim();
+    if (q && !a.title.toLowerCase().includes(q) && !a.missions.some((m) => m.title.toLowerCase().includes(q))) return false;
+    if (activeFilter === "active") return a.missions.some((m) => !m.completed);
+    if (activeFilter === "done") return a.missions.length > 0 && a.missions.every((m) => m.completed);
+    return true;
+  });
+
+  const totalXp = adventures.reduce((sum, a) =>
+    sum + a.missions.filter((m) => m.completed).reduce((s, m) => {
+      const xp = m.difficulty === 3 ? 25 : m.difficulty === 2 ? 15 : 10;
+      return s + xp;
+    }, 0)
+  , 0);
+  const currentLevel = LEVELS.find((l) => totalXp >= l.min && totalXp <= l.max) ?? LEVELS[0];
+  const levelRange = currentLevel.max - currentLevel.min;
+  const levelPct = levelRange > 0 ? Math.min(100, Math.round(((totalXp - currentLevel.min) / levelRange) * 100)) : 100;
 
   function selectAdventure(id: number) {
     if (id === selectedId) {
@@ -84,35 +118,74 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
         padding: "30px 34px",
       }}>
 
-        {/* ── Columna izquierda: saludo + mini-tarjetas ── */}
-        <div style={{ flexShrink: 0, width: 438, display: "flex", flexDirection: "column", minHeight: 0 }}>
-          {/* Greeting header */}
-          <div style={{ flexShrink: 0, marginBottom: 18 }}>
+        {/* ── Columna izquierda (glass card) ── */}
+        <div style={{
+          flexShrink: 0, width: 438, display: "flex", flexDirection: "column", minHeight: 0,
+          background: theme.glassBg,
+          backdropFilter: "blur(18px) saturate(1.1)",
+          WebkitBackdropFilter: "blur(18px) saturate(1.1)",
+          border: glassBorder, borderRadius: 22, padding: 18, boxSizing: "border-box",
+        }}>
+          {/* Greeting */}
+          <div style={{ flexShrink: 0, marginBottom: 14 }}>
             <div style={{ fontFamily: "var(--font-schibsted)", fontWeight: 600, fontSize: 25, color: theme.headerInk, lineHeight: 1.1 }}>
               {theme.greeting}, {firstName}
             </div>
-            <div style={{ fontSize: 13.5, color: theme.headerSub, marginTop: 5, fontStyle: "italic" }}>
+            <div style={{ fontSize: 13.5, color: theme.headerSub, marginTop: 5 }}>
               {theme.subtext}
             </div>
           </div>
 
+          {/* Search input */}
+          <div style={{ position: "relative", marginBottom: 8 }}>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar aventuras o misiones…"
+              style={{
+                width: "100%", fontFamily: "var(--font-hanken)", fontSize: 13.5,
+                color: theme.cardInk, background: theme.trackBg,
+                border: `1px solid ${theme.glassBorder}`, borderRadius: 12,
+                padding: "10px 14px 10px 38px", outline: "none", boxSizing: "border-box",
+              }}
+            />
+            <span style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: theme.cardSub, fontSize: 15, pointerEvents: "none" }}>⌕</span>
+          </div>
+
+          {/* Filter chips */}
+          <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
+            {FILTER_CHIPS.map((fc) => {
+              const isActive = activeFilter === fc.key;
+              return (
+                <div key={fc.key} onClick={() => setActiveFilter(fc.key)} style={{
+                  flex: 1, textAlign: "center", fontSize: 12, fontWeight: 600,
+                  color: isActive ? "#E3A878" : theme.cardSub,
+                  background: isActive ? "rgba(227,168,120,.18)" : theme.trackBg,
+                  border: `1px solid ${isActive ? "rgba(227,168,120,.5)" : theme.glassBorder}`,
+                  borderRadius: 999, padding: "6px 0", cursor: "pointer",
+                  transition: "all .18s ease",
+                }}>
+                  {fc.label}
+                </div>
+              );
+            })}
+          </div>
+
           {/* Cards */}
           <div style={{ position: "relative", flex: 1, minHeight: 0 }}>
-          <div style={{ height: "100%", overflowY: "auto", scrollbarWidth: "none" }}>
+          <div style={{ height: "100%", overflowY: "auto", paddingRight: 4 }}>
           {activeAdventures.length === 0 ? (
-            <div style={{
-              background: theme.glassBg,
-              backdropFilter: "blur(18px) saturate(1.3)",
-              WebkitBackdropFilter: "blur(18px) saturate(1.3)",
-              border: glassBorder, borderRadius: 18, padding: "22px 20px",
-              color: theme.cardSub, fontSize: 14, lineHeight: 1.6,
-            }}>
+            <div style={{ color: theme.cardSub, fontSize: 14, lineHeight: 1.6 }}>
               Todavía no tienes aventuras activas.{" "}
               <span style={{ color: theme.cardInk, fontWeight: 500 }}>Crea la primera con el panel de la derecha.</span>
             </div>
+          ) : filteredAdventures.length === 0 ? (
+            <div style={{ color: theme.cardSub, fontSize: 13.5, fontStyle: "italic" }}>
+              Sin resultados para esta búsqueda.
+            </div>
           ) : (
             <div style={{ display: "flex", flexDirection: "column", gap: 11 }}>
-              {activeAdventures.map((adventure, i) => {
+              {filteredAdventures.map((adventure, i) => {
                 const done = adventure.missions.filter((m) => m.completed).length;
                 const total = adventure.missions.length;
                 const pct = total > 0 ? Math.round((done / total) * 100) : 0;
@@ -129,14 +202,12 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
                     key={adventure.id}
                     onClick={() => selectAdventure(adventure.id)}
                     style={{
-                      background: isSel ? "rgba(91,155,209,.18)" : theme.glassBg,
-                      backdropFilter: "blur(18px) saturate(1.15)",
-                      WebkitBackdropFilter: "blur(18px) saturate(1.15)",
-                      border: `1px solid ${isSel ? "rgba(146,199,230,.55)" : theme.glassBorder}`,
+                      background: isSel ? "rgba(91,155,209,.18)" : "rgba(236,230,216,.06)",
+                      border: `1px solid ${isSel ? "rgba(146,199,230,.55)" : "rgba(236,230,216,.12)"}`,
                       borderRadius: 16, padding: 14,
                       display: "flex", gap: 13, alignItems: "center",
                       cursor: "pointer",
-                      boxShadow: `inset 0 1px 0 ${theme.glassInner}`,
+                      boxShadow: "inset 0 1px 0 rgba(255,255,255,.06)",
                       transition: "background .22s ease, border-color .22s ease",
                     }}
                   >
@@ -173,39 +244,33 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
           <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, height: 40, background: `linear-gradient(180deg, rgba(14,22,48,0), ${theme.key === "noche" ? "rgba(15,21,38,.5)" : "rgba(0,0,0,.08)"})`, pointerEvents: "none" }} />
           </div>{/* /cards scroll outer */}
 
-          {/* ── Footer: racha + progreso general ── */}
-          <div style={{
-            flexShrink: 0, marginTop: 14,
-            background: theme.glassBg,
-            backdropFilter: "blur(14px)",
-            WebkitBackdropFilter: "blur(14px)",
-            border: `1px solid ${theme.glassBorder}`,
-            borderRadius: 16,
-            padding: "14px 16px",
-            display: "flex", alignItems: "center", gap: 16,
-          }}>
+          {/* Footer inline (dentro del glass card) */}
+          <div style={{ flexShrink: 0, marginTop: 8, borderTop: "1px solid rgba(236,230,216,.1)", paddingTop: 14, paddingBottom: 2, display: "flex", alignItems: "center", gap: 14 }}>
             {/* Racha */}
             <div style={{ flexShrink: 0, textAlign: "center" }}>
               <div style={{ fontFamily: "var(--font-schibsted)", fontWeight: 600, fontSize: 22, color: theme.cardInk, lineHeight: 1 }}>
                 {streak}
               </div>
-              <div style={{ fontSize: 11, color: theme.cardSub, marginTop: 3 }}>días de racha</div>
+              <div style={{ fontSize: 11, color: theme.cardSub, marginTop: 3 }}>días racha</div>
             </div>
-            {/* Divisor */}
             <div style={{ width: 1, height: 36, background: "rgba(236,230,216,.12)", flexShrink: 0 }} />
-            {/* Barra de progreso */}
+            {/* Misiones */}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
-                <span style={{ fontSize: 12, color: theme.headerSub }}>Progreso general</span>
-                <span style={{ fontSize: 12, color: theme.cardSub }}>{doneMissions}/{totalMissions} misiones</span>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 7 }}>
+                <span style={{ fontSize: 11.5, color: "#A7B2AE" }}>Misiones</span>
+                <span style={{ fontSize: 11.5, color: "#9FB4C6" }}>{doneMissions}/{totalMissions}</span>
               </div>
-              <div style={{ height: 6, borderRadius: 999, background: theme.trackBg }}>
-                <div style={{
-                  height: 6, borderRadius: 999,
-                  width: totalMissions > 0 ? `${Math.round(doneMissions / totalMissions * 100)}%` : "0%",
-                  background: "linear-gradient(90deg,#7E9A86,#5B9BD1)",
-                  transition: "width .4s ease",
-                }} />
+              <div style={{ height: 5, borderRadius: 999, background: theme.trackBg }}>
+                <div style={{ height: 5, borderRadius: 999, width: totalMissions > 0 ? `${Math.round(doneMissions / totalMissions * 100)}%` : "0%", background: "linear-gradient(90deg,#7E9A86,#5B9BD1)", transition: "width .3s ease" }} />
+              </div>
+            </div>
+            <div style={{ width: 1, height: 36, background: "rgba(236,230,216,.12)", flexShrink: 0 }} />
+            {/* XP + nivel */}
+            <div style={{ flexShrink: 0, textAlign: "center", minWidth: 76 }}>
+              <div style={{ fontFamily: "var(--font-schibsted)", fontWeight: 600, fontSize: 17, color: "#E3A878", lineHeight: 1 }}>{totalXp} XP</div>
+              <div style={{ fontSize: 10.5, fontWeight: 600, color: currentLevel.color, marginTop: 3, letterSpacing: ".05em" }}>{currentLevel.name.toUpperCase()}</div>
+              <div style={{ height: 3, borderRadius: 999, background: "rgba(236,230,216,.14)", marginTop: 6 }}>
+                <div style={{ height: 3, borderRadius: 999, width: `${levelPct}%`, background: `linear-gradient(90deg,${currentLevel.color},#E3A878)`, transition: "width .5s ease" }} />
               </div>
             </div>
           </div>
