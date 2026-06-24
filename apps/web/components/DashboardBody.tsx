@@ -1,25 +1,19 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { createPortal } from "react-dom";
+import { useState } from "react";
 import Link from "next/link";
 import NewAdventurePanel from "./NewAdventurePanel";
 import MissionEditorModal, { MISSION_LEVELS, hexToRgb } from "./MissionEditorModal";
+import AdventureEditorModal from "./AdventureEditorModal";
 import { MomentTheme } from "@/lib/theme";
+import { PALETTES } from "@/lib/palettes";
 import { toggleMission } from "@/app/actions/missions";
-import { updateAdventure, deleteAdventure } from "@/app/actions/adventures";
 import type { Adventure, Mission, CheckIn } from "@/lib/generated/prisma/client";
 
 type AdventureWithMissions = Adventure & { missions: Mission[] };
 type Rec = { id: number; title: string; reason: string };
 type RecsResult = { recommendations: Rec[]; message: string } | null;
 
-const GRADIENTS = [
-  "linear-gradient(180deg,#2C3A52 0%,#5E5670 60%,#A88098 100%)",
-  "linear-gradient(180deg,#F0C9A8 0%,#E3A878 55%,#C98A6A 100%)",
-  "linear-gradient(180deg,#C9DCE3 0%,#AFC3B4 52%,#8BA893 78%,#6E8C78 100%)",
-  "linear-gradient(180deg,#1B2330 0%,#2C3340 55%,#3A5A5E 100%)",
-];
 
 const DIM = "rgba(236,230,216,.18)";
 
@@ -64,23 +58,27 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [fadeTick, setFadeTick] = useState(0);
   const [editorTarget, setEditorTarget] = useState<EditorTarget | null>(null);
-  const [showKebab, setShowKebab] = useState(false);
-  const [kebabPos, setKebabPos] = useState<{ top: number; right: number } | null>(null);
-  const [editing, setEditing] = useState(false);
-  const kebabRef = useRef<HTMLButtonElement>(null);
+  const [showAdvModal, setShowAdvModal] = useState(false);
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState<"all" | "active" | "done">("all");
 
   const activeAdventures = adventures.filter((a) => a.status !== "completed");
   const selected = activeAdventures.find((a) => a.id === selectedId) ?? null;
 
-  const filteredAdventures = activeAdventures.filter((a) => {
-    const q = search.toLowerCase().trim();
-    if (q && !a.title.toLowerCase().includes(q) && !a.missions.some((m) => m.title.toLowerCase().includes(q))) return false;
-    if (activeFilter === "active") return a.missions.some((m) => !m.completed);
-    if (activeFilter === "done") return a.missions.length > 0 && a.missions.every((m) => m.completed);
-    return true;
-  });
+  const filteredAdventures = activeAdventures
+    .filter((a) => {
+      const q = search.toLowerCase().trim();
+      if (q && !a.title.toLowerCase().includes(q) && !a.missions.some((m) => m.title.toLowerCase().includes(q))) return false;
+      if (activeFilter === "active") return a.missions.some((m) => !m.completed);
+      if (activeFilter === "done") return a.missions.length > 0 && a.missions.every((m) => m.completed);
+      return true;
+    })
+    .sort((a, b) => {
+      const aDone = a.missions.length > 0 && a.missions.every((m) => m.completed);
+      const bDone = b.missions.length > 0 && b.missions.every((m) => m.completed);
+      if (aDone === bDone) return 0;
+      return aDone ? 1 : -1;
+    });
 
   const totalXp = adventures.reduce((sum, a) =>
     sum + a.missions.filter((m) => m.completed).reduce((s, m) => {
@@ -97,14 +95,12 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
       setSelectedId(null);
     } else {
       setSelectedId(id);
-      setEditing(false);
     }
     setFadeTick((t) => t + 1);
   }
 
   function goBack() {
     setSelectedId(null);
-    setEditing(false);
     setFadeTick((t) => t + 1);
   }
 
@@ -213,7 +209,7 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
                   >
                     <div style={{
                       flexShrink: 0, width: 46, height: 46, borderRadius: 12,
-                      background: GRADIENTS[i % GRADIENTS.length],
+                      background: PALETTES[adventure.paletteIdx % PALETTES.length],
                       boxShadow: "inset 0 0 0 1px rgba(255,255,255,.18)",
                       position: "relative", overflow: "hidden",
                     }}>
@@ -408,25 +404,15 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
                     ‹ Hoy
                   </button>
                   <button
-                    ref={kebabRef}
-                    onClick={() => {
-                      if (showKebab) { setShowKebab(false); }
-                      else {
-                        const rect = kebabRef.current!.getBoundingClientRect();
-                        setKebabPos({ top: rect.bottom + 4, right: window.innerWidth - rect.right });
-                        setShowKebab(true);
-                      }
-                    }}
+                    onClick={() => setShowAdvModal(true)}
                     style={{ background: "none", border: "none", width: 30, height: 30, borderRadius: "50%", color: theme.cardSub, cursor: "pointer", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center" }}
                   >
                     ⋮
                   </button>
                 </div>
 
-                {/* Título + badge */}
-                {!editing && (
-                  <>
-                    <div style={{ fontSize: 11, letterSpacing: ".14em", textTransform: "uppercase", color: theme.cardSub, fontWeight: 600, flexShrink: 0 }}>Aventura</div>
+                {/* Adventure title + badge */}
+                <div style={{ fontSize: 11, letterSpacing: ".14em", textTransform: "uppercase", color: theme.cardSub, fontWeight: 600, flexShrink: 0 }}>Aventura</div>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginTop: 4, marginBottom: 16, flexShrink: 0 }}>
                       <div style={{ fontFamily: "var(--font-schibsted)", fontWeight: 600, fontSize: 21, color: theme.cardInk, lineHeight: 1.2, maxWidth: 220 }}>
                         {selected.title}
@@ -440,25 +426,6 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
                         <div style={{ height: 8, borderRadius: 999, transition: "width .3s ease", width: `${Math.round((selected.missions.filter((m) => m.completed).length / selected.missions.length) * 100)}%`, background: "linear-gradient(90deg,#7E9A86,#5B9BD1)" }} />
                       </div>
                     )}
-                  </>
-                )}
-
-                {editing && (
-                  <form action={async (fd) => { await updateAdventure(fd); setEditing(false); }} style={{ display: "flex", flexDirection: "column", gap: 9, marginBottom: 16, flexShrink: 0 }}>
-                    <input type="hidden" name="id" value={selected.id} />
-                    <input name="title" defaultValue={selected.title} required style={INPUT_STYLE} />
-                    <input name="description" defaultValue={selected.description ?? ""} placeholder="Descripción" style={INPUT_STYLE} />
-                    <select name="status" defaultValue={selected.status} style={INPUT_STYLE}>
-                      <option value="active">Activa</option>
-                      <option value="paused">Pausada</option>
-                      <option value="completed">Completada</option>
-                    </select>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <button type="submit" style={{ background: "#2A332D", color: "#FBF8F1", border: "none", borderRadius: 999, padding: "8px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Guardar</button>
-                      <button type="button" onClick={() => setEditing(false)} style={{ background: "none", color: theme.cardSub, border: glassBorder, borderRadius: 999, padding: "8px 14px", fontSize: 13, cursor: "pointer" }}>Cancelar</button>
-                    </div>
-                  </form>
-                )}
 
                 {/* Lista de misiones */}
                 <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
@@ -565,20 +532,13 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
                   </form>
                 </div>
 
-                {/* Kebab portal */}
-                {showKebab && kebabPos && createPortal(
-                  <>
-                    <div onClick={() => setShowKebab(false)} style={{ position: "fixed", inset: 0, zIndex: 99 }} />
-                    <div style={{ position: "fixed", top: kebabPos.top, right: kebabPos.right, background: "rgba(251,248,241,.97)", border: "1px solid rgba(255,255,255,.7)", borderRadius: 12, boxShadow: "0 8px 24px rgba(42,51,45,.15)", overflow: "hidden", zIndex: 100, minWidth: 130 }}>
-                      <button onClick={() => { setEditing(true); setShowKebab(false); }} style={{ display: "block", width: "100%", textAlign: "left", padding: "11px 16px", background: "none", border: "none", fontSize: 13, color: "#2A332D", cursor: "pointer" }}>Editar</button>
-                      <div style={{ height: 1, background: "rgba(42,51,45,.07)", margin: "0 10px" }} />
-                      <form action={deleteAdventure} onSubmit={() => { setShowKebab(false); setSelectedId(null); }}>
-                        <input type="hidden" name="id" value={selected.id} />
-                        <button type="submit" style={{ display: "block", width: "100%", textAlign: "left", padding: "11px 16px", background: "none", border: "none", fontSize: 13, color: "#C97B7B", cursor: "pointer" }}>Eliminar</button>
-                      </form>
-                    </div>
-                  </>,
-                  document.body
+                {/* Adventure editor modal */}
+                {showAdvModal && (
+                  <AdventureEditorModal
+                    adventure={selected}
+                    onClose={() => setShowAdvModal(false)}
+                    onDeleted={() => { setShowAdvModal(false); setSelectedId(null); setFadeTick(t => t + 1); }}
+                  />
                 )}
               </>
             )}

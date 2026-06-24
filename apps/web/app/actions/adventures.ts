@@ -8,6 +8,7 @@ import { auth } from "@/auth";
 const AdventureSchema = z.object({
   title: z.string().min(3, "El título debe tener al menos 3 caracteres"),
   description: z.string().optional(),
+  paletteIdx: z.coerce.number().min(0).max(4).default(0),
 });
 
 type ActionState = {
@@ -26,6 +27,7 @@ export async function createAdventure(
   const result = AdventureSchema.safeParse({
     title: formData.get("title"),
     description: formData.get("description") || undefined,
+    paletteIdx: formData.get("paletteIdx") ?? 0,
   });
 
   if (!result.success) {
@@ -45,6 +47,7 @@ export async function createAdventure(
     data: {
       title: result.data.title,
       description: result.data.description,
+      paletteIdx: result.data.paletteIdx,
       userId,
       ...(missionData.length > 0 && {
         missions: { create: missionData },
@@ -61,6 +64,7 @@ const UpdateAdventureSchema = z.object({
   title: z.string().min(3, "El título debe tener al menos 3 caracteres"),
   description: z.string().optional(),
   status: z.enum(["active", "completed", "paused"]),
+  paletteIdx: z.coerce.number().min(0).max(4).default(0),
 });
 
 export async function updateAdventure(formData: FormData): Promise<void> {
@@ -72,6 +76,7 @@ export async function updateAdventure(formData: FormData): Promise<void> {
     title: formData.get("title"),
     description: formData.get("description") || undefined,
     status: formData.get("status"),
+    paletteIdx: formData.get("paletteIdx") ?? 0,
   });
 
   if (!result.success) {
@@ -84,6 +89,7 @@ export async function updateAdventure(formData: FormData): Promise<void> {
       title: result.data.title,
       description: result.data.description,
       status: result.data.status,
+      paletteIdx: result.data.paletteIdx,
     },
   });
 

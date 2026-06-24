@@ -22,6 +22,7 @@ model Adventure {
   title       String
   description String?
   status      String    @default("active")
+  paletteIdx  Int       @default(0)
   createdAt   DateTime  @default(now())
   userId      Int
   user        User      @relation(fields: [userId], references: [id])

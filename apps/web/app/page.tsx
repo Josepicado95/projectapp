@@ -198,6 +198,49 @@ export default async function Home() {
           ))}
         </div>
 
+        {/* Trees + mirador props */}
+        <div style={{ position: "absolute", left: 0, bottom: 0, width: "200%", height: 120, display: "flex", animation: "av-pan 44s linear infinite", pointerEvents: "none" }}>
+          {[0, 1].map((i) => (
+            <div key={i} style={{ flexShrink: 0, width: "50%", height: "100%", position: "relative" }}>
+              {/* Round tree 1 */}
+              <div style={{ position: "absolute", left: "13%", bottom: 0, width: 40, height: 56, transformOrigin: "bottom center", animation: "av-sway 4.2s ease-in-out infinite" }}>
+                <div style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", bottom: 0, width: 5, height: 24, background: theme.parallaxL4 }} />
+                <div style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", bottom: 16, width: 34, height: 34, borderRadius: "50%", background: theme.parallaxL4 }} />
+              </div>
+              {/* Pine 1 */}
+              <div style={{ position: "absolute", left: "27%", bottom: 0, width: 30, height: 54, transformOrigin: "bottom center", animation: "av-sway 5s ease-in-out infinite .6s" }}>
+                <div style={{ position: "absolute", inset: 0, background: theme.parallaxL4, clipPath: "polygon(50% 0,100% 100%,0 100%)" }} />
+              </div>
+              {/* Round tree 2 */}
+              <div style={{ position: "absolute", left: "39%", bottom: 0, width: 32, height: 46, transformOrigin: "bottom center", animation: "av-sway 4.6s ease-in-out infinite 1.1s" }}>
+                <div style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", bottom: 0, width: 4, height: 20, background: theme.parallaxL4 }} />
+                <div style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", bottom: 13, width: 28, height: 28, borderRadius: "50%", background: theme.parallaxL4 }} />
+              </div>
+              {/* Mirador */}
+              <div style={{ position: "absolute", left: "71%", bottom: 0, width: 96, height: 50 }}>
+                <div style={{ position: "absolute", left: 0, bottom: 0, width: 96, height: 9, background: theme.parallaxL4 }} />
+                <div style={{ position: "absolute", left: 6, bottom: 9, width: 3, height: 22, background: theme.parallaxL4 }} />
+                <div style={{ position: "absolute", left: 46, bottom: 9, width: 3, height: 22, background: theme.parallaxL4 }} />
+                <div style={{ position: "absolute", left: 87, bottom: 9, width: 3, height: 22, background: theme.parallaxL4 }} />
+                <div style={{ position: "absolute", left: 4, bottom: 29, width: 86, height: 3, background: theme.parallaxL4 }} />
+                <div style={{ position: "absolute", left: 62, bottom: 9, width: 8, height: 18, borderRadius: "4px 4px 0 0", background: theme.parallaxL4 }} />
+                <div style={{ position: "absolute", left: 63, bottom: 25, width: 6, height: 6, borderRadius: "50%", background: theme.parallaxL4 }} />
+              </div>
+              {/* Pine 2 */}
+              <div style={{ position: "absolute", left: "92%", bottom: 0, width: 26, height: 46, transformOrigin: "bottom center", animation: "av-sway 5.4s ease-in-out infinite .3s" }}>
+                <div style={{ position: "absolute", inset: 0, background: theme.parallaxL4, clipPath: "polygon(50% 0,100% 100%,0 100%)" }} />
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Foreground pines — fastest pan for depth */}
+        <div style={{ position: "absolute", left: 0, bottom: 0, width: "200%", height: 120, display: "flex", animation: "av-pan 38s linear infinite", pointerEvents: "none" }}>
+          {[0, 1].map((i) => (
+            <div key={i} style={{ flexShrink: 0, width: "50%", height: "100%", background: theme.parallaxL4, transition: "background 1s ease", clipPath: "polygon(0 100%,4% 60%,8% 100%,15% 48%,22% 100%,31% 66%,40% 100%,52% 54%,63% 100%,74% 62%,85% 100%,93% 70%,100% 100%)" }} />
+          ))}
+        </div>
+
         {/* Wind gusts */}
         <div style={{ position: "absolute", inset: 0, overflow: "hidden", pointerEvents: "none" }}>
           {([{top:"30%",w:56,dur:8,d:0},{top:"43%",w:40,dur:6.5,d:2.4},{top:"24%",w:66,dur:9.5,d:4.8},{top:"53%",w:46,dur:7.4,d:3.5}] as const).map((g, i) => (
@@ -205,40 +248,48 @@ export default async function Home() {
           ))}
         </div>
 
-        {/* Birds */}
+        {/* ── Birds flying across ── */}
         {([
-          { top: "17%", w: 22, h: 9, op: .7,  flyDur: 52, flyDel: 6,  glDur: 2.8, glDel: 0  },
-          { top: "11%", w: 15, h: 6, op: .55, flyDur: 48, flyDel: 22, glDur: 3.4, glDel: .4 },
-          { top: "7%",  w: 10, h: 4, op: .4,  flyDur: 60, flyDel: 38, glDur: 3.8, glDel: 1  },
+          { top:"17%", dur:52, delay:6,  w:22, h:9,  op:.70 },
+          { top:"11%", dur:48, delay:22, w:15, h:6,  op:.55 },
+          { top:"7%",  dur:60, delay:38, w:10, h:4,  op:.40 },
         ] as const).map((b, i) => (
-          <div key={i} style={{ position: "absolute", top: b.top, left: 0, pointerEvents: "none", animation: `av-fly ${b.flyDur}s linear infinite ${b.flyDel}s` }}>
-            <div style={{ animation: `av-glide ${b.glDur}s ease-in-out infinite ${b.glDel}s`, width: b.w, height: b.h, opacity: b.op }}>
+          <div key={i} style={{ position: "absolute", top: b.top, left: 0, pointerEvents: "none", animation: `av-fly ${b.dur}s linear infinite ${b.delay}s` }}>
+            <div style={{ animation: `av-glide ${2.8 + i * 0.5}s ease-in-out infinite`, width: b.w, height: b.h, opacity: b.op }}>
               <div style={{ width: "100%", height: "100%", background: "rgba(236,230,216,.85)", clipPath: "polygon(0% 100%,22% 22%,50% 60%,78% 22%,100% 100%)" }} />
             </div>
           </div>
         ))}
 
-        {/* Airplane with contrail */}
-        <div style={{ position: "absolute", top: "13%", left: 0, pointerEvents: "none", animation: "av-fly 110s linear infinite 30s", opacity: .75 }}>
-          <div style={{ position: "absolute", top: 6, left: 56, width: 90, height: 2, background: "linear-gradient(90deg,rgba(243,236,223,.45),rgba(243,236,223,0))", borderRadius: 2, filter: "blur(1px)" }} />
-          <div style={{ position: "absolute", top: 5, left: 4, width: 42, height: 4, background: "rgba(243,236,223,.9)", borderRadius: 2 }} />
-          <div style={{ position: "absolute", top: 4, left: 0, width: 6, height: 6, borderRadius: "50%", background: "rgba(243,236,223,.9)" }} />
-          <div style={{ position: "absolute", top: 0, left: 18, width: 0, height: 0, borderBottom: "9px solid rgba(243,236,223,.8)", borderRight: "22px solid transparent" }} />
-          <div style={{ position: "absolute", bottom: 0, left: 18, width: 0, height: 0, borderTop: "9px solid rgba(243,236,223,.8)", borderRight: "22px solid transparent" }} />
-          <div style={{ position: "absolute", top: 1, right: 8, width: 3, height: 6, background: "rgba(243,236,223,.75)" }} />
-          <div style={{ position: "absolute", top: 3, right: 6, width: 0, height: 0, borderBottom: "4px solid rgba(243,236,223,.7)", borderRight: "10px solid transparent" }} />
-          <div style={{ position: "absolute", bottom: 3, right: 6, width: 0, height: 0, borderTop: "4px solid rgba(243,236,223,.7)", borderRight: "10px solid transparent" }} />
+        {/* ── Airplane with contrail ── */}
+        <div style={{ position: "absolute", top: "13%", left: 0, pointerEvents: "none", animation: "av-fly 110s linear infinite 30s", opacity: .72 }}>
+          <div style={{ position: "relative", width: 56, height: 16 }}>
+            {/* contrail */}
+            <div style={{ position: "absolute", top: 7, left: 58, width: 92, height: 2, background: "linear-gradient(90deg,rgba(243,236,223,.42),rgba(243,236,223,0))", borderRadius: 2, filter: "blur(1px)" }} />
+            {/* fuselage */}
+            <div style={{ position: "absolute", top: 6, left: 4, width: 44, height: 4, background: "rgba(243,236,223,.9)", borderRadius: 2 }} />
+            {/* nose */}
+            <div style={{ position: "absolute", top: 5, left: 0, width: 6, height: 6, borderRadius: "50%", background: "rgba(243,236,223,.9)" }} />
+            {/* upper wing */}
+            <div style={{ position: "absolute", top: 0, left: 18, width: 0, height: 0, borderBottom: "9px solid rgba(243,236,223,.78)", borderRight: "22px solid transparent" }} />
+            {/* lower wing */}
+            <div style={{ position: "absolute", bottom: 0, left: 18, width: 0, height: 0, borderTop: "9px solid rgba(243,236,223,.78)", borderRight: "22px solid transparent" }} />
+            {/* tail fin */}
+            <div style={{ position: "absolute", top: 2, right: 8, width: 3, height: 6, background: "rgba(243,236,223,.72)" }} />
+            <div style={{ position: "absolute", top: 4, right: 6, width: 0, height: 0, borderBottom: "4px solid rgba(243,236,223,.68)", borderRight: "10px solid transparent" }} />
+            <div style={{ position: "absolute", bottom: 4, right: 6, width: 0, height: 0, borderTop: "4px solid rgba(243,236,223,.68)", borderRight: "10px solid transparent" }} />
+          </div>
         </div>
 
-        {/* Cherry blossom + close trees — fastest parallax */}
+        {/* ── Cherry blossom + close-perspective trees ── */}
         <div style={{ position: "absolute", left: 0, bottom: 0, width: "200%", height: 140, display: "flex", animation: "av-pan 36s linear infinite", pointerEvents: "none" }}>
-          {[0, 1].map((i) => (
-            <div key={i} style={{ flexShrink: 0, width: "50%", height: "100%", position: "relative" }}>
-              {/* Large pine left */}
+          {[0, 1].map((ci) => (
+            <div key={ci} style={{ flexShrink: 0, width: "50%", height: "100%", position: "relative" }}>
+              {/* tall pine left */}
               <div style={{ position: "absolute", left: "6%", bottom: 0, width: 36, height: 112, transformOrigin: "bottom center", animation: "av-sway 5.6s ease-in-out infinite .2s" }}>
                 <div style={{ position: "absolute", inset: 0, background: theme.parallaxL4, clipPath: "polygon(50% 0,100% 100%,0 100%)" }} />
               </div>
-              {/* Cerezo (cherry blossom) */}
+              {/* cerezo (cherry blossom) */}
               <div style={{ position: "absolute", left: "30%", bottom: 0, width: 76, height: 140, transformOrigin: "bottom center", animation: "av-sway 6.5s ease-in-out infinite .9s" }}>
                 <div style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", bottom: 0, width: 9, height: 70, background: theme.parallaxL4, borderRadius: "4px 4px 0 0" }} />
                 <div style={{ position: "absolute", left: 24, bottom: 54, width: 3, height: 34, background: theme.parallaxL4, transform: "rotate(-32deg)", transformOrigin: "bottom center" }} />
@@ -249,12 +300,12 @@ export default async function Home() {
                 <div style={{ position: "absolute", left: 8, top: 26, width: 28, height: 30, borderRadius: "50%", background: "rgba(255,170,188,.68)", filter: "blur(2px)" }} />
                 <div style={{ position: "absolute", left: 38, top: 20, width: 26, height: 28, borderRadius: "50%", background: "rgba(250,165,183,.68)", filter: "blur(2px)" }} />
               </div>
-              {/* Large rounded tree */}
+              {/* large rounded tree */}
               <div style={{ position: "absolute", left: "62%", bottom: 0, width: 52, height: 100, transformOrigin: "bottom center", animation: "av-sway 5s ease-in-out infinite 1.4s" }}>
                 <div style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", bottom: 0, width: 7, height: 40, background: theme.parallaxL4 }} />
                 <div style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", bottom: 28, width: 50, height: 50, borderRadius: "50%", background: theme.parallaxL4 }} />
               </div>
-              {/* Large pine right */}
+              {/* tall pine right */}
               <div style={{ position: "absolute", left: "88%", bottom: 0, width: 30, height: 96, transformOrigin: "bottom center", animation: "av-sway 6s ease-in-out infinite .5s" }}>
                 <div style={{ position: "absolute", inset: 0, background: theme.parallaxL4, clipPath: "polygon(50% 0,100% 100%,0 100%)" }} />
               </div>
