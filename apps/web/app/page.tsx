@@ -418,51 +418,6 @@ export default async function Home() {
             weekDays={weekDays}
           />
 
-          {/* ── Orbe-asistente IA (placeholder tappable) ── */}
-          <div
-            title="Asistente (próximamente)"
-            style={{
-              position: "absolute",
-              left: "55%", bottom: 104,
-              transform: "translateX(-50%)",
-              display: "flex", flexDirection: "column", alignItems: "center", gap: 13,
-              cursor: "pointer", zIndex: 6, pointerEvents: "auto",
-            }}
-          >
-            {/* Speech bubble */}
-            <div style={{
-              background: "rgba(20,28,33,.6)",
-              backdropFilter: "blur(14px) saturate(1.2)",
-              WebkitBackdropFilter: "blur(14px) saturate(1.2)",
-              border: "1px solid rgba(236,230,216,.18)",
-              borderRadius: "18px 18px 18px 5px",
-              padding: "12px 16px",
-              boxShadow: "0 12px 30px rgba(0,0,0,.32)",
-              maxWidth: 220,
-              fontSize: 13.5, color: "#ECE6D8", lineHeight: 1.45,
-            }}>
-              ¿Cómo te sientes hoy? Estoy aquí para acompañarte en el camino.
-            </div>
-            {/* Orbe — bobs suavemente */}
-            <div style={{ position: "relative", animation: "av-bob 5s ease-in-out infinite" }}>
-              <span style={{ position: "absolute", inset: -6, borderRadius: "50%", border: "1.5px solid rgba(146,199,230,.5)", animation: "av-ring 3.2s ease-out infinite", pointerEvents: "none" }} />
-              <div style={{
-                position: "relative", width: 66, height: 66, borderRadius: "50%",
-                background: "radial-gradient(circle at 38% 32%, #DCEEFA 0%, #5B9BD1 58%, #3E6E8C 100%)",
-                boxShadow: "0 0 34px rgba(91,155,209,.5), inset 0 2px 7px rgba(255,255,255,.45)",
-                animation: "av-glow 6s ease-in-out infinite",
-                display: "flex", alignItems: "center", justifyContent: "center",
-              }}>
-                <span style={{ fontSize: 25, filter: "drop-shadow(0 1px 2px rgba(0,0,0,.2))" }}>✦</span>
-                <span style={{
-                  position: "absolute", bottom: 4, right: 6,
-                  width: 13, height: 13, borderRadius: "50%",
-                  background: "#7E9A86", border: "2.5px solid #16202A",
-                }} />
-              </div>
-            </div>
-          </div>
-
         </div>
 
         {/* ── Barra inferior móvil ── */}
