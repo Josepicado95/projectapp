@@ -12,7 +12,7 @@ type RegisterState = {
   general?: string;
 };
 
-type LoginState = { error?: string };
+type LoginState = { error?: string; success?: boolean };
 
 const RegisterSchema = z.object({
   name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
@@ -63,7 +63,7 @@ export async function loginAction(
     await signIn("credentials", {
       email: formData.get("email"),
       password: formData.get("password"),
-      redirectTo: "/",
+      redirect: false,
     });
   } catch (error) {
     if (error instanceof AuthError) {
@@ -71,7 +71,7 @@ export async function loginAction(
     }
     throw error;
   }
-  return {};
+  return { success: true };
 }
 
 export async function logoutAction(): Promise<void> {

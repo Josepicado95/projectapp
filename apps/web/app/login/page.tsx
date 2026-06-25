@@ -1,12 +1,13 @@
 "use client";
 
-import { useActionState, Suspense } from "react";
+import { useActionState, Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { loginAction } from "@/app/actions/auth";
 import AuthBackground from "@/components/AuthBackground";
 
-type LoginState = { error?: string };
+type LoginState = { error?: string; success?: boolean };
 const initialState: LoginState = {};
 
 function JustRegisteredMessage() {
@@ -25,6 +26,15 @@ function JustRegisteredMessage() {
 
 export default function LoginPage() {
   const [state, formAction, pending] = useActionState(loginAction, initialState);
+  const [transitioning, setTransitioning] = useState(false);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!state.success) return;
+    setTransitioning(true);
+    const t = setTimeout(() => router.push("/"), 700);
+    return () => clearTimeout(t);
+  }, [state.success, router]);
 
   return (
     <div style={{ position: "relative", height: "100vh", overflow: "hidden", background: "linear-gradient(180deg,#0C1428 0%,#172040 35%,#243358 68%,#2E4168 100%)" }}>
@@ -145,6 +155,16 @@ export default function LoginPage() {
           Al continuar aceptas los términos de uso.
         </div>
       </div>
+
+      {/* Dawn curtain: aparece al hacer login exitoso, se hace opaco y navega */}
+      {transitioning && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 99,
+          background: "linear-gradient(180deg,#0C1428 0%,#172040 35%,#243358 68%,#2E4168 100%)",
+          animation: "lg-dawn-in 600ms cubic-bezier(.4,0,.15,1) forwards",
+          pointerEvents: "none",
+        }} />
+      )}
     </div>
   );
 }
