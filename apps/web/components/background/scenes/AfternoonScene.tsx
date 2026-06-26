@@ -66,7 +66,7 @@ function Butterflies() {
       spd[i] = 0.5 + Math.random() * 1.2;
     }
     return { pos, ph, spd };
-  }, []);
+  }, [count]);
 
   useFrame(({ clock }) => {
     if (!meshRef.current) return;
