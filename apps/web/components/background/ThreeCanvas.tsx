@@ -6,8 +6,9 @@ import type { MomentKey } from "@/lib/theme";
 import type { WeatherCondition } from "@/lib/weather";
 import NightScene from "./scenes/NightScene";
 import MorningScene from "./scenes/MorningScene";
+import AfternoonScene from "./scenes/AfternoonScene";
 
-// Remaining scenes imported here as they are built (Tasks 7–8)
+// Remaining scenes imported here as they are built (Task 8)
 
 type Props = {
   moment: MomentKey;
@@ -18,7 +19,7 @@ function SceneSelector({ moment }: { moment: MomentKey }) {
   switch (moment) {
     case "noche":     return <NightScene />;
     case "manana":    return <MorningScene />;
-    case "tarde":     return <NightScene />; // placeholder until Task 7
+    case "tarde":     return <AfternoonScene />;
     case "atardecer": return <NightScene />; // placeholder until Task 8
   }
 }
