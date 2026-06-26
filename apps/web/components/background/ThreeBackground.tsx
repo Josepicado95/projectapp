@@ -1,3 +1,5 @@
+"use client";
+
 import dynamic from "next/dynamic";
 import type { MomentKey } from "@/lib/theme";
 import type { WeatherCondition } from "@/lib/weather";

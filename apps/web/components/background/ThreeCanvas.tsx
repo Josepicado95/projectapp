@@ -1,13 +1,26 @@
 "use client";
 
 import { Canvas } from "@react-three/fiber";
+import { Suspense } from "react";
 import type { MomentKey } from "@/lib/theme";
 import type { WeatherCondition } from "@/lib/weather";
+import NightScene from "./scenes/NightScene";
+
+// Remaining scenes imported here as they are built (Tasks 6–8)
 
 type Props = {
   moment: MomentKey;
   weather?: WeatherCondition;
 };
+
+function SceneSelector({ moment }: { moment: MomentKey }) {
+  switch (moment) {
+    case "noche":     return <NightScene />;
+    case "manana":    return <NightScene />; // placeholder until Task 6
+    case "tarde":     return <NightScene />; // placeholder until Task 7
+    case "atardecer": return <NightScene />; // placeholder until Task 8
+  }
+}
 
 export default function ThreeCanvas({ moment, weather }: Props) {
   return (
@@ -16,9 +29,9 @@ export default function ThreeCanvas({ moment, weather }: Props) {
       camera={{ fov: 60, near: 0.1, far: 500, position: [0, 2, 10] }}
       gl={{ alpha: false, antialias: true }}
     >
-      {/* Placeholder: solid dark sky while scenes are built */}
-      <color attach="background" args={["#0E1630"]} />
-      <ambientLight intensity={0.4} />
+      <Suspense fallback={null}>
+        <SceneSelector moment={moment} />
+      </Suspense>
     </Canvas>
   );
 }
