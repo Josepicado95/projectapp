@@ -5,8 +5,9 @@ import { Suspense } from "react";
 import type { MomentKey } from "@/lib/theme";
 import type { WeatherCondition } from "@/lib/weather";
 import NightScene from "./scenes/NightScene";
+import MorningScene from "./scenes/MorningScene";
 
-// Remaining scenes imported here as they are built (Tasks 6–8)
+// Remaining scenes imported here as they are built (Tasks 7–8)
 
 type Props = {
   moment: MomentKey;
@@ -16,7 +17,7 @@ type Props = {
 function SceneSelector({ moment }: { moment: MomentKey }) {
   switch (moment) {
     case "noche":     return <NightScene />;
-    case "manana":    return <NightScene />; // placeholder until Task 6
+    case "manana":    return <MorningScene />;
     case "tarde":     return <NightScene />; // placeholder until Task 7
     case "atardecer": return <NightScene />; // placeholder until Task 8
   }
