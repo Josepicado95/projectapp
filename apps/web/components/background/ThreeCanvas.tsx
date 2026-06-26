@@ -8,11 +8,20 @@ import NightScene from "./scenes/NightScene";
 import MorningScene from "./scenes/MorningScene";
 import AfternoonScene from "./scenes/AfternoonScene";
 import SunsetScene from "./scenes/SunsetScene";
+import RainLayer from "./weather/RainLayer";
+import SnowLayer from "./weather/SnowLayer";
 
 type Props = {
   moment: MomentKey;
   weather?: WeatherCondition;
 };
+
+function WeatherLayer({ weather }: { weather?: WeatherCondition }) {
+  if (!weather || weather === "clear") return null;
+  if (weather === "rain" || weather === "storm") return <RainLayer />;
+  if (weather === "snow") return <SnowLayer />;
+  return null; // fog handled via scene fog; storm = rain at higher intensity
+}
 
 function SceneSelector({ moment }: { moment: MomentKey }) {
   switch (moment) {
@@ -32,6 +41,7 @@ export default function ThreeCanvas({ moment, weather }: Props) {
     >
       <Suspense fallback={null}>
         <SceneSelector moment={moment} />
+        <WeatherLayer weather={weather} />
       </Suspense>
     </Canvas>
   );
