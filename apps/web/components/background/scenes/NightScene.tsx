@@ -5,6 +5,68 @@ import { useFrame } from "@react-three/fiber";
 import { Stars } from "@react-three/drei";
 import * as THREE from "three";
 
+const AURORA_VERT = `
+  varying vec2 vUv;
+  void main() {
+    vUv = uv;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+const AURORA_FRAG = `
+  uniform float uTime;
+  varying vec2 vUv;
+
+  void main() {
+    float t = uTime * 0.28;
+    vec2 uv = vUv;
+
+    float w1 = sin(uv.x * 4.2 + t) * sin(uv.x * 1.6 - t * 0.65);
+    float w2 = sin(uv.x * 6.5 - t * 1.05 + 2.1) * 0.55;
+    float w3 = sin(uv.x * 2.8 + t * 0.4 + 1.0) * 0.35;
+    float wave = w1 * 0.55 + w2 * 0.28 + w3 * 0.17;
+
+    float mask = smoothstep(0.0, 0.28, uv.y) * smoothstep(1.0, 0.52, uv.y);
+    float intensity = (wave * 0.5 + 0.5) * mask;
+
+    vec3 green  = vec3(0.04, 0.88, 0.42);
+    vec3 blue   = vec3(0.04, 0.42, 0.94);
+    vec3 purple = vec3(0.52, 0.04, 0.84);
+
+    float bf = sin(uv.x * 3.1 + t * 0.45) * 0.5 + 0.5;
+    vec3 col = mix(green, blue, bf);
+    col = mix(col, purple, sin(uv.x * 1.9 - t * 0.6) * 0.28 + 0.18);
+
+    gl_FragColor = vec4(col * intensity, intensity * 0.72);
+  }
+`;
+
+function Aurora() {
+  const matRef = useRef<THREE.ShaderMaterial>(null);
+
+  useFrame(({ clock }) => {
+    if (matRef.current) {
+      matRef.current.uniforms.uTime.value = clock.getElapsedTime();
+    }
+  });
+
+  return (
+    <mesh position={[0, 6, -45]} rotation-x={-0.15}>
+      <planeGeometry args={[90, 24, 1, 1]} />
+      <shaderMaterial
+        ref={matRef}
+        vertexShader={AURORA_VERT}
+        fragmentShader={AURORA_FRAG}
+        uniforms={{ uTime: { value: 0 } }}
+        transparent
+        depthWrite={false}
+        side={THREE.DoubleSide}
+        blending={THREE.AdditiveBlending}
+      />
+    </mesh>
+  );
+}
+
 function Moon() {
   return (
     <group position={[6, 7, -30]}>
@@ -111,6 +173,7 @@ export default function NightScene() {
         fade
         speed={0.6}
       />
+      <Aurora />
 
       <Moon />
 
