@@ -333,6 +333,93 @@ function Lanterns({ isStatic }: { isStatic: boolean }) {
   );
 }
 
+// ── Ground mist (bioluminescent breathing plane) ──────────────────────────────
+const MIST_VERT = /* glsl */ `
+  uniform float uTime; varying vec2 vUv;
+  void main() {
+    vUv = uv; vec3 p = position;
+    p.y += sin(p.x * 0.30 + uTime * 0.40) * 0.04
+         + cos(p.z * 0.25 + uTime * 0.30) * 0.04;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
+  }
+`;
+const MIST_FRAG = /* glsl */ `
+  uniform float uTime; varying vec2 vUv;
+  void main() {
+    float breath  = 0.5 + 0.5 * sin(uTime * 0.6);
+    float pattern = sin(vUv.x * 8.0 + uTime * 0.2) * cos(vUv.y * 6.0 + uTime * 0.15) * 0.5 + 0.5;
+    vec3  col     = mix(vec3(0.05, 0.22, 0.20), vec3(0.10, 0.55, 0.45), pattern);
+    float edge    = smoothstep(0.0, 0.14, vUv.x) * smoothstep(1.0, 0.86, vUv.x)
+                  * smoothstep(0.0, 0.14, vUv.y) * smoothstep(1.0, 0.86, vUv.y);
+    float alpha   = 0.12 * (0.5 + 0.5 * breath) * edge * (0.6 + 0.4 * pattern);
+    gl_FragColor  = vec4(col, alpha);
+  }
+`;
+
+function GroundMist() {
+  const matRef   = useRef<THREE.ShaderMaterial>(null!);
+  const uniforms = useMemo(() => ({ uTime: { value: 0 } }), []);
+  useFrame(({ clock }) => { matRef.current.uniforms.uTime.value = clock.getElapsedTime(); });
+  return (
+    <mesh rotation-x={-Math.PI / 2} position={[0, 0.45, -8]}>
+      <planeGeometry args={[80, 40, 12, 12]} />
+      <shaderMaterial ref={matRef} uniforms={uniforms}
+        vertexShader={MIST_VERT} fragmentShader={MIST_FRAG}
+        transparent blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.DoubleSide} />
+    </mesh>
+  );
+}
+
+// ── Ground pools (glowing teal puddles, hooks-safe: one component per pool) ───
+const POOL_VERT = /* glsl */ `
+  varying vec2 vUv;
+  void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }
+`;
+const POOL_FRAG = /* glsl */ `
+  uniform float uTime; uniform float uPhase; varying vec2 vUv;
+  void main() {
+    vec2  c    = vUv - 0.5;
+    float dist = length(c) * 2.0;
+    if (dist > 1.0) discard;
+    float ripple = sin(dist * 6.0 - uTime * 1.5 + uPhase) * 0.5 + 0.5;
+    vec3  col    = mix(vec3(0.05, 0.35, 0.45), vec3(0.15, 0.70, 0.65), ripple);
+    float alpha  = (1.0 - dist) * ripple * 0.35;
+    gl_FragColor = vec4(col, alpha);
+  }
+`;
+
+type PoolDef = { x: number; z: number; r: number; phase: number };
+
+function GroundPool({ x, z, r, phase }: PoolDef) {
+  const matRef   = useRef<THREE.ShaderMaterial>(null!);
+  const uniforms = useMemo(() => ({ uTime: { value: 0 }, uPhase: { value: phase } }), [phase]);
+  useFrame(({ clock }) => { matRef.current.uniforms.uTime.value = clock.getElapsedTime(); });
+  return (
+    <mesh rotation-x={-Math.PI / 2} position={[x, 0.01, z]}>
+      <circleGeometry args={[r, 20]} />
+      <shaderMaterial ref={matRef} uniforms={uniforms}
+        vertexShader={POOL_VERT} fragmentShader={POOL_FRAG}
+        transparent blending={THREE.AdditiveBlending} depthWrite={false} />
+    </mesh>
+  );
+}
+
+const POOL_DEFS: PoolDef[] = [
+  { x: -3.5, z: -5,  r: 1.2, phase: 0.0 },
+  { x:  4.0, z: -8,  r: 0.9, phase: 1.4 },
+  { x: -1.5, z: -14, r: 1.5, phase: 2.8 },
+  { x:  6.5, z: -11, r: 0.7, phase: 0.7 },
+  { x: -7.0, z: -18, r: 1.1, phase: 3.5 },
+];
+
+function GroundPools() {
+  return (
+    <>
+      {POOL_DEFS.map((p, i) => <GroundPool key={i} {...p} />)}
+    </>
+  );
+}
+
 // ── Camera + lights ───────────────────────────────────────────────────────────
 function CameraAndLights({ isStatic }: { isStatic: boolean }) {
   const moonLightRef = useRef<THREE.DirectionalLight>(null!);
@@ -357,12 +444,12 @@ function CameraAndLights({ isStatic }: { isStatic: boolean }) {
   return (
     <>
       <directionalLight ref={moonLightRef} color={0x8BBCE8} intensity={1.1} position={[-8, 14, 5]} />
-      <hemisphereLight args={[0x1A3C78 as unknown as THREE.ColorRepresentation, 0x3A1840 as unknown as THREE.ColorRepresentation, 0.55]} />
-      <ambientLight color={0x120820} intensity={0.35} />
+      <hemisphereLight args={[0x2456A8 as unknown as THREE.ColorRepresentation, 0x3E1C52 as unknown as THREE.ColorRepresentation, 0.85]} />
+      <ambientLight color={0x120820} intensity={0.65} />
       <pointLight ref={glowRef} color={0xD4823A} intensity={1.2} distance={18} decay={2} position={[1.5, 0.4, -4]} />
-      <pointLight color={0xFF9933} intensity={1.8} distance={12} decay={2.2} position={[ 2.2, 0.7, -2]} />
-      <pointLight color={0xFFAA44} intensity={1.4} distance={10} decay={2.0} position={[-2.2, 0.7, -5]} />
-      <pointLight color={0xFFCC66} intensity={1.2} distance={9}  decay={1.8} position={[ 2.2, 0.7, -8]} />
+      <pointLight color={0xFF9933} intensity={2.2} distance={12} decay={2.2} position={[ 2.2, 0.7, -2]} />
+      <pointLight color={0xFFAA44} intensity={1.8} distance={10} decay={2.0} position={[-2.2, 0.7, -5]} />
+      <pointLight color={0xFFCC66} intensity={1.4} distance={9}  decay={1.8} position={[ 2.2, 0.7, -8]} />
     </>
   );
 }
@@ -372,7 +459,7 @@ export default function ForestScene({ isStatic = false }: { isStatic?: boolean }
   return (
     <>
       <color attach="background" args={["#0A1E42"]} />
-      <fogExp2 attach="fog" args={["#0E2448", 0.005]} />
+      <fogExp2 attach="fog" args={["#1A3A5C", 0.007]} />
 
       <SkyGradient />
 
@@ -392,6 +479,8 @@ export default function ForestScene({ isStatic = false }: { isStatic?: boolean }
         <meshLambertMaterial color={0x050C18} />
       </mesh>
 
+      <GroundMist />
+      <GroundPools />
       <Forest />
       <Fireflies />
       <Lanterns isStatic={isStatic} />
