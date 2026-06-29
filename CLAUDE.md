@@ -253,17 +253,18 @@ algo, está bien dejarlo a medias y anotarlo en `ROADMAP.md` para la próxima.
 (Claude Code: actualiza esta sección al final de cada sesión con un resumen de 2-3 líneas:
 en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
 
-- **Fase/Sesión actual:** Fase 12 completa — app en producción
-- **Último checkpoint superado:** Fase 12 completa. Deploy funcional: Next.js en Vercel,
-  PostgreSQL en Neon, recommender Python en Railway. CI/CD automático: cada push a main
-  despliega a producción. Next.js 16 breaking changes resueltos: middleware→proxy.ts,
-  useSearchParams envuelto en Suspense.
+- **Fase/Sesión actual:** Fase 14 completa — sistema de fondos Three.js/R3F terminado
+- **Último checkpoint superado:** Fase 14 completa. 4 escenas Three.js conectadas al momento
+  del día (mañana/tarde/atardecer/noche). ForestScene con GLSL aurora, luna, montañas, pinos
+  con sway, luciérnagas, linternas. AuthCard login+register unificado. CheckInBody y
+  ProgressBody como client components. ProgressBody migrado de CSS-only a ThreeBackground.
+  Bug fixes de performance: Math.random fuera de useFrame, useMemo deps, computeVertexNormals
+  eliminado del loop. Diseños Figma (Login, Progreso) implementados vía claude_design MCP.
 - **URLs de producción:** Vercel (projectapp-6wqde3z63-josepicado95s-projects.vercel.app),
   Railway recommender (projectapp-production-164a.up.railway.app).
 - **Deuda técnica conocida:** campo `date` en `CheckIn` usa `DateTime` completo (con hora).
-  `status` en `Adventure` es `String` (no enum) intencionalmente. Sprint de diseño visual
-  (Tailwind completo) pendiente. Warning de deprecación httpx/starlette en tests — ignorable.
+  `status` en `Adventure` es `String` (no enum) intencionalmente. Warning de deprecación
+  httpx/starlette en tests — ignorable.
 - **Credenciales de prueba:** jose@aventuras.com / aventuras123
-- **Pendiente para la próxima sesión:** Fase 13 — Polish visual (Tailwind, diseño, UX).
-  También acordada una sesión de revisión profunda de componentes (leer y desmenuzar el
-  código existente para consolidar aprendizaje).
+- **Pendiente para la próxima sesión:** Sesión de revisión profunda de componentes acordada
+  (leer y desmenuzar código existente para consolidar aprendizaje). Fase 13 polish si se desea.
