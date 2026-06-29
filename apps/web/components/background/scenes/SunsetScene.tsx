@@ -24,7 +24,6 @@ function Ocean() {
       );
     }
     pos.needsUpdate = true;
-    (meshRef.current.geometry as THREE.PlaneGeometry).computeVertexNormals();
   });
 
   return (

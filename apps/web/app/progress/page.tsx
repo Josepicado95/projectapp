@@ -2,7 +2,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import CheckInChart from "@/components/CheckInChart";
+import { logoutAction } from "@/app/actions/auth";
+import ProgressBody from "@/components/ProgressBody";
 
 export default async function ProgressPage() {
   const session = await auth();
@@ -10,77 +11,80 @@ export default async function ProgressPage() {
 
   const userId = Number(session.user.id);
 
-  const adventures = await prisma.adventure.findMany({
-    where: { userId },
-    include: { missions: true },
-    orderBy: { createdAt: "desc" },
-  });
+  const [adventures, checkIns, recentCheckIns] = await Promise.all([
+    prisma.adventure.findMany({
+      where: { userId },
+      include: { missions: true },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.checkIn.findMany({
+      where: { userId, date: { gte: new Date(Date.now() - 14 * 86400_000) } },
+      orderBy: { date: "asc" },
+      select: { date: true, energy: true, mood: true, stress: true, sleep: true },
+    }),
+    prisma.checkIn.findMany({
+      where: { userId },
+      orderBy: { date: "desc" },
+      take: 60,
+      select: { date: true },
+    }),
+  ]);
 
-  const fourteenDaysAgo = new Date();
-  fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
-
-  const checkIns = await prisma.checkIn.findMany({
-    where: { userId, date: { gte: fourteenDaysAgo } },
-    orderBy: { date: "asc" },
-    select: { date: true, energy: true, mood: true, stress: true, sleep: true },
-  });
-
-  const chartData = checkIns.map((c) => ({
-    date: c.date.toISOString().slice(0, 10),
-    energy: c.energy,
-    mood: c.mood,
-    stress: c.stress,
-    sleep: c.sleep,
-  }));
+  // Streak calculation
+  const ciDays = new Set(
+    recentCheckIns.map(ci => {
+      const d = new Date(ci.date);
+      return `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
+    })
+  );
+  let streak = 0;
+  for (let i = 0; i < 60; i++) {
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() - i);
+    const key = `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
+    if (ciDays.has(key)) { streak++; }
+    else if (i === 0) { continue; }
+    else { break; }
+  }
 
   return (
-    <main className="max-w-2xl mx-auto p-4">
-      <div className="flex items-center gap-3 mb-6">
-        <Link href="/" className="text-sm text-gray-500 hover:text-gray-700">
-          ← Dashboard
+    <>
+      <ProgressBody
+        adventures={adventures.map(a => ({
+          id: a.id,
+          title: a.title,
+          missions: a.missions.map(m => ({ id: m.id, label: m.title, completed: m.completed })),
+        }))}
+        checkIns={checkIns.map(ci => ({
+          date: new Date(ci.date).toISOString().slice(0, 10),
+          energy: ci.energy,
+          mood: ci.mood,
+          stress: ci.stress,
+          sleep: ci.sleep,
+        }))}
+        userName={session.user.name ?? session.user.email ?? "?"}
+        streak={streak}
+        logoutAction={logoutAction}
+      />
+
+      {/* Mobile bottom nav (hidden on desktop via global CSS) */}
+      <div className="av-bottom-nav" style={{ position: "fixed", bottom: 0, left: 0, right: 0,
+        background: "rgba(10,15,26,.88)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)",
+        borderTop: "1px solid rgba(236,230,216,.1)", padding: "10px 0 16px",
+        justifyContent: "space-around", alignItems: "center", zIndex: 60 }}>
+        <Link href="/" style={{ textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, color: "#9FB4C6" }}>
+          <span style={{ fontSize: 22 }}>⛰</span>
+          <span style={{ fontSize: 9, fontWeight: 600 }}>Aventuras</span>
         </Link>
-        <h1 className="text-2xl font-bold">Mi Progreso</h1>
+        <Link href="/checkin" style={{ textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, color: "#9FB4C6" }}>
+          <span style={{ fontSize: 22 }}>♡</span>
+          <span style={{ fontSize: 9, fontWeight: 600 }}>Check-in</span>
+        </Link>
+        <Link href="/progress" style={{ textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, color: "#CDE6F5" }}>
+          <span style={{ fontSize: 22 }}>◷</span>
+          <span style={{ fontSize: 9, fontWeight: 600 }}>Progreso</span>
+        </Link>
       </div>
-
-      <section className="mb-8">
-        <h2 className="text-lg font-semibold mb-4">Aventuras</h2>
-        {adventures.length === 0 ? (
-          <p className="text-gray-400 text-sm">No tienes aventuras todavía.</p>
-        ) : (
-          <div className="space-y-4">
-            {adventures.map((a) => {
-              const total = a.missions.length;
-              const completed = a.missions.filter((m) => m.completed).length;
-              const pct = total === 0 ? 0 : Math.round((completed / total) * 100);
-              return (
-                <div key={a.id}>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="font-medium">{a.title}</span>
-                    <span className="text-gray-500">
-                      {completed}/{total} misiones · {pct}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-100 rounded-full h-2">
-                    <div
-                      className="bg-green-500 h-2 rounded-full transition-all"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
-
-      <section>
-        <h2 className="text-lg font-semibold mb-4">Estado de ánimo — últimos 14 días</h2>
-        {checkIns.length === 0 ? (
-          <p className="text-gray-400 text-sm">Aún no hay check-ins registrados.</p>
-        ) : (
-          <CheckInChart data={chartData} />
-        )}
-      </section>
-    </main>
+    </>
   );
 }

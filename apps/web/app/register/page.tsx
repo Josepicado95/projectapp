@@ -3,7 +3,7 @@
 import { useActionState } from "react";
 import Link from "next/link";
 import { registerAction } from "@/app/actions/auth";
-import AuthBackground from "@/components/AuthBackground";
+import ThreeBackground from "@/components/background/ThreeBackground";
 
 type RegisterState = {
   errors?: { name?: string[]; email?: string[]; password?: string[] };
@@ -16,7 +16,7 @@ export default function RegisterPage() {
 
   return (
     <div style={{ position: "relative", height: "100vh", overflow: "hidden", background: "linear-gradient(180deg,#0C1428 0%,#172040 35%,#243358 68%,#2E4168 100%)" }}>
-      <AuthBackground />
+      <ThreeBackground moment="noche" isStatic />
 
       <div style={{
         position: "absolute", inset: 0,

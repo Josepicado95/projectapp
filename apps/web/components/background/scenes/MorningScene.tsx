@@ -14,14 +14,16 @@ function DustParticles() {
     const pos = new Float32Array(count * 3);
     const spd = new Float32Array(count);
     const ph  = new Float32Array(count);
+    const scl = new Float32Array(count);
     for (let i = 0; i < count; i++) {
       pos[i * 3]     = (Math.random() - 0.5) * 24;
       pos[i * 3 + 1] = -1 + Math.random() * 6;
       pos[i * 3 + 2] = (Math.random() - 0.5) * 14;
       spd[i] = 0.1 + Math.random() * 0.25;
       ph[i]  = Math.random() * Math.PI * 2;
+      scl[i] = 0.015 + Math.random() * 0.01;
     }
-    return { pos, spd, ph };
+    return { pos, spd, ph, scl };
   }, []);
 
   useFrame(({ clock }) => {
@@ -33,7 +35,7 @@ function DustParticles() {
         data.pos[i * 3 + 1] + t * data.spd[i] * 0.18 % 7,
         data.pos[i * 3 + 2]
       );
-      dummy.scale.setScalar(0.015 + Math.random() * 0.01);
+      dummy.scale.setScalar(data.scl[i]);
       dummy.updateMatrix();
       meshRef.current.setMatrixAt(i, dummy.matrix);
     }

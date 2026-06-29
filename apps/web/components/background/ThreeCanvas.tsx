@@ -4,7 +4,7 @@ import { Canvas } from "@react-three/fiber";
 import { Suspense } from "react";
 import type { MomentKey } from "@/lib/theme";
 import type { WeatherCondition } from "@/lib/weather";
-import NightScene from "./scenes/NightScene";
+import ForestScene from "./scenes/ForestScene";
 import MorningScene from "./scenes/MorningScene";
 import AfternoonScene from "./scenes/AfternoonScene";
 import SunsetScene from "./scenes/SunsetScene";
@@ -14,25 +14,26 @@ import SnowLayer from "./weather/SnowLayer";
 type Props = {
   moment: MomentKey;
   weather?: WeatherCondition;
+  isStatic?: boolean;
 };
 
 function WeatherLayer({ weather }: { weather?: WeatherCondition }) {
   if (!weather || weather === "clear") return null;
   if (weather === "rain" || weather === "storm") return <RainLayer />;
   if (weather === "snow") return <SnowLayer />;
-  return null; // fog handled via scene fog; storm = rain at higher intensity
+  return null;
 }
 
-function SceneSelector({ moment }: { moment: MomentKey }) {
+function SceneSelector({ moment, isStatic }: { moment: MomentKey; isStatic?: boolean }) {
   switch (moment) {
-    case "noche":     return <NightScene />;
+    case "noche":     return <ForestScene isStatic={isStatic} />;
     case "manana":    return <MorningScene />;
     case "tarde":     return <AfternoonScene />;
     case "atardecer": return <SunsetScene />;
   }
 }
 
-export default function ThreeCanvas({ moment, weather }: Props) {
+export default function ThreeCanvas({ moment, weather, isStatic }: Props) {
   return (
     <Canvas
       style={{ width: "100%", height: "100%" }}
@@ -40,7 +41,7 @@ export default function ThreeCanvas({ moment, weather }: Props) {
       gl={{ alpha: false, antialias: true }}
     >
       <Suspense fallback={null}>
-        <SceneSelector moment={moment} />
+        <SceneSelector moment={moment} isStatic={isStatic} />
         <WeatherLayer weather={weather} />
       </Suspense>
     </Canvas>
