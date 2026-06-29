@@ -4,6 +4,8 @@
  */
 "use client";
 
+import ThreeBackground from "@/components/background/ThreeBackground";
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Mission   = { id: number; label: string; completed: boolean };
 type Adventure = { id: number; title: string; missions: Mission[] };
@@ -106,56 +108,15 @@ export default function ProgressBody({ adventures, checkIns, userName, streak, l
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(236,230,216,.18); border-radius: 4px; }
-        @keyframes av-aurora   { 0%{transform:translateX(-8%) skewY(-6deg) scaleY(1);opacity:.5} 50%{transform:translateX(8%) skewY(-6deg) scaleY(1.25);opacity:.85} 100%{transform:translateX(-8%) skewY(-6deg) scaleY(1);opacity:.5} }
-        @keyframes av-glow     { 0%,100%{opacity:.9;transform:scale(1)} 50%{opacity:1;transform:scale(1.04)} }
-        @keyframes av-cross    { from{transform:translateX(60px)} to{transform:translateX(-60px)} }
-        @keyframes av-pan      { from{transform:translateX(0)} to{transform:translateX(-50%)} }
-        @keyframes av-dawn     { 0%{opacity:1} 55%{opacity:.65} 100%{opacity:0} }
+        @keyframes av-dawn { 0%{opacity:1} 55%{opacity:.65} 100%{opacity:0} }
       `}} />
+
+      <ThreeBackground moment="noche" />
 
       {/* Dawn curtain */}
       <div style={{ position: "absolute", inset: 0, zIndex: 8, pointerEvents: "none",
         background: "linear-gradient(180deg,#0E1630 0%,#1B2647 42%,#27375E 74%,#34496F 100%)",
         animation: "av-dawn 3.8s cubic-bezier(.4,0,.15,1) .15s forwards" }} />
-
-      {/* Aurora ribbons */}
-      <div style={{ position:"absolute", left:"-10%", right:"-10%", top:"8%", height:200,
-        background:"linear-gradient(180deg,rgba(126,154,134,0) 0%,rgba(126,154,134,.22) 45%,rgba(126,154,134,0) 100%)",
-        filter:"blur(34px)", animation:"av-aurora 22s ease-in-out infinite", pointerEvents:"none" }} />
-      <div style={{ position:"absolute", left:"-10%", right:"-10%", top:"2%", height:160,
-        background:"linear-gradient(180deg,rgba(91,155,209,0) 0%,rgba(91,155,209,.2) 50%,rgba(91,155,209,0) 100%)",
-        filter:"blur(40px)", animation:"av-aurora 30s ease-in-out infinite reverse", pointerEvents:"none" }} />
-
-      {/* Moon */}
-      <div style={{ position:"absolute", left:"52%", top:72, width:130, height:130,
-        animation:"av-cross 60s ease-in-out infinite alternate", pointerEvents:"none" }}>
-        <div style={{ width:"100%", height:"100%", borderRadius:"50%",
-          background:"radial-gradient(circle,#F0EAD8 0%,#C9C7B4 46%,rgba(201,199,180,0) 68%)",
-          animation:"av-glow 8s ease-in-out infinite" }} />
-      </div>
-
-      {/* Mountain layers */}
-      <div style={{ position:"absolute", left:0, bottom:100, width:"200%", height:180,
-        display:"flex", animation:"av-pan 120s linear infinite", opacity:.5, filter:"blur(1px)", pointerEvents:"none" }}>
-        {[0,1].map(k => <div key={k} style={{ flexShrink:0, width:"50%", height:"100%", background:"#1A2640",
-          clipPath:"polygon(0 76%,6% 56%,12% 70%,19% 40%,26% 62%,33% 34%,41% 60%,48% 46%,56% 66%,63% 42%,71% 64%,79% 36%,87% 60%,94% 48%,100% 76%,100% 100%,0 100%)" }} />)}
-      </div>
-      <div style={{ position:"absolute", left:0, bottom:36, width:"200%", height:180,
-        display:"flex", animation:"av-pan 78s linear infinite", pointerEvents:"none" }}>
-        {[0,1].map(k => <div key={k} style={{ flexShrink:0, width:"50%", height:"100%", background:"#142030",
-          clipPath:"polygon(0 70%,10% 52%,20% 64%,30% 44%,42% 62%,52% 48%,64% 66%,74% 50%,86% 64%,94% 54%,100% 70%,100% 100%,0 100%)" }} />)}
-      </div>
-      <div style={{ position:"absolute", left:0, bottom:0, width:"200%", height:140,
-        display:"flex", animation:"av-pan 50s linear infinite", pointerEvents:"none" }}>
-        {[0,1].map(k => <div key={k} style={{ flexShrink:0, width:"50%", height:"100%", background:"#0F1A28",
-          clipPath:"polygon(0 58%,8% 44%,16% 56%,26% 34%,36% 52%,46% 30%,56% 50%,66% 32%,76% 52%,86% 36%,94% 50%,100% 58%,100% 100%,0 100%)" }} />)}
-      </div>
-      {/* Foreground pines */}
-      <div style={{ position:"absolute", left:0, bottom:0, width:"200%", height:90,
-        display:"flex", animation:"av-pan 38s linear infinite", pointerEvents:"none" }}>
-        {[0,1].map(k => <div key={k} style={{ flexShrink:0, width:"50%", height:"100%", background:"#060E18",
-          clipPath:"polygon(0 100%,4% 60%,8% 100%,15% 48%,22% 100%,31% 66%,40% 100%,52% 54%,63% 100%,74% 62%,85% 100%,93% 70%,100% 100%)" }} />)}
-      </div>
 
       {/* ── Layout ── */}
       <div style={{ position:"absolute", inset:0, display:"flex", zIndex:1 }}>
