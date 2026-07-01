@@ -4,7 +4,7 @@
  */
 "use client";
 
-import ThreeBackground from "@/components/background/ThreeBackground";
+import ForestBackground from "@/components/ForestBackground";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Mission   = { id: number; label: string; completed: boolean };
@@ -111,7 +111,7 @@ export default function ProgressBody({ adventures, checkIns, userName, streak, l
         @keyframes av-dawn { 0%{opacity:1} 55%{opacity:.65} 100%{opacity:0} }
       `}} />
 
-      <ThreeBackground moment="noche" />
+      <ForestBackground />
 
       {/* Dawn curtain */}
       <div style={{ position: "absolute", inset: 0, zIndex: 8, pointerEvents: "none",

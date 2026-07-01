@@ -1,12 +1,5 @@
 "use client";
 
-/**
- * ForestScene.tsx — Fantasy night forest (React Three Fiber).
- * Props:
- *   isStatic?: true → camera breathes only (login/register)
- *              false → rightward cinematic drift (app screens)
- */
-
 import { useRef, useMemo } from "react";
 import { useFrame } from "@react-three/fiber";
 import { Stars } from "@react-three/drei";
@@ -66,58 +59,44 @@ function AuroraCurtain({ y, z, w, h, c1, c2, spd, timeOffset }: {
   c1: string; c2: string; spd: number; timeOffset: number;
 }) {
   const matRef   = useRef<THREE.ShaderMaterial>(null!);
+  useFrame(({ clock }) => { matRef.current.uniforms.uTime.value = clock.getElapsedTime() + timeOffset; });
   const uniforms = useMemo(() => ({
     uTime: { value: 0 },
     uSpd:  { value: spd },
     uC1:   { value: new THREE.Color(c1) },
     uC2:   { value: new THREE.Color(c2) },
   }), [c1, c2, spd]);
-  useFrame(({ clock }) => { matRef.current.uniforms.uTime.value = clock.getElapsedTime() + timeOffset; });
   return (
     <mesh position={[0, y, z]}>
       <planeGeometry args={[w, h, 200, 1]} />
       <shaderMaterial ref={matRef} vertexShader={AURORA_VERT} fragmentShader={AURORA_FRAG}
-        uniforms={uniforms} transparent depthWrite={false} side={THREE.DoubleSide}
-        blending={THREE.AdditiveBlending} />
+        uniforms={uniforms} transparent depthWrite={false} side={THREE.DoubleSide} blending={THREE.AdditiveBlending} />
     </mesh>
   );
 }
 
 // ── Moon with glow halos ──────────────────────────────────────────────────────
-const HALO_VERT = /* glsl */ `
-  varying vec2 vUv;
-  void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }
-`;
-const HALO_FRAG = /* glsl */ `
-  uniform float uA; varying vec2 vUv;
-  void main() {
-    float d = distance(vUv, vec2(0.5)) * 2.0;
-    gl_FragColor = vec4(0.95, 0.92, 0.84, smoothstep(1.0, 0.0, d) * uA);
-  }
-`;
+const HALO_VERT = /* glsl */ `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`;
+const HALO_FRAG = /* glsl */ `uniform float uA; varying vec2 vUv; void main() { float d = distance(vUv, vec2(0.5)) * 2.0; gl_FragColor = vec4(0.95, 0.92, 0.84, smoothstep(1.0, 0.0, d) * uA); }`;
+const HALOS = [{ r: 9, a: 0.06 }, { r: 6, a: 0.12 }, { r: 4, a: 0.22 }, { r: 2.8, a: 0.36 }];
 
-function HaloMesh({ r, a }: { r: number; a: number }) {
+function MoonHalo({ r, a }: { r: number; a: number }) {
   const uniforms = useMemo(() => ({ uA: { value: a } }), [a]);
   return (
     <mesh>
       <circleGeometry args={[r, 48]} />
       <shaderMaterial vertexShader={HALO_VERT} fragmentShader={HALO_FRAG}
-        uniforms={uniforms} transparent blending={THREE.AdditiveBlending}
-        depthWrite={false} side={THREE.DoubleSide} />
+        uniforms={uniforms} transparent blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.DoubleSide} />
     </mesh>
   );
 }
 
 function Moon() {
   const groupRef = useRef<THREE.Group>(null!);
-  useFrame(({ clock }) => {
-    groupRef.current.position.y = 26 + Math.sin(clock.getElapsedTime() * 0.08) * 0.5;
-  });
+  useFrame(({ clock }) => { groupRef.current.position.y = 26 + Math.sin(clock.getElapsedTime() * 0.08) * 0.5; });
   return (
     <group ref={groupRef} position={[-16, 26, -120]}>
-      {[{ r: 9, a: 0.06 }, { r: 6, a: 0.12 }, { r: 4, a: 0.22 }, { r: 2.8, a: 0.36 }].map((h, i) => (
-        <HaloMesh key={i} r={h.r} a={h.a} />
-      ))}
+      {HALOS.map(({ r, a }, i) => <MoonHalo key={i} r={r} a={a} />)}
       <mesh>
         <circleGeometry args={[1.95, 64]} />
         <meshBasicMaterial color={0xF0EAD8} fog={false} />
@@ -128,29 +107,28 @@ function Moon() {
 
 // ── Mountain silhouettes ──────────────────────────────────────────────────────
 const MTN_DEFS = [
-  { baseY: 6, z: -100, color: 0x1A3254, seed: 0.4 },
-  { baseY: 4, z: -80,  color: 0x112540, seed: 1.1 },
-  { baseY: 2, z: -60,  color: 0x0A1A2E, seed: 2.0 },
+  { baseY: -1.5, z: -100, color: 0x1A3254, seed: 0.4, amp: [3.5, 2.0, 0.9, 0.35] },
+  { baseY: -2.2, z: -80,  color: 0x112540, seed: 1.1, amp: [2.8, 1.6, 0.7, 0.28] },
+  { baseY: -2.8, z: -60,  color: 0x0A1A2E, seed: 2.0, amp: [2.2, 1.2, 0.5, 0.22] },
 ];
 
 function Mountains() {
   const shapes = useMemo(() =>
-    MTN_DEFS.map(({ baseY, seed }) => {
+    MTN_DEFS.map(({ baseY, seed, amp }) => {
       const shape = new THREE.Shape();
-      shape.moveTo(-90, -3);
+      shape.moveTo(-90, -6);
       for (let i = 0; i <= 80; i++) {
         const tx = i / 80, x = -90 + tx * 180;
         const y = baseY
-          + 8   * Math.sin(tx * 2.9 * Math.PI + seed)
-          + 4.5 * Math.sin(tx * 6.5 * Math.PI + seed * 1.3)
-          + 2   * Math.sin(tx * 13  * Math.PI + seed * 0.7)
-          + 0.8 * Math.cos(tx * 24  * Math.PI + seed * 2.2);
+          + amp[0] * Math.sin(tx * 2.9 * Math.PI + seed)
+          + amp[1] * Math.sin(tx * 6.5 * Math.PI + seed * 1.3)
+          + amp[2] * Math.sin(tx * 13  * Math.PI + seed * 0.7)
+          + amp[3] * Math.cos(tx * 24  * Math.PI + seed * 2.2);
         shape.lineTo(x, y);
       }
-      shape.lineTo(90, -3);
+      shape.lineTo(90, -6);
       return shape;
-    }),
-  []);
+    }), []);
   return (
     <>
       {MTN_DEFS.map(({ z, color }, i) => (
@@ -176,17 +154,17 @@ const FOREST_LAYERS = [
   { z:   7, n:  4, s: 3.8, sp: 36,  t: 0.00 },
 ];
 
-const CONE_TIERS: [number, number, number][] = [
+type TreeDef = {
+  id: string; x: number; z: number; scale: number;
+  color: THREE.Color; swayAmp: number; swayPeriod: number; swayPhase: number;
+};
+
+const CONE_LAYERS: [number, number, number][] = [
   [1.05, 1.15, 0.50],
   [0.82, 1.05, 0.98],
   [0.58, 0.95, 1.38],
   [0.36, 0.84, 1.72],
 ];
-
-type TreeDef = {
-  id: string; x: number; z: number; scale: number;
-  color: THREE.Color; swayAmp: number; swayPeriod: number; swayPhase: number;
-};
 
 function Forest() {
   const groupRef = useRef<(THREE.Group | null)[]>([]);
@@ -229,7 +207,7 @@ function Forest() {
             <cylinderGeometry args={[0.07 * tr.scale, 0.11 * tr.scale, 0.45 * tr.scale, 7]} />
             <meshLambertMaterial color={tr.color} />
           </mesh>
-          {CONE_TIERS.map(([r, h, py], ci) => (
+          {CONE_LAYERS.map(([r, h, py], ci) => (
             <mesh key={ci} position={[0, py * tr.scale, 0]}>
               <coneGeometry args={[r * tr.scale, h * tr.scale, 8]} />
               <meshLambertMaterial color={tr.color} />
@@ -309,7 +287,7 @@ function Lanterns({ isStatic }: { isStatic: boolean }) {
   useFrame(({ clock }) => {
     if (!meshRef.current) return;
     const t      = clock.getElapsedTime();
-    const driftX = isStatic ? 0 : t * 0.025;
+    const driftX = isStatic ? 0 : t * 0.065;
     for (let i = 0; i < COUNT; i++) {
       const l     = data[i];
       const blink = 0.65 + 0.35 * Math.sin(t * 0.9 + l.phase);
@@ -333,90 +311,113 @@ function Lanterns({ isStatic }: { isStatic: boolean }) {
   );
 }
 
-// ── Ground mist (bioluminescent breathing plane) ──────────────────────────────
-const MIST_VERT = /* glsl */ `
-  uniform float uTime; varying vec2 vUv;
-  void main() {
-    vUv = uv; vec3 p = position;
-    p.y += sin(p.x * 0.30 + uTime * 0.40) * 0.04
-         + cos(p.z * 0.25 + uTime * 0.30) * 0.04;
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(p, 1.0);
-  }
-`;
-const MIST_FRAG = /* glsl */ `
-  uniform float uTime; varying vec2 vUv;
-  void main() {
-    float breath  = 0.5 + 0.5 * sin(uTime * 0.6);
-    float pattern = sin(vUv.x * 8.0 + uTime * 0.2) * cos(vUv.y * 6.0 + uTime * 0.15) * 0.5 + 0.5;
-    vec3  col     = mix(vec3(0.05, 0.22, 0.20), vec3(0.10, 0.55, 0.45), pattern);
-    float edge    = smoothstep(0.0, 0.14, vUv.x) * smoothstep(1.0, 0.86, vUv.x)
-                  * smoothstep(0.0, 0.14, vUv.y) * smoothstep(1.0, 0.86, vUv.y);
-    float alpha   = 0.12 * (0.5 + 0.5 * breath) * edge * (0.6 + 0.4 * pattern);
-    gl_FragColor  = vec4(col, alpha);
-  }
-`;
-
-function GroundMist() {
-  const matRef   = useRef<THREE.ShaderMaterial>(null!);
-  const uniforms = useMemo(() => ({ uTime: { value: 0 } }), []);
-  useFrame(({ clock }) => { matRef.current.uniforms.uTime.value = clock.getElapsedTime(); });
-  return (
-    <mesh rotation-x={-Math.PI / 2} position={[0, 0.45, -8]}>
-      <planeGeometry args={[80, 40, 12, 12]} />
-      <shaderMaterial ref={matRef} uniforms={uniforms}
-        vertexShader={MIST_VERT} fragmentShader={MIST_FRAG}
-        transparent blending={THREE.AdditiveBlending} depthWrite={false} side={THREE.DoubleSide} />
-    </mesh>
-  );
-}
-
-// ── Ground pools (glowing teal puddles, hooks-safe: one component per pool) ───
-const POOL_VERT = /* glsl */ `
+// ── Magic mist wisps — vertical planes with swirling spiral shader ─────────────
+const WISP_VERT = /* glsl */ `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`;
+const WISP_FRAG = /* glsl */ `
+  uniform float uTime; uniform float uPhase; uniform float uWarm;
   varying vec2 vUv;
-  void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }
-`;
-const POOL_FRAG = /* glsl */ `
-  uniform float uTime; uniform float uPhase; varying vec2 vUv;
-  void main() {
-    vec2  c    = vUv - 0.5;
-    float dist = length(c) * 2.0;
-    if (dist > 1.0) discard;
-    float ripple = sin(dist * 6.0 - uTime * 1.5 + uPhase) * 0.5 + 0.5;
-    vec3  col    = mix(vec3(0.05, 0.35, 0.45), vec3(0.15, 0.70, 0.65), ripple);
-    float alpha  = (1.0 - dist) * ripple * 0.35;
+  void main(){
+    vec2 c = vUv - vec2(0.5, 0.0);
+    float angle = atan(c.y, c.x + 0.001);
+    float r = length(c);
+    float swirl = sin(angle*2.5 + r*7.0 - uTime*0.38 + uPhase)*0.5+0.5;
+    swirl *= sin(vUv.y*5.0 + uTime*0.22 + uPhase*1.4)*0.5+0.5;
+    swirl += sin(vUv.x*10.0 + vUv.y*8.0 - uTime*0.55 + uPhase)*0.07;
+    float eX = smoothstep(0.0,0.28,vUv.x)*smoothstep(1.0,0.72,vUv.x);
+    float eY = smoothstep(0.0,0.04,vUv.y)*smoothstep(1.0,0.18,vUv.y);
+    float alpha = swirl * eX * eY * 0.20;
+    vec3 warm = vec3(1.00, 0.85, 0.55);
+    vec3 cool = vec3(0.75, 0.88, 1.00);
+    vec3 col = mix(cool, warm, uWarm) * (0.7 + 0.3*swirl);
     gl_FragColor = vec4(col, alpha);
   }
 `;
 
-type PoolDef = { x: number; z: number; r: number; phase: number };
+type WispDef = { x: number; z: number; w: number; h: number; phase: number; warm: number };
+const WISP_DEFS: WispDef[] = [
+  { x: -4, z:  -5, w: 3.5, h:  7, phase: 0.0, warm: 0.85 },
+  { x:  3, z:  -8, w: 4.0, h:  9, phase: 1.2, warm: 0.70 },
+  { x: -7, z: -12, w: 3.0, h:  8, phase: 2.5, warm: 0.30 },
+  { x:  6, z: -10, w: 3.5, h:  7, phase: 3.8, warm: 0.90 },
+  { x: -2, z: -16, w: 4.5, h: 10, phase: 0.9, warm: 0.20 },
+  { x:  9, z: -14, w: 3.0, h:  8, phase: 5.1, warm: 0.75 },
+  { x:-10, z:  -7, w: 2.8, h:  7, phase: 4.4, warm: 0.40 },
+  { x:  1, z:  -6, w: 3.2, h:  8, phase: 2.0, warm: 0.60 },
+  { x: -5, z: -20, w: 5.0, h: 10, phase: 1.6, warm: 0.15 },
+  { x:  4, z: -19, w: 3.8, h:  9, phase: 3.3, warm: 0.85 },
+];
 
-function GroundPool({ x, z, r, phase }: PoolDef) {
-  const matRef   = useRef<THREE.ShaderMaterial>(null!);
-  const uniforms = useMemo(() => ({ uTime: { value: 0 }, uPhase: { value: phase } }), [phase]);
-  useFrame(({ clock }) => { matRef.current.uniforms.uTime.value = clock.getElapsedTime(); });
+function MistWisp({ def, isStatic }: { def: WispDef; isStatic: boolean }) {
+  const meshRef  = useRef<THREE.Mesh>(null!);
+  const uniforms = useMemo(() => ({
+    uTime:  { value: 0 },
+    uPhase: { value: def.phase },
+    uWarm:  { value: def.warm },
+  }), [def.phase, def.warm]);
+
+  useFrame(({ clock }) => {
+    uniforms.uTime.value = clock.getElapsedTime();
+    if (!isStatic && meshRef.current) {
+      meshRef.current.position.x = def.x + clock.getElapsedTime() * 0.065;
+    }
+  });
+
   return (
-    <mesh rotation-x={-Math.PI / 2} position={[x, 0.01, z]}>
-      <circleGeometry args={[r, 20]} />
-      <shaderMaterial ref={matRef} uniforms={uniforms}
-        vertexShader={POOL_VERT} fragmentShader={POOL_FRAG}
-        transparent blending={THREE.AdditiveBlending} depthWrite={false} />
+    <mesh ref={meshRef} position={[def.x, def.h / 2 - 0.5, def.z]}>
+      <planeGeometry args={[def.w, def.h]} />
+      <shaderMaterial vertexShader={WISP_VERT} fragmentShader={WISP_FRAG}
+        uniforms={uniforms} transparent depthWrite={false}
+        blending={THREE.AdditiveBlending} side={THREE.DoubleSide} />
     </mesh>
   );
 }
 
+// ── Ground light pools (moonlight blue + lantern warm) ────────────────────────
+const POOL_VERT = /* glsl */ `varying vec2 vUv; void main(){ vUv=uv; gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0); }`;
+const POOL_FRAG = /* glsl */ `uniform vec3 uCol; uniform float uA; varying vec2 vUv; void main(){ float d=length(vUv-0.5)*2.0; gl_FragColor=vec4(uCol, smoothstep(1.0,0.0,d)*uA); }`;
+
+type PoolDef = { x: number; z: number; r: number; col: string; alpha: number };
 const POOL_DEFS: PoolDef[] = [
-  { x: -3.5, z: -5,  r: 1.2, phase: 0.0 },
-  { x:  4.0, z: -8,  r: 0.9, phase: 1.4 },
-  { x: -1.5, z: -14, r: 1.5, phase: 2.8 },
-  { x:  6.5, z: -11, r: 0.7, phase: 0.7 },
-  { x: -7.0, z: -18, r: 1.1, phase: 3.5 },
+  { x: -3,  z: -18, r: 4.5, col: "#8BBCE8", alpha: 0.14 },
+  { x:  6,  z: -28, r: 5.5, col: "#9AC8F0", alpha: 0.11 },
+  { x: -8,  z: -38, r: 4.0, col: "#7EB4E0", alpha: 0.12 },
+  { x:  2,  z: -50, r: 6.0, col: "#8BBCE8", alpha: 0.09 },
+  { x:-14,  z: -22, r: 3.5, col: "#A0CCF4", alpha: 0.10 },
+  { x: 10,  z: -14, r: 3.0, col: "#9AC8F0", alpha: 0.13 },
+  { x: -2,  z:  -2, r: 1.8, col: "#FFB347", alpha: 0.30 },
+  { x:  2,  z:  -4, r: 1.5, col: "#FFCC66", alpha: 0.28 },
+  { x: -2,  z:  -7, r: 1.6, col: "#FF9933", alpha: 0.26 },
+  { x:  2,  z: -10, r: 1.4, col: "#FFB347", alpha: 0.24 },
+  { x: -2,  z: -13, r: 1.5, col: "#FFCC66", alpha: 0.22 },
+  { x:  2,  z: -16, r: 1.3, col: "#FF9933", alpha: 0.20 },
+  { x: -2,  z: -20, r: 1.4, col: "#FFB347", alpha: 0.18 },
+  { x:  2,  z: -24, r: 1.2, col: "#FFCC66", alpha: 0.15 },
 ];
 
-function GroundPools() {
+function GroundPool({ p }: { p: PoolDef }) {
+  const uniforms = useMemo(() => ({
+    uCol: { value: new THREE.Color(p.col) },
+    uA:   { value: p.alpha },
+  }), [p.col, p.alpha]);
   return (
-    <>
-      {POOL_DEFS.map((p, i) => <GroundPool key={i} {...p} />)}
-    </>
+    <mesh rotation-x={-Math.PI / 2} position={[p.x, 0, p.z]}>
+      <circleGeometry args={[p.r, 32]} />
+      <shaderMaterial vertexShader={POOL_VERT} fragmentShader={POOL_FRAG}
+        uniforms={uniforms} transparent depthWrite={false} blending={THREE.AdditiveBlending} />
+    </mesh>
+  );
+}
+
+function GroundPools({ isStatic }: { isStatic: boolean }) {
+  const groupRef = useRef<THREE.Group>(null!);
+  useFrame(({ clock }) => {
+    if (isStatic || !groupRef.current) return;
+    groupRef.current.position.x = clock.getElapsedTime() * 0.065;
+  });
+  return (
+    <group ref={groupRef} position={[0, 0.02, 0]}>
+      {POOL_DEFS.map((p, i) => <GroundPool key={i} p={p} />)}
+    </group>
   );
 }
 
@@ -424,6 +425,8 @@ function GroundPools() {
 function CameraAndLights({ isStatic }: { isStatic: boolean }) {
   const moonLightRef = useRef<THREE.DirectionalLight>(null!);
   const glowRef      = useRef<THREE.PointLight>(null!);
+  const ground1Ref   = useRef<THREE.PointLight>(null!);
+  const ground2Ref   = useRef<THREE.PointLight>(null!);
 
   useFrame(({ camera, clock }) => {
     const t = clock.getElapsedTime();
@@ -432,24 +435,31 @@ function CameraAndLights({ isStatic }: { isStatic: boolean }) {
       camera.position.y = 0.8 + Math.sin(t * 0.022) * 0.05;
       camera.lookAt(0, 3.2, -12);
     } else {
-      const driftX = t * 0.025;
+      const driftX = t * 0.065;
       camera.position.x = driftX + Math.sin(t * 0.018) * 0.35;
       camera.position.y = 0.8 + Math.sin(t * 0.027) * 0.09;
       camera.lookAt(driftX * 0.15, 3.2, -12);
-      glowRef.current.position.set(camera.position.x + 1.5, 0.4, camera.position.z - 4);
-      moonLightRef.current.position.set(camera.position.x - 8, 14, 5);
+      const cx = camera.position.x;
+      glowRef.current.position.set(cx + 1.2, 0.3, -3);
+      ground1Ref.current.position.set(cx + 3 + Math.sin(t * 0.22) * 2, 0.2, -8);
+      ground2Ref.current.position.set(cx - 2 + Math.sin(t * 0.18) * 2, 0.2, -14);
+      moonLightRef.current.position.set(cx - 8, 14, 5);
     }
   });
 
   return (
     <>
-      <directionalLight ref={moonLightRef} color={0x8BBCE8} intensity={1.1} position={[-8, 14, 5]} />
-      <hemisphereLight args={[0x2456A8 as unknown as THREE.ColorRepresentation, 0x3E1C52 as unknown as THREE.ColorRepresentation, 0.85]} />
-      <ambientLight color={0x120820} intensity={0.65} />
-      <pointLight ref={glowRef} color={0xD4823A} intensity={1.2} distance={18} decay={2} position={[1.5, 0.4, -4]} />
-      <pointLight color={0xFF9933} intensity={2.2} distance={12} decay={2.2} position={[ 2.2, 0.7, -2]} />
-      <pointLight color={0xFFAA44} intensity={1.8} distance={10} decay={2.0} position={[-2.2, 0.7, -5]} />
-      <pointLight color={0xFFCC66} intensity={1.4} distance={9}  decay={1.8} position={[ 2.2, 0.7, -8]} />
+      <directionalLight ref={moonLightRef} color={0x8BBCE8} intensity={1.3} position={[-8, 14, 5]} />
+      <hemisphereLight args={[0x2A5C9A as unknown as THREE.ColorRepresentation, 0x5A3878 as unknown as THREE.ColorRepresentation, 0.85]} />
+      <ambientLight color={0x1A1030} intensity={0.65} />
+      <pointLight ref={glowRef}    color={0xE8901A} intensity={1.8} distance={14} decay={2} position={[1.2, 0.3, -3]} />
+      <pointLight ref={ground1Ref} color={0xFF7722} intensity={2.2} distance={18} decay={2} position={[3, 0.2, -8]} />
+      <pointLight ref={ground2Ref} color={0xFFAA44} intensity={1.8} distance={16} decay={2} position={[-2, 0.2, -14]} />
+      <pointLight color={0xFF9933} intensity={2.2} distance={8} decay={2.2} position={[ 2, 0.5,  -2]} />
+      <pointLight color={0xFFAA44} intensity={2.0} distance={8} decay={2.0} position={[-2, 0.5,  -5]} />
+      <pointLight color={0xFFCC66} intensity={1.8} distance={8} decay={1.8} position={[ 2, 0.5,  -9]} />
+      <pointLight color={0xFF9933} intensity={1.5} distance={8} decay={2.0} position={[-2, 0.5, -13]} />
+      <pointLight color={0xFFAA44} intensity={1.2} distance={8} decay={2.0} position={[ 2, 0.5, -17]} />
     </>
   );
 }
@@ -462,7 +472,6 @@ export default function ForestScene({ isStatic = false }: { isStatic?: boolean }
       <fogExp2 attach="fog" args={["#1A3A5C", 0.007]} />
 
       <SkyGradient />
-
       <Stars radius={190} depth={20} count={1100} factor={2.5} saturation={0} fade speed={0.5} />
 
       <AuroraCurtain y={22} z={-130} w={320} h={16} c1="#5CB88A" c2="#4A8FD4" spd={0.28} timeOffset={0} />
@@ -471,16 +480,15 @@ export default function ForestScene({ isStatic = false }: { isStatic?: boolean }
 
       <Moon />
       <CameraAndLights isStatic={isStatic} />
-
       <Mountains />
 
       <mesh rotation-x={-Math.PI / 2} position={[0, 0, 0]}>
         <planeGeometry args={[500, 500]} />
-        <meshLambertMaterial color={0x050C18} />
+        <meshLambertMaterial color={0x0A1828} />
       </mesh>
 
-      <GroundMist />
-      <GroundPools />
+      {WISP_DEFS.map((def, i) => <MistWisp key={i} def={def} isStatic={isStatic} />)}
+      <GroundPools isStatic={isStatic} />
       <Forest />
       <Fireflies />
       <Lanterns isStatic={isStatic} />

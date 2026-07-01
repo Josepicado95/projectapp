@@ -5,7 +5,7 @@
 
 import { useActionState, useState, useEffect, useRef } from "react";
 import { saveCheckIn } from "@/app/actions/checkins";
-import ThreeBackground from "@/components/background/ThreeBackground";
+import ForestBackground from "@/components/ForestBackground";
 
 type MetricKey = "energy" | "mood" | "stress" | "sleep";
 type Values    = Record<MetricKey, number>;
@@ -99,7 +99,7 @@ export default function CheckInBody({ today, recentWeek, userName }: Props) {
     <div style={{ position:"relative", width:"100%", height:"100vh", overflow:"hidden",
       fontFamily: "var(--font-hanken), sans-serif" }}>
 
-      <ThreeBackground moment="noche" isStatic />
+      <ForestBackground static />
 
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes ci-pulse   { 0%{transform:scale(1)} 50%{transform:scale(1.06)} 100%{transform:scale(1)} }

@@ -3,7 +3,7 @@
 import { useActionState, useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
-import ThreeBackground from "@/components/background/ThreeBackground";
+import ForestBackground from "@/components/ForestBackground";
 import { loginAction } from "@/app/actions/auth";
 import { registerAction } from "@/app/actions/auth";
 
@@ -77,7 +77,7 @@ export default function AuthCard({ initialMode = "login" as Mode }: { initialMod
         .av-input::placeholder { color:rgba(236,230,216,.3); }
       `}} />
 
-      <ThreeBackground moment="noche" isStatic />
+      <ForestBackground static />
 
       {/* Dawn curtain — fades out on mount */}
       <div style={{
