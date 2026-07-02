@@ -1,9 +1,16 @@
+// app/actions/missions.ts
 "use server";
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import {
+  createMission as createMissionService,
+  updateMission as updateMissionService,
+  toggleMission as toggleMissionService,
+  deleteMission as deleteMissionService,
+} from "@/lib/services/missions";
+import { NotFoundError } from "@/lib/services/errors";
 
 type ActionState = {
   errors?: { title?: string[]; difficulty?: string[] };
@@ -43,14 +50,18 @@ export async function createMission(
     return { errors: result.error.flatten().fieldErrors };
   }
 
-  await prisma.mission.create({
-    data: {
+  try {
+    await createMissionService(Number(session.user.id), result.data.adventureId, {
       title: result.data.title,
       description: result.data.description,
       difficulty: result.data.difficulty,
-      adventureId: result.data.adventureId,
-    },
-  });
+    });
+  } catch (error) {
+    if (error instanceof NotFoundError) {
+      return { message: "No se pudo crear la misión" };
+    }
+    throw error;
+  }
 
   revalidatePath("/");
   revalidatePath(`/adventures/${result.data.adventureId}`);
@@ -71,14 +82,16 @@ export async function updateMission(formData: FormData): Promise<void> {
 
   if (!result.success) return;
 
-  await prisma.mission.update({
-    where: { id: result.data.id },
-    data: {
+  try {
+    await updateMissionService(Number(session.user.id), result.data.id, {
       title: result.data.title,
       description: result.data.description,
       difficulty: result.data.difficulty,
-    },
-  });
+    });
+  } catch (error) {
+    if (error instanceof NotFoundError) return;
+    throw error;
+  }
 
   revalidatePath("/");
   revalidatePath(`/adventures/${result.data.adventureId}`);
@@ -100,10 +113,17 @@ export async function saveMission(
 
   if (title.length < 3) return { errors: { title: ["El título debe tener al menos 3 caracteres"] } };
 
-  if (id) {
-    await prisma.mission.update({ where: { id }, data: { title, difficulty } });
-  } else {
-    await prisma.mission.create({ data: { title, difficulty, adventureId, completed: false } });
+  const userId = Number(session.user.id);
+
+  try {
+    if (id) {
+      await updateMissionService(userId, id, { title, difficulty });
+    } else {
+      await createMissionService(userId, adventureId, { title, difficulty });
+    }
+  } catch (error) {
+    if (error instanceof NotFoundError) return { message: "error" };
+    throw error;
   }
 
   revalidatePath("/");
@@ -118,16 +138,12 @@ export async function toggleMission(formData: FormData): Promise<void> {
   const adventureId = Number(formData.get("adventureId"));
   if (!id || !adventureId) return;
 
-  const mission = await prisma.mission.findUnique({ where: { id } });
-  if (!mission) return;
-
-  await prisma.mission.update({
-    where: { id },
-    data: {
-      completed: !mission.completed,
-      completedAt: !mission.completed ? new Date() : null,
-    },
-  });
+  try {
+    await toggleMissionService(Number(session.user.id), id);
+  } catch (error) {
+    if (error instanceof NotFoundError) return;
+    throw error;
+  }
 
   revalidatePath("/");
   revalidatePath(`/adventures/${adventureId}`);
@@ -141,7 +157,13 @@ export async function deleteMission(formData: FormData): Promise<void> {
   const adventureId = Number(formData.get("adventureId"));
   if (!id || !adventureId) return;
 
-  await prisma.mission.delete({ where: { id } });
+  try {
+    await deleteMissionService(Number(session.user.id), id);
+  } catch (error) {
+    if (error instanceof NotFoundError) return;
+    throw error;
+  }
+
   revalidatePath("/");
   revalidatePath(`/adventures/${adventureId}`);
 }
