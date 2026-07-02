@@ -8,13 +8,14 @@ datasource db {
 }
 
 model User {
-  id         Int         @id @default(autoincrement())
-  email      String      @unique
-  name       String
-  password   String
-  createdAt  DateTime    @default(now())
-  adventures Adventure[]
-  checkIns   CheckIn[]
+  id            Int            @id @default(autoincrement())
+  email         String         @unique
+  name          String
+  password      String
+  createdAt     DateTime       @default(now())
+  adventures    Adventure[]
+  checkIns      CheckIn[]
+  refreshTokens RefreshToken[]
 }
 
 model Adventure {
@@ -50,4 +51,14 @@ model CheckIn {
   date      DateTime @default(now())
   userId    Int
   user      User     @relation(fields: [userId], references: [id])
+}
+
+model RefreshToken {
+  id        Int       @id @default(autoincrement())
+  tokenHash String    @unique
+  userId    Int
+  user      User      @relation(fields: [userId], references: [id])
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
 }
