@@ -3,9 +3,9 @@
 import { z } from "zod";
 import { redirect } from "next/navigation";
 import { AuthError } from "next-auth";
-import bcrypt from "bcryptjs";
-import { prisma } from "@/lib/prisma";
 import { signIn, signOut } from "@/auth";
+import { registerUser } from "@/lib/services/auth";
+import { ConflictError } from "@/lib/services/errors";
 
 type RegisterState = {
   errors?: { name?: string[]; email?: string[]; password?: string[] };
@@ -34,23 +34,14 @@ export async function registerAction(
     return { errors: result.error.flatten().fieldErrors };
   }
 
-  const existing = await prisma.user.findUnique({
-    where: { email: result.data.email },
-  });
-
-  if (existing) {
-    return { errors: { email: ["Ya existe una cuenta con ese email"] } };
+  try {
+    await registerUser(result.data.name, result.data.email, result.data.password);
+  } catch (error) {
+    if (error instanceof ConflictError) {
+      return { errors: { email: [error.message] } };
+    }
+    throw error;
   }
-
-  const hashedPassword = await bcrypt.hash(result.data.password, 12);
-
-  await prisma.user.create({
-    data: {
-      name: result.data.name,
-      email: result.data.email,
-      password: hashedPassword,
-    },
-  });
 
   redirect("/login?registered=true");
 }
