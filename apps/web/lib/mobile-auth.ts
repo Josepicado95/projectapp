@@ -22,7 +22,8 @@ export function verifyAccessToken(token: string): number | null {
   try {
     const payload = jwt.verify(token, getSecret()) as jwt.JwtPayload;
     if (!payload.sub) return null;
-    return Number(payload.sub);
+    const userId = Number(payload.sub);
+    return Number.isFinite(userId) ? userId : null;
   } catch {
     return null;
   }
@@ -54,10 +55,14 @@ export async function rotateRefreshToken(
     return null;
   }
 
-  await prisma.refreshToken.update({
-    where: { id: stored.id },
+  const { count } = await prisma.refreshToken.updateMany({
+    where: { id: stored.id, revokedAt: null },
     data: { revokedAt: new Date() },
   });
+
+  if (count === 0) {
+    return null;
+  }
 
   const newRefreshToken = await issueRefreshToken(stored.userId);
   const accessToken = signAccessToken(stored.userId);
