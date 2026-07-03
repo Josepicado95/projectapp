@@ -4,6 +4,7 @@ import crypto from "crypto";
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { apiError } from "@/lib/api-response";
+import { auth } from "@/auth";
 
 const ACCESS_TOKEN_TTL = "15m";
 const REFRESH_TOKEN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
@@ -89,17 +90,24 @@ export type MobileAuthHandler<C> = (
 export function withMobileAuth<C = unknown>(handler: MobileAuthHandler<C>) {
   return async (req: NextRequest, routeContext: C): Promise<Response> => {
     const authHeader = req.headers.get("authorization");
-    if (!authHeader?.startsWith("Bearer ")) {
-      return apiError(401, "missing_token", "Falta el header Authorization");
+
+    if (authHeader?.startsWith("Bearer ")) {
+      const token = authHeader.slice("Bearer ".length);
+      const userId = verifyAccessToken(token);
+
+      if (userId === null) {
+        return apiError(401, "token_expired", "El access token es inválido o expiró");
+      }
+
+      return handler(req, { userId, ...routeContext });
     }
 
-    const token = authHeader.slice("Bearer ".length);
-    const userId = verifyAccessToken(token);
-
-    if (userId === null) {
-      return apiError(401, "token_expired", "El access token es inválido o expiró");
+    // No Bearer header — fall back to the web app's own NextAuth session cookie.
+    const session = await auth();
+    if (session?.user?.id) {
+      return handler(req, { userId: Number(session.user.id), ...routeContext });
     }
 
-    return handler(req, { userId, ...routeContext });
+    return apiError(401, "missing_token", "Falta el header Authorization o la sesión");
   };
 }
