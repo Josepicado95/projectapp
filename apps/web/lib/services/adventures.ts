@@ -83,6 +83,16 @@ export async function listAdventures(userId: number): Promise<AdventureSummary[]
   }));
 }
 
+export async function listAdventuresWithMissions(userId: number): Promise<AdventureDetail[]> {
+  const adventures = await prisma.adventure.findMany({
+    where: { userId },
+    include: { missions: { orderBy: { createdAt: "asc" } } },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return adventures.map(toDetail);
+}
+
 export async function getAdventure(userId: number, id: number): Promise<AdventureDetail> {
   const adventure = await prisma.adventure.findUnique({
     where: { id },
