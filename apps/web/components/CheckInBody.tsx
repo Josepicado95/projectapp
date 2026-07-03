@@ -3,8 +3,7 @@
  */
 "use client";
 
-import { useActionState, useState, useEffect, useRef } from "react";
-import { saveCheckIn } from "@/app/actions/checkins";
+import { useState, useEffect, useRef } from "react";
 import ForestBackground from "@/components/ForestBackground";
 
 type MetricKey = "energy" | "mood" | "stress" | "sleep";
@@ -12,11 +11,7 @@ type Values    = Record<MetricKey, number>;
 
 type CheckInPoint = { date: string; energy: number; mood: number; stress: number; sleep: number };
 
-type Props = {
-  today?:     Values;
-  recentWeek: CheckInPoint[];
-  userName:   string;
-};
+type Props = { userName: string };
 
 const METRICS = [
   { key: "energy" as MetricKey, label: "Energía", icon: "⚡", color: "#E3A878",
@@ -43,21 +38,81 @@ const METRICS = [
 
 const WEEK_DAYS = ["L","M","X","J","V","S","D"];
 
-export default function CheckInBody({ today, recentWeek, userName }: Props) {
-  const [state, formAction, pending] = useActionState(saveCheckIn, {});
+type LoadState = "loading" | "ready" | "error";
+type SaveState = { status: "idle" | "saving" | "success" | "error"; message?: string; error?: string };
 
-  const [step,      setStep]      = useState<number>(today ? 5 : 0);
-  const [direction, setDirection] = useState<"forward"|"back">("forward");
-  const [animKey,   setAnimKey]   = useState(0);
-  const [values,    setValues]    = useState<Values>(
-    today ?? { energy: 3, mood: 3, stress: 3, sleep: 3 }
-  );
+export default function CheckInBody({ userName }: Props) {
+  const [loadState,  setLoadState]  = useState<LoadState>("loading");
+  const [saveState,  setSaveState]  = useState<SaveState>({ status: "idle" });
+
+  const [step,       setStep]       = useState<number>(0);
+  const [direction,  setDirection]  = useState<"forward"|"back">("forward");
+  const [animKey,    setAnimKey]    = useState(0);
+  const [recentWeek, setRecentWeek] = useState<CheckInPoint[]>([]);
+  const [values,     setValues]     = useState<Values>({ energy: 3, mood: 3, stress: 3, sleep: 3 });
 
   const formRef = useRef<HTMLFormElement>(null);
 
   useEffect(() => {
-    if (state?.message) setStep(5);
-  }, [state?.message]);
+    let cancelled = false;
+
+    async function load() {
+      try {
+        const [todayRes, weekRes] = await Promise.all([
+          fetch("/api/mobile/checkins?today=true"),
+          fetch("/api/mobile/checkins?days=7"),
+        ]);
+        if (!todayRes.ok || !weekRes.ok) throw new Error("load_failed");
+
+        const todayData: { checkIn: Values | null } = await todayRes.json();
+        const weekData: CheckInPoint[] = await weekRes.json();
+        if (cancelled) return;
+
+        setRecentWeek(weekData.map((c) => ({
+          date: c.date.slice(0, 10),
+          energy: c.energy,
+          mood: c.mood,
+          stress: c.stress,
+          sleep: c.sleep,
+        })));
+
+        if (todayData.checkIn) {
+          setValues(todayData.checkIn);
+          setStep(5);
+        }
+        setLoadState("ready");
+      } catch {
+        if (!cancelled) setLoadState("error");
+      }
+    }
+
+    load();
+    return () => { cancelled = true; };
+  }, []);
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setSaveState({ status: "saving" });
+    try {
+      const res = await fetch("/api/mobile/checkins", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        setSaveState({ status: "error", error: body?.error?.message ?? "No se pudo guardar el check-in." });
+        return;
+      }
+      setSaveState({
+        status: "success",
+        message: res.status === 201 ? "¡Check-in guardado!" : "¡Check-in actualizado!",
+      });
+      setStep(5);
+    } catch {
+      setSaveState({ status: "error", error: "No se pudo guardar el check-in." });
+    }
+  }
 
   function goTo(next: number, dir: "forward" | "back") {
     setDirection(dir);
@@ -94,6 +149,40 @@ export default function CheckInBody({ today, recentWeek, userName }: Props) {
     boxShadow: "0 32px 80px rgba(0,0,0,.55), inset 0 1px 0 rgba(236,230,216,.1)",
     animation: `${anim} .4s cubic-bezier(.2,0,0,1) both`,
   };
+
+  const loadingCardStyle: React.CSSProperties = {
+    background: "rgba(14,20,36,.84)",
+    backdropFilter: "blur(28px) saturate(1.3)",
+    WebkitBackdropFilter: "blur(28px) saturate(1.3)",
+    border: "1px solid rgba(236,230,216,.16)",
+    borderRadius: 28,
+    boxShadow: "0 32px 80px rgba(0,0,0,.55), inset 0 1px 0 rgba(236,230,216,.1)",
+  };
+
+  if (loadState === "loading" || loadState === "error") {
+    return (
+      <div style={{ position:"relative", width:"100%", height:"100vh", overflow:"hidden", fontFamily: "var(--font-hanken), sans-serif" }}>
+        <ForestBackground static />
+        <div style={{ position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center", zIndex:1 }}>
+          <div style={{ ...loadingCardStyle, width:"100%", maxWidth:440, padding:"48px 44px", textAlign:"center" }}>
+            {loadState === "loading" ? (
+              <div style={{ fontSize:15, color:"#7A8FA0" }}>Cargando tu check-in…</div>
+            ) : (
+              <>
+                <div style={{ fontSize:15, color:"#F0A0A0", marginBottom:16 }}>No se pudo cargar tu check-in.</div>
+                <button
+                  onClick={() => window.location.reload()}
+                  style={{ fontFamily:"var(--font-hanken)", fontWeight:700, fontSize:14, color:"#1E282A", background:"#E3A878", border:"none", borderRadius:12, padding:"10px 20px", cursor:"pointer" }}
+                >
+                  Reintentar
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ position:"relative", width:"100%", height:"100vh", overflow:"hidden",
@@ -233,23 +322,19 @@ export default function CheckInBody({ today, recentWeek, userName }: Props) {
                     <span>Siguiente</span><span style={{ fontSize:17 }}>→</span>
                   </button>
                 ) : (
-                  <form ref={formRef} action={formAction} style={{ flex:1 }}>
-                    <input type="hidden" name="energy" value={values.energy} />
-                    <input type="hidden" name="mood"   value={values.mood}   />
-                    <input type="hidden" name="stress" value={values.stress} />
-                    <input type="hidden" name="sleep"  value={values.sleep}  />
-                    <button type="submit" disabled={pending}
-                      style={{ width:"100%", fontFamily:"var(--font-hanken)", fontWeight:700, fontSize:15, color:"#1E282A", background: pending ? "rgba(126,154,134,.5)" : "linear-gradient(135deg,#7E9A86 0%,#5E7A66 100%)", border:"none", borderRadius:14, padding:15, cursor: pending ? "wait" : "pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:8, boxShadow:"0 8px 24px rgba(126,154,134,.3)" }}>
-                      <span>{pending ? "Guardando..." : "Guardar check-in"}</span>
-                      {!pending && <span style={{ fontSize:17 }}>✓</span>}
+                  <form ref={formRef} onSubmit={handleSubmit} style={{ flex:1 }}>
+                    <button type="submit" disabled={saveState.status === "saving"}
+                      style={{ width:"100%", fontFamily:"var(--font-hanken)", fontWeight:700, fontSize:15, color:"#1E282A", background: saveState.status === "saving" ? "rgba(126,154,134,.5)" : "linear-gradient(135deg,#7E9A86 0%,#5E7A66 100%)", border:"none", borderRadius:14, padding:15, cursor: saveState.status === "saving" ? "wait" : "pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:8, boxShadow:"0 8px 24px rgba(126,154,134,.3)" }}>
+                      <span>{saveState.status === "saving" ? "Guardando..." : "Guardar check-in"}</span>
+                      {saveState.status !== "saving" && <span style={{ fontSize:17 }}>✓</span>}
                     </button>
                   </form>
                 )}
               </div>
 
-              {state.error && (
+              {saveState.status === "error" && (
                 <div style={{ marginTop:14, display:"flex", alignItems:"center", gap:8, background:"rgba(220,80,80,.12)", border:"1px solid rgba(220,80,80,.28)", borderRadius:11, padding:"10px 13px" }}>
-                  <span style={{ fontSize:13, color:"#F0A0A0" }}>{state.error}</span>
+                  <span style={{ fontSize:13, color:"#F0A0A0" }}>{saveState.error}</span>
                 </div>
               )}
             </div>
@@ -261,7 +346,7 @@ export default function CheckInBody({ today, recentWeek, userName }: Props) {
               <div style={{ textAlign:"center", marginBottom:30 }}>
                 <div style={{ width:68, height:68, borderRadius:"50%", background:"rgba(126,154,134,.15)", border:"2px solid rgba(126,154,134,.4)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 16px", fontSize:26, animation:"ci-checkIn .5s cubic-bezier(.2,0,0,1) both" }}>✓</div>
                 <div style={{ fontFamily:"var(--font-schibsted)", fontWeight:700, fontSize:24, color:"#F2EFE6", marginBottom:6 }}>
-                  {state.message ?? "Check-in guardado"}
+                  {saveState.message ?? "Check-in guardado"}
                 </div>
                 <div style={{ fontSize:14, color:"#7A8FA0" }}>Tu momento de hoy está registrado.</div>
               </div>
