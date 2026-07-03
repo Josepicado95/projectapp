@@ -1,9 +1,10 @@
+// app/actions/checkins.ts
 "use server";
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import { saveCheckIn as saveCheckInService } from "@/lib/services/checkins";
 
 type CheckInState = { message?: string; error?: string };
 
@@ -33,27 +34,9 @@ export async function saveCheckIn(
     return { error: "Valores inválidos. Asegúrate de que todos estén entre 1 y 5." };
   }
 
-  const startOfDay = new Date();
-  startOfDay.setUTCHours(0, 0, 0, 0);
-  const endOfDay = new Date();
-  endOfDay.setUTCHours(23, 59, 59, 999);
-
-  const existing = await prisma.checkIn.findFirst({
-    where: { userId, date: { gte: startOfDay, lte: endOfDay } },
-  });
-
-  if (existing) {
-    await prisma.checkIn.update({
-      where: { id: existing.id },
-      data: result.data,
-    });
-  } else {
-    await prisma.checkIn.create({
-      data: { ...result.data, userId },
-    });
-  }
+  const { created } = await saveCheckInService(userId, result.data);
 
   revalidatePath("/checkin");
   revalidatePath("/");
-  return { message: existing ? "¡Check-in actualizado!" : "¡Check-in guardado!" };
+  return { message: created ? "¡Check-in guardado!" : "¡Check-in actualizado!" };
 }

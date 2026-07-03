@@ -1,7 +1,6 @@
 import NextAuth, { DefaultSession } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import bcrypt from "bcryptjs";
-import { prisma } from "@/lib/prisma";
+import { verifyCredentials } from "@/lib/services/auth";
 import { authConfig } from "@/auth.config";
 
 declare module "next-auth" {
@@ -21,18 +20,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
 
-        const user = await prisma.user.findUnique({
-          where: { email: String(credentials.email) },
-        });
-
-        if (!user) return null;
-
-        const passwordMatch = await bcrypt.compare(
-          String(credentials.password),
-          user.password
+        const user = await verifyCredentials(
+          String(credentials.email),
+          String(credentials.password)
         );
-
-        if (!passwordMatch) return null;
+        if (!user) return null;
 
         return { id: String(user.id), name: user.name, email: user.email };
       },

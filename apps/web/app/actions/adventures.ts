@@ -1,9 +1,14 @@
+// app/actions/adventures.ts
 "use server";
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import {
+  createAdventure as createAdventureService,
+  updateAdventure as updateAdventureService,
+  deleteAdventure as deleteAdventureService,
+} from "@/lib/services/adventures";
 
 const AdventureSchema = z.object({
   title: z.string().min(3, "El título debe tener al menos 3 caracteres"),
@@ -37,22 +42,16 @@ export async function createAdventure(
   const initialMissionNames = (formData.getAll("initialMission") as string[]).map((n) => n.trim()).filter(Boolean);
   const initialMissionDiffs = (formData.getAll("initialMissionDiff") as string[]).map((d) => Math.min(3, Math.max(1, Number(d) || 2)));
 
-  const missionData = initialMissionNames.map((title, i) => ({
+  const initialMissions = initialMissionNames.map((title, i) => ({
     title,
     difficulty: initialMissionDiffs[i] ?? 2,
-    completed: false,
   }));
 
-  await prisma.adventure.create({
-    data: {
-      title: result.data.title,
-      description: result.data.description,
-      paletteIdx: result.data.paletteIdx,
-      userId,
-      ...(missionData.length > 0 && {
-        missions: { create: missionData },
-      }),
-    },
+  await createAdventureService(userId, {
+    title: result.data.title,
+    description: result.data.description,
+    paletteIdx: result.data.paletteIdx,
+    initialMissions,
   });
 
   revalidatePath("/");
@@ -83,14 +82,11 @@ export async function updateAdventure(formData: FormData): Promise<void> {
     throw new Error("Datos inválidos al actualizar la aventura");
   }
 
-  await prisma.adventure.update({
-    where: { id: result.data.id, userId: Number(session.user.id) },
-    data: {
-      title: result.data.title,
-      description: result.data.description,
-      status: result.data.status,
-      paletteIdx: result.data.paletteIdx,
-    },
+  await updateAdventureService(Number(session.user.id), result.data.id, {
+    title: result.data.title,
+    description: result.data.description,
+    status: result.data.status,
+    paletteIdx: result.data.paletteIdx,
   });
 
   revalidatePath("/");
@@ -103,10 +99,7 @@ export async function deleteAdventure(formData: FormData): Promise<void> {
   const id = Number(formData.get("id"));
   if (!id) return;
 
-  await prisma.mission.deleteMany({ where: { adventureId: id } });
-  await prisma.adventure.delete({
-    where: { id, userId: Number(session.user.id) },
-  });
+  await deleteAdventureService(Number(session.user.id), id);
 
   revalidatePath("/");
 }
