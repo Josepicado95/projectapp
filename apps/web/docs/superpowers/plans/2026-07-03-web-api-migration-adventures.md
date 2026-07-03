@@ -594,8 +594,9 @@ type Props = {
 export default function MissionItem({ mission, onChanged }: Props) {
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  async function patchMission(body: Record<string, unknown>) {
+  async function patchMission(body: Record<string, unknown>): Promise<boolean> {
     setBusy(true);
     try {
       const res = await fetch(`/api/mobile/missions/${mission.id}`, {
@@ -605,9 +606,19 @@ export default function MissionItem({ mission, onChanged }: Props) {
       });
       if (res.status === 401) {
         window.location.href = "/login";
-        return;
+        return false;
       }
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => null);
+        setError(errBody?.error?.message ?? "No se pudo guardar la misión.");
+        return false;
+      }
+      setError(null);
       onChanged();
+      return true;
+    } catch {
+      setError("No se pudo guardar la misión.");
+      return false;
     } finally {
       setBusy(false);
     }
@@ -623,8 +634,8 @@ export default function MissionItem({ mission, onChanged }: Props) {
     const title = (form.elements.namedItem("title") as HTMLInputElement).value;
     const description = (form.elements.namedItem("description") as HTMLInputElement).value;
     const difficulty = Number((form.elements.namedItem("difficulty") as HTMLSelectElement).value);
-    await patchMission({ title, description: description || undefined, difficulty });
-    setEditing(false);
+    const ok = await patchMission({ title, description: description || undefined, difficulty });
+    if (ok) setEditing(false);
   }
 
   async function handleDelete() {
@@ -635,7 +646,14 @@ export default function MissionItem({ mission, onChanged }: Props) {
         window.location.href = "/login";
         return;
       }
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => null);
+        setError(errBody?.error?.message ?? "No se pudo eliminar la misión.");
+        return;
+      }
       onChanged();
+    } catch {
+      setError("No se pudo eliminar la misión.");
     } finally {
       setBusy(false);
     }
@@ -668,13 +686,14 @@ export default function MissionItem({ mission, onChanged }: Props) {
             placeholder="Descripción (opcional)"
             className="border rounded px-2 py-1 w-full mb-2"
           />
+          {error && <p className="text-red-500 text-xs mb-2">{error}</p>}
           <div className="flex gap-2">
             <button type="submit" disabled={busy} className="bg-blue-500 text-white px-3 py-1 rounded text-sm disabled:opacity-50">
               Guardar
             </button>
             <button
               type="button"
-              onClick={() => setEditing(false)}
+              onClick={() => { setEditing(false); setError(null); }}
               className="border px-3 py-1 rounded text-sm"
             >
               Cancelar
@@ -710,6 +729,7 @@ export default function MissionItem({ mission, onChanged }: Props) {
             </span>
           )}
         </div>
+        {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
       </div>
 
       <div className="flex gap-2 shrink-0">
@@ -810,6 +830,8 @@ import Link from "next/link";
 import NewAdventurePanel from "./NewAdventurePanel";
 import MissionEditorModal, { MISSION_LEVELS, hexToRgb } from "./MissionEditorModal";
 import AdventureEditorModal from "./AdventureEditorModal";
+import ThreeBackground from "@/components/background/ThreeBackground";
+import { logoutAction } from "@/app/actions/auth";
 import { MomentTheme } from "@/lib/theme";
 import { PALETTES } from "@/lib/palettes";
 import type { Adventure, Mission } from "@/lib/generated/prisma/client";
@@ -958,17 +980,200 @@ export default function DashboardBody({ theme, firstName, initial }: Props) {
 
 Note: `doneMissions`/`totalMissions` move from server-computed props to client-computed derived values (same formula, moved). `refresh` is deliberately fetched fully in parallel (`Promise.all` of 4 endpoints) rather than the original's implicit sequential server-side awaits — this doesn't change what the user sees, only how fast it loads.
 
-Now, immediately after the `if (activeAdventures.length === 0...` — actually, before the existing `return (` that starts the main JSX, add the loading/error early-return (insert this right after the `levelPct` calculation, before `return (`):
+Now, before the existing `return (` that starts the main JSX, add the loading/error early-return (insert this right after the `levelPct` calculation, before `return (`):
 
 ```tsx
   if (loadState === "loading" || loadState === "error") {
     return (
-      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: theme.cardSub, fontSize: 15 }}>
-        {loadState === "loading" ? "Cargando tu dashboard…" : "No se pudo cargar el dashboard. Intenta recargar la página."}
+      <div style={{ position: "relative", height: "100vh", overflow: "hidden" }}>
+        <ThreeBackground moment={theme.key} />
+        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: theme.cardSub, fontSize: 15, zIndex: 1 }}>
+          {loadState === "loading" ? "Cargando tu dashboard…" : "No se pudo cargar el dashboard. Intenta recargar la página."}
+        </div>
       </div>
     );
   }
 ```
+
+This matches `/checkin`'s and `/adventures/[id]`'s established loading/error pattern — no nav rail during loading, just the cinematic background with a centered message.
+
+- [ ] **Step 2b: Move the page shell (background, nav rail, bottom nav) from `page.tsx` into `DashboardBody.tsx`**
+
+**This step exists because of a gap this plan originally had**: `page.tsx`'s pre-migration version didn't just fetch data — it also rendered the entire page shell (`ThreeBackground`, the desktop nav rail with the app's only logout button, and the mobile bottom nav), none of which exists anywhere in `DashboardBody.tsx`. Step 1 already strips all of that out of `page.tsx`. Without this step, the dashboard would lose its background, navigation, and the logout button entirely. This mirrors exactly what Task 2 already did for `/adventures/[id]` (`AdventureDetailBody.tsx` absorbed its page's shell the same way) — this plan simply missed doing the same thing for the dashboard when it was first written.
+
+The nav rail's "Check-in" link shows a small unread-style dot when there's no check-in for today. Before this migration that came from the `todayCheckIn` prop `page.tsx` fetched server-side; after this migration it comes from `DashboardBody`'s own client-fetched `todayCheckIn` state (already wired up in Step 2 above) — same condition (`!todayCheckIn`), just sourced client-side now instead of from a prop.
+
+Find the start of the main return statement:
+
+```tsx
+  return (
+    <>
+      <div style={{
+        flex: 1, display: "flex", justifyContent: "space-between", gap: 24, overflow: "hidden",
+        padding: "30px 34px",
+      }}>
+```
+
+Replace with:
+
+```tsx
+  return (
+    <div style={{ height: "100vh", overflow: "hidden", position: "relative" }}>
+      <ThreeBackground moment={theme.key} />
+      <div style={{ position: "absolute", inset: 0, display: "flex", zIndex: 1 }}>
+
+        {/* Nav Rail */}
+        <div className="av-nav-rail" style={{
+          flexShrink: 0, width: 84,
+          background: "rgba(10,15,26,.66)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          borderRight: "1px solid rgba(236,230,216,.1)",
+          display: "flex", flexDirection: "column", alignItems: "center",
+          padding: "22px 0",
+          isolation: "isolate",
+        }}>
+          <div style={{
+            width: 38, height: 38, borderRadius: 11,
+            background: "radial-gradient(circle at 60% 35%, #F0EAD8, #9DB6A4)",
+            boxShadow: "0 0 18px rgba(240,234,216,.3)",
+            marginBottom: 24, flexShrink: 0,
+          }} />
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "center" }}>
+            <Link href="/" style={{ textDecoration: "none" }}>
+              <div style={{
+                width: 56, height: 56, borderRadius: 15,
+                background: "rgba(91,155,209,.2)", border: "1px solid rgba(146,199,230,.45)",
+                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                gap: 4, color: "#CDE6F5", cursor: "pointer",
+              }}>
+                <span style={{ fontSize: 18, lineHeight: 1 }}>⛰</span>
+                <span style={{ fontSize: 9, fontWeight: 600 }}>Aventuras</span>
+              </div>
+            </Link>
+            <Link href="/checkin" style={{ textDecoration: "none" }}>
+              <div style={{
+                position: "relative",
+                width: 56, height: 56, borderRadius: 15,
+                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                gap: 4, color: "#9FB4C6", cursor: "pointer",
+              }}>
+                <span style={{ fontSize: 18, lineHeight: 1 }}>♡</span>
+                <span style={{ fontSize: 9, fontWeight: 600 }}>Check-in</span>
+                {!todayCheckIn && (
+                  <span style={{
+                    position: "absolute", top: 9, right: 13,
+                    width: 9, height: 9, borderRadius: "50%",
+                    background: "#7E9A86", border: "2px solid rgba(10,15,26,.9)",
+                  }} />
+                )}
+              </div>
+            </Link>
+            <Link href="/progress" style={{ textDecoration: "none" }}>
+              <div style={{
+                width: 56, height: 56, borderRadius: 15,
+                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                gap: 4, color: "#9FB4C6", cursor: "pointer",
+              }}>
+                <span style={{ fontSize: 17, lineHeight: 1 }}>◷</span>
+                <span style={{ fontSize: 9, fontWeight: 600 }}>Progreso</span>
+              </div>
+            </Link>
+          </div>
+          <div style={{ marginTop: "auto" }}>
+            <form action={logoutAction}>
+              <button
+                type="submit"
+                title="Cerrar sesión"
+                style={{
+                  width: 38, height: 38, borderRadius: "50%",
+                  background: theme.avatarBg, color: theme.avatarInk,
+                  border: "none", cursor: "pointer",
+                  fontWeight: 600, fontSize: 14,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}
+              >
+                {initial}
+              </button>
+            </form>
+          </div>
+        </div>
+
+      <div style={{
+        flex: 1, display: "flex", justifyContent: "space-between", gap: 24, overflow: "hidden",
+        padding: "30px 34px",
+      }}>
+```
+
+Note: the closing `</>` and its matching opening `<>` are gone — the fragment is replaced by real wrapper `<div>`s, so the corresponding close needs updating too (next find/replace below).
+
+Find the end of the return statement (the last `</div>` before the Mission editor modal comment, all the way to the end of the file):
+
+```tsx
+      </div>
+
+      {/* Mission editor modal */}
+      {editorTarget && (
+        <MissionEditorModal
+          adventureId={editorTarget.adventureId}
+          mission={editorTarget.mission}
+          onClose={() => setEditorTarget(null)}
+        />
+      )}
+    </>
+  );
+}
+```
+
+Replace with:
+
+```tsx
+      </div>
+
+      </div>{/* /nav rail + content flex row */}
+
+      {/* Bottom nav — mobile */}
+      <div className="av-bottom-nav" style={{
+        position: "fixed", bottom: 0, left: 0, right: 0,
+        background: "rgba(10,15,26,.88)",
+        backdropFilter: "blur(14px)",
+        WebkitBackdropFilter: "blur(14px)",
+        borderTop: "1px solid rgba(236,230,216,.1)",
+        padding: "10px 0 16px",
+        justifyContent: "space-around", alignItems: "center",
+        zIndex: 60,
+      }}>
+        <Link href="/" style={{ textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, color: "#CDE6F5" }}>
+          <span style={{ fontSize: 22 }}>⛰</span>
+          <span style={{ fontSize: 9, fontWeight: 600 }}>Aventuras</span>
+        </Link>
+        <Link href="/checkin" style={{ textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, color: "#9FB4C6", position: "relative" }}>
+          <span style={{ fontSize: 22 }}>♡</span>
+          <span style={{ fontSize: 9, fontWeight: 600 }}>Check-in</span>
+          {!todayCheckIn && (
+            <span style={{ position: "absolute", top: -1, right: -4, width: 8, height: 8, borderRadius: "50%", background: "#7E9A86", border: "2px solid rgba(10,15,26,.9)" }} />
+          )}
+        </Link>
+        <Link href="/progress" style={{ textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, color: "#9FB4C6" }}>
+          <span style={{ fontSize: 22 }}>◷</span>
+          <span style={{ fontSize: 9, fontWeight: 600 }}>Progreso</span>
+        </Link>
+      </div>
+
+      {/* Mission editor modal */}
+      {editorTarget && (
+        <MissionEditorModal
+          adventureId={editorTarget.adventureId}
+          mission={editorTarget.mission}
+          onClose={() => setEditorTarget(null)}
+        />
+      )}
+    </div>
+  );
+}
+```
+
+The first `</div>` in this block is the pre-existing closer for the "columna izquierda + rail derecho" content row (unchanged from before this plan). The second `</div>` (with the comment) is new — it closes the `position: "absolute", inset: 0, display: "flex"` wrapper opened in the previous find/replace. The outermost `<div style={{ height: "100vh"... }}>` opened at the very top of the return statement is closed by the final `</div>` here, replacing the old `</>`.
 
 - [ ] **Step 3: Update the two inline mission-toggle forms**
 
