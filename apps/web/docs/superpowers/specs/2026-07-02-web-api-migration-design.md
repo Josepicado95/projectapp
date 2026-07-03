@@ -66,7 +66,7 @@ This replaces the loading/error handling Next.js currently provides for free via
 
 Strictly incremental, one resource at a time, each with its own Modo B cycle (explanation → code → active review → checkpoint) before moving to the next:
 
-1. **Auth** — `AuthCard.tsx` → `/api/mobile/auth/{register,login,logout}`
+1. **Auth (register only)** — `AuthCard.tsx`'s register form → `/api/mobile/auth/register`. `login`/`logout` stay as Server Actions unchanged: they are NextAuth session mechanics (`signIn()`/`signOut()` create/clear the session cookie the dual-mode auth bridge depends on), not duplicated business logic — `signIn`'s `authorize()` callback already calls the same `verifyCredentials` service. Migrating them to the JSON API would return a JWT but never set the session cookie, breaking the web app's own auth.
 2. **Adventures** — `AdventureCard.tsx`, `AdventureEditorModal.tsx`, `NewAdventurePanel.tsx`, `NewAdventureForm.tsx`, `DashboardBody.tsx`, `app/page.tsx` → `/api/mobile/adventures*`
 3. **Missions** — `MissionItem.tsx`, `MissionEditorModal.tsx`, `NewMissionForm.tsx` → `/api/mobile/adventures/:id/missions`, `/api/mobile/missions/:id`
 4. **Check-ins** — `CheckInBody.tsx`, `CheckInForm.tsx`, `app/progress/page.tsx` → `/api/mobile/checkins`
