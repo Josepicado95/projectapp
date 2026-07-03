@@ -3,7 +3,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiError, apiSuccess } from "@/lib/api-response";
 import { withMobileAuth } from "@/lib/mobile-auth";
-import { saveCheckIn, listCheckIns } from "@/lib/services/checkins";
+import { saveCheckIn, listCheckIns, listRecentCheckIns, getTodayCheckIn } from "@/lib/services/checkins";
 
 const CheckInSchema = z.object({
   energy: z.number().int().min(1).max(5),
@@ -13,9 +13,22 @@ const CheckInSchema = z.object({
 });
 
 export const GET = withMobileAuth(async (req: NextRequest, { userId }) => {
-  const limitParam = req.nextUrl.searchParams.get("limit");
-  const limit = limitParam ? Math.min(30, Math.max(1, Number(limitParam) || 7)) : 7;
+  const params = req.nextUrl.searchParams;
 
+  if (params.get("today") === "true") {
+    const checkIn = await getTodayCheckIn(userId);
+    return apiSuccess({ checkIn });
+  }
+
+  const daysParam = params.get("days");
+  if (daysParam) {
+    const days = Math.min(60, Math.max(1, Number(daysParam) || 7));
+    const checkIns = await listRecentCheckIns(userId, days);
+    return apiSuccess(checkIns);
+  }
+
+  const limitParam = params.get("limit");
+  const limit = limitParam ? Math.min(30, Math.max(1, Number(limitParam) || 7)) : 7;
   const checkIns = await listCheckIns(userId, limit);
   return apiSuccess(checkIns);
 });

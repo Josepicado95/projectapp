@@ -37,6 +37,15 @@ export async function listCheckIns(userId: number, limit: number): Promise<Check
   });
 }
 
+export async function listRecentCheckIns(userId: number, days: number): Promise<CheckInData[]> {
+  const since = new Date();
+  since.setDate(since.getDate() - days);
+  return prisma.checkIn.findMany({
+    where: { userId, date: { gte: since } },
+    orderBy: { date: "asc" },
+  });
+}
+
 export async function getTodayCheckIn(userId: number): Promise<CheckInData | null> {
   return prisma.checkIn.findFirst({
     where: { userId, date: todayRangeUTC() },
