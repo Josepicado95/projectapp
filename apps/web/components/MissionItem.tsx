@@ -17,8 +17,9 @@ type Props = {
 export default function MissionItem({ mission, onChanged }: Props) {
   const [editing, setEditing] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  async function patchMission(body: Record<string, unknown>) {
+  async function patchMission(body: Record<string, unknown>): Promise<boolean> {
     setBusy(true);
     try {
       const res = await fetch(`/api/mobile/missions/${mission.id}`, {
@@ -28,9 +29,19 @@ export default function MissionItem({ mission, onChanged }: Props) {
       });
       if (res.status === 401) {
         window.location.href = "/login";
-        return;
+        return false;
       }
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => null);
+        setError(errBody?.error?.message ?? "No se pudo guardar la misión.");
+        return false;
+      }
+      setError(null);
       onChanged();
+      return true;
+    } catch {
+      setError("No se pudo guardar la misión.");
+      return false;
     } finally {
       setBusy(false);
     }
@@ -46,8 +57,8 @@ export default function MissionItem({ mission, onChanged }: Props) {
     const title = (form.elements.namedItem("title") as HTMLInputElement).value;
     const description = (form.elements.namedItem("description") as HTMLInputElement).value;
     const difficulty = Number((form.elements.namedItem("difficulty") as HTMLSelectElement).value);
-    await patchMission({ title, description: description || undefined, difficulty });
-    setEditing(false);
+    const ok = await patchMission({ title, description: description || undefined, difficulty });
+    if (ok) setEditing(false);
   }
 
   async function handleDelete() {
@@ -58,7 +69,14 @@ export default function MissionItem({ mission, onChanged }: Props) {
         window.location.href = "/login";
         return;
       }
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => null);
+        setError(errBody?.error?.message ?? "No se pudo eliminar la misión.");
+        return;
+      }
       onChanged();
+    } catch {
+      setError("No se pudo eliminar la misión.");
     } finally {
       setBusy(false);
     }
@@ -91,13 +109,14 @@ export default function MissionItem({ mission, onChanged }: Props) {
             placeholder="Descripción (opcional)"
             className="border rounded px-2 py-1 w-full mb-2"
           />
+          {error && <p className="text-red-500 text-xs mb-2">{error}</p>}
           <div className="flex gap-2">
             <button type="submit" disabled={busy} className="bg-blue-500 text-white px-3 py-1 rounded text-sm disabled:opacity-50">
               Guardar
             </button>
             <button
               type="button"
-              onClick={() => setEditing(false)}
+              onClick={() => { setEditing(false); setError(null); }}
               className="border px-3 py-1 rounded text-sm"
             >
               Cancelar
@@ -133,6 +152,7 @@ export default function MissionItem({ mission, onChanged }: Props) {
             </span>
           )}
         </div>
+        {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
       </div>
 
       <div className="flex gap-2 shrink-0">
