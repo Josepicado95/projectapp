@@ -62,6 +62,10 @@ export default function CheckInBody({ userName }: Props) {
           fetch("/api/mobile/checkins?today=true"),
           fetch("/api/mobile/checkins?days=7"),
         ]);
+        if (todayRes.status === 401 || weekRes.status === 401) {
+          window.location.href = "/login";
+          return;
+        }
         if (!todayRes.ok || !weekRes.ok) throw new Error("load_failed");
 
         const todayData: { checkIn: Values | null } = await todayRes.json();
@@ -99,6 +103,10 @@ export default function CheckInBody({ userName }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),
       });
+      if (res.status === 401) {
+        window.location.href = "/login";
+        return;
+      }
       if (!res.ok) {
         const body = await res.json().catch(() => null);
         setSaveState({ status: "error", error: body?.error?.message ?? "No se pudo guardar el check-in." });
