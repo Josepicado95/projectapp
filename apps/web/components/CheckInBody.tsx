@@ -3,8 +3,9 @@
  */
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import ForestBackground from "@/components/ForestBackground";
+import { toDailyLatest } from "@/lib/checkin-utils";
 
 type MetricKey = "energy" | "mood" | "stress" | "sleep";
 type Values    = Record<MetricKey, number>;
@@ -52,6 +53,36 @@ export default function CheckInBody({ userName }: Props) {
   const [values,     setValues]     = useState<Values>({ energy: 3, mood: 3, stress: 3, sleep: 3 });
 
   const formRef = useRef<HTMLFormElement>(null);
+
+  // Deliberately NOT called from inside the effect below, and deliberately
+  // duplicating that effect's own "fetch days=7, map, setRecentWeek" logic
+  // rather than sharing it: the effect's `load()` must stay entirely
+  // self-contained (never reference an externally-defined state-setting
+  // function) to satisfy the `react-hooks/set-state-in-effect` lint rule —
+  // same rule and fix pattern already established in DashboardBody.tsx /
+  // AdventureDetailBody.tsx. This function is only ever called from the
+  // plain event handler `handleSubmit`, never from an effect, so it's exempt.
+  const refreshRecentWeek = useCallback(async () => {
+    try {
+      const weekRes = await fetch("/api/mobile/checkins?days=7");
+      if (weekRes.status === 401) {
+        window.location.href = "/login";
+        return;
+      }
+      if (!weekRes.ok) return;
+      const weekData: CheckInPoint[] = await weekRes.json();
+      setRecentWeek(weekData.map((c) => ({
+        date: c.date.slice(0, 10),
+        energy: c.energy,
+        mood: c.mood,
+        stress: c.stress,
+        sleep: c.sleep,
+      })));
+    } catch {
+      // Best-effort refresh — if this fails, the week strip just keeps
+      // showing the last known data until the next successful refresh.
+    }
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -112,11 +143,9 @@ export default function CheckInBody({ userName }: Props) {
         setSaveState({ status: "error", error: body?.error?.message ?? "No se pudo guardar el check-in." });
         return;
       }
-      setSaveState({
-        status: "success",
-        message: res.status === 201 ? "¡Check-in guardado!" : "¡Check-in actualizado!",
-      });
+      setSaveState({ status: "success", message: "¡Check-in guardado!" });
       setStep(5);
+      refreshRecentWeek();
     } catch {
       setSaveState({ status: "error", error: "No se pudo guardar el check-in." });
     }
@@ -128,9 +157,15 @@ export default function CheckInBody({ userName }: Props) {
     setStep(next);
   }
 
+  function startNewCheckIn() {
+    setValues({ energy: 3, mood: 3, stress: 3, sleep: 3 });
+    setSaveState({ status: "idle" });
+    goTo(0, "back");
+  }
+
   const now = new Date();
   const todayDow = now.getDay();
-  const weekBars = recentWeek.slice(-7).map((c, i, arr) => {
+  const weekBars = toDailyLatest(recentWeek).slice(-7).map((c, i, arr) => {
     const offset   = (todayDow - (arr.length - 1 - i) + 7) % 7;
     const dayLabel = WEEK_DAYS[offset === 0 ? 6 : offset - 1];
     const avg      = (c.energy + c.mood + c.sleep) / 3;
@@ -383,9 +418,15 @@ export default function CheckInBody({ userName }: Props) {
                 })}
               </div>
 
-              <a href="/" style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:8, width:"100%", fontFamily:"var(--font-hanken)", fontWeight:700, fontSize:15, color:"#1E282A", background:"linear-gradient(135deg,#E3A878 0%,#C8885A 100%)", textDecoration:"none", borderRadius:14, padding:15, boxShadow:"0 8px 24px rgba(227,168,120,.3)" }}>
-                <span>Ver mi dashboard</span><span style={{ fontSize:17 }}>→</span>
-              </a>
+              <div style={{ display:"flex", gap:10 }}>
+                <button type="button" onClick={startNewCheckIn}
+                  style={{ flex:1, fontFamily:"var(--font-hanken)", fontWeight:700, fontSize:15, color:"#ECE6D8", background:"rgba(236,230,216,.08)", border:"1px solid rgba(236,230,216,.18)", borderRadius:14, padding:15, cursor:"pointer" }}>
+                  Hacer otro check-in
+                </button>
+                <a href="/" style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:8, fontFamily:"var(--font-hanken)", fontWeight:700, fontSize:15, color:"#1E282A", background:"linear-gradient(135deg,#E3A878 0%,#C8885A 100%)", textDecoration:"none", borderRadius:14, padding:15, boxShadow:"0 8px 24px rgba(227,168,120,.3)" }}>
+                  <span>Ver mi dashboard</span><span style={{ fontSize:17 }}>→</span>
+                </a>
+              </div>
             </div>
           )}
 
