@@ -1,12 +1,12 @@
 // app/api/mobile/recommendations/route.ts
 import { apiSuccess } from "@/lib/api-response";
 import { withMobileAuth } from "@/lib/mobile-auth";
-import { getTodayCheckIn } from "@/lib/services/checkins";
+import { getLatestCheckInToday } from "@/lib/services/checkins";
 import { listPendingMissions } from "@/lib/services/adventures";
 import { getRecommendations } from "@/lib/recommender";
 
 export const GET = withMobileAuth(async (_req, { userId }) => {
-  const todayCheckIn = await getTodayCheckIn(userId);
+  const todayCheckIn = await getLatestCheckInToday(userId);
 
   if (!todayCheckIn) {
     return apiSuccess({

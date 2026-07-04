@@ -12,21 +12,8 @@ function todayRangeUTC(): { gte: Date; lte: Date } {
   return { gte: startOfDay, lte: endOfDay };
 }
 
-export async function saveCheckIn(
-  userId: number,
-  input: CheckInInput
-): Promise<{ checkIn: CheckInData; created: boolean }> {
-  const existing = await prisma.checkIn.findFirst({
-    where: { userId, date: todayRangeUTC() },
-  });
-
-  if (existing) {
-    const checkIn = await prisma.checkIn.update({ where: { id: existing.id }, data: input });
-    return { checkIn, created: false };
-  }
-
-  const checkIn = await prisma.checkIn.create({ data: { ...input, userId } });
-  return { checkIn, created: true };
+export async function saveCheckIn(userId: number, input: CheckInInput): Promise<CheckInData> {
+  return prisma.checkIn.create({ data: { ...input, userId } });
 }
 
 export async function listCheckIns(userId: number, limit: number): Promise<CheckInData[]> {
@@ -46,8 +33,9 @@ export async function listRecentCheckIns(userId: number, days: number): Promise<
   });
 }
 
-export async function getTodayCheckIn(userId: number): Promise<CheckInData | null> {
+export async function getLatestCheckInToday(userId: number): Promise<CheckInData | null> {
   return prisma.checkIn.findFirst({
     where: { userId, date: todayRangeUTC() },
+    orderBy: { date: "desc" },
   });
 }
