@@ -52,6 +52,68 @@ type LoadState = "loading" | "ready" | "error";
 
 const DAY_LABELS = ["D", "L", "M", "M", "J", "V", "S"] as const;
 
+type DashboardSnapshot = {
+  adventures: AdventureWithMissions[];
+  todayCheckIn: CheckInValues | null;
+  streak: number;
+  weekDays: WeekDay[];
+  recommendations: RecsResult;
+};
+
+// No state access — safe to call from anywhere, including a useEffect's own
+// closure, without tripping the "setState in effect" lint rule.
+async function fetchDashboardSnapshot(): Promise<DashboardSnapshot | null> {
+  const [advRes, todayRes, historyRes, recsRes] = await Promise.all([
+    fetch("/api/mobile/adventures?include=missions"),
+    fetch("/api/mobile/checkins?today=true"),
+    fetch("/api/mobile/checkins?limit=30"),
+    fetch("/api/mobile/recommendations"),
+  ]);
+
+  if ([advRes, todayRes, historyRes, recsRes].some((r) => r.status === 401)) {
+    window.location.href = "/login";
+    return null;
+  }
+  if (!advRes.ok || !todayRes.ok || !historyRes.ok || !recsRes.ok) {
+    throw new Error("load_failed");
+  }
+
+  const adventures = await advRes.json();
+  const todayData: { checkIn: CheckInValues | null } = await todayRes.json();
+  const history: { date: string }[] = await historyRes.json();
+
+  const ciDays = new Set(
+    history.map((ci) => {
+      const d = new Date(ci.date);
+      return `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
+    })
+  );
+  let streak = 0;
+  for (let i = 0; i < 30; i++) {
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() - i);
+    const key = `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
+    if (ciDays.has(key)) {
+      streak++;
+    } else if (i === 0) {
+      continue;
+    } else {
+      break;
+    }
+  }
+
+  const weekDays = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() - (6 - i));
+    const key = `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
+    return { done: ciDays.has(key), label: DAY_LABELS[d.getUTCDay()], isToday: i === 6 };
+  });
+
+  const recommendations = await recsRes.json();
+
+  return { adventures, todayCheckIn: todayData.checkIn, streak, weekDays, recommendations };
+}
+
 export default function DashboardBody({ theme, firstName, initial }: Props) {
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const [adventures, setAdventures] = useState<AdventureWithMissions[]>([]);
@@ -67,67 +129,47 @@ export default function DashboardBody({ theme, firstName, initial }: Props) {
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState<"all" | "active" | "done">("all");
 
+  // Used by children after a mutation (create/edit/delete) to pull fresh data.
   const refresh = useCallback(async () => {
     try {
-      const [advRes, todayRes, historyRes, recsRes] = await Promise.all([
-        fetch("/api/mobile/adventures?include=missions"),
-        fetch("/api/mobile/checkins?today=true"),
-        fetch("/api/mobile/checkins?limit=30"),
-        fetch("/api/mobile/recommendations"),
-      ]);
-
-      if ([advRes, todayRes, historyRes, recsRes].some((r) => r.status === 401)) {
-        window.location.href = "/login";
-        return;
-      }
-      if (!advRes.ok || !todayRes.ok || !historyRes.ok || !recsRes.ok) {
-        throw new Error("load_failed");
-      }
-
-      setAdventures(await advRes.json());
-
-      const todayData: { checkIn: CheckInValues | null } = await todayRes.json();
-      setTodayCheckIn(todayData.checkIn);
-
-      const history: { date: string }[] = await historyRes.json();
-      const ciDays = new Set(
-        history.map((ci) => {
-          const d = new Date(ci.date);
-          return `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
-        })
-      );
-      let s = 0;
-      for (let i = 0; i < 30; i++) {
-        const d = new Date();
-        d.setUTCDate(d.getUTCDate() - i);
-        const key = `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
-        if (ciDays.has(key)) {
-          s++;
-        } else if (i === 0) {
-          continue;
-        } else {
-          break;
-        }
-      }
-      setStreak(s);
-
-      setWeekDays(Array.from({ length: 7 }, (_, i) => {
-        const d = new Date();
-        d.setUTCDate(d.getUTCDate() - (6 - i));
-        const key = `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
-        return { done: ciDays.has(key), label: DAY_LABELS[d.getUTCDay()], isToday: i === 6 };
-      }));
-
-      setRecommendations(await recsRes.json());
+      const snap = await fetchDashboardSnapshot();
+      if (!snap) return;
+      setAdventures(snap.adventures);
+      setTodayCheckIn(snap.todayCheckIn);
+      setStreak(snap.streak);
+      setWeekDays(snap.weekDays);
+      setRecommendations(snap.recommendations);
       setLoadState("ready");
     } catch {
       setLoadState((prev) => (prev === "loading" ? "error" : prev));
     }
   }, []);
 
+  // Deliberately NOT calling `refresh()` here: this closure lives entirely inside
+  // the effect (never handed out as a stable reference elsewhere), with its own
+  // cancellation guard, so a still-in-flight initial load can't clobber state
+  // after the component unmounts. It duplicates refresh's "commit" step rather
+  // than calling it, because referencing `refresh` here — even just to await it —
+  // would make the effect indistinguishable, to the linter, from calling a
+  // known state-setting function directly inside an effect.
   useEffect(() => {
-    refresh();
-  }, [refresh]);
+    let cancelled = false;
+    (async () => {
+      try {
+        const snap = await fetchDashboardSnapshot();
+        if (cancelled || !snap) return;
+        setAdventures(snap.adventures);
+        setTodayCheckIn(snap.todayCheckIn);
+        setStreak(snap.streak);
+        setWeekDays(snap.weekDays);
+        setRecommendations(snap.recommendations);
+        setLoadState("ready");
+      } catch {
+        if (!cancelled) setLoadState((prev) => (prev === "loading" ? "error" : prev));
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
 
   const doneMissions = adventures
     .filter((a) => a.status !== "completed")

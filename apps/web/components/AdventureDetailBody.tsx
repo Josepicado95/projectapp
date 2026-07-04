@@ -25,6 +25,7 @@ export default function AdventureDetailBody({ adventureId, momentKey }: Props) {
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const [adventure, setAdventure] = useState<AdventureDetail | null>(null);
 
+  // Used by children after a mutation (create/edit/delete mission) to pull fresh data.
   const load = useCallback(async () => {
     try {
       const res = await fetch(`/api/mobile/adventures/${adventureId}`);
@@ -44,9 +45,35 @@ export default function AdventureDetailBody({ adventureId, momentKey }: Props) {
     }
   }, [adventureId]);
 
+  // Deliberately NOT calling `load()` here: this closure lives entirely inside the
+  // effect (never handed out as a stable reference elsewhere), with its own
+  // cancellation guard tied to this specific adventureId — so a stale response for
+  // a previous adventureId can't overwrite the one the user is now viewing.
   useEffect(() => {
-    load();
-  }, [load]);
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/mobile/adventures/${adventureId}`);
+        if (cancelled) return;
+        if (res.status === 401) {
+          window.location.href = "/login";
+          return;
+        }
+        if (res.status === 404) {
+          setLoadState("not-found");
+          return;
+        }
+        if (!res.ok) throw new Error("load_failed");
+        const data = await res.json();
+        if (cancelled) return;
+        setAdventure(data);
+        setLoadState("ready");
+      } catch {
+        if (!cancelled) setLoadState((prev) => (prev === "loading" ? "error" : prev));
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [adventureId]);
 
   if (loadState === "loading") {
     return (
