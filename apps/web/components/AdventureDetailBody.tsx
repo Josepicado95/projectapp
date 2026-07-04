@@ -40,7 +40,7 @@ export default function AdventureDetailBody({ adventureId, momentKey }: Props) {
       setAdventure(await res.json());
       setLoadState("ready");
     } catch {
-      setLoadState("error");
+      setLoadState((prev) => (prev === "loading" ? "error" : prev));
     }
   }, [adventureId]);
 

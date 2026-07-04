@@ -121,7 +121,7 @@ export default function DashboardBody({ theme, firstName, initial }: Props) {
       setRecommendations(await recsRes.json());
       setLoadState("ready");
     } catch {
-      setLoadState("error");
+      setLoadState((prev) => (prev === "loading" ? "error" : prev));
     }
   }, []);
 
