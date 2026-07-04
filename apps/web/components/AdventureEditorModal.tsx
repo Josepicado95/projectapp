@@ -2,7 +2,6 @@
 
 import { useState, useTransition } from "react";
 import { createPortal } from "react-dom";
-import { updateAdventure, deleteAdventure } from "@/app/actions/adventures";
 import { PALETTES } from "@/lib/palettes";
 import type { Adventure, Mission } from "@/lib/generated/prisma/client";
 
@@ -11,37 +10,55 @@ type AdventureWithMissions = Adventure & { missions: Mission[] };
 type Props = {
   adventure: AdventureWithMissions;
   onClose: () => void;
+  onSaved: () => void;
   onDeleted: () => void;
 };
 
-export default function AdventureEditorModal({ adventure, onClose, onDeleted }: Props) {
+export default function AdventureEditorModal({ adventure, onClose, onSaved, onDeleted }: Props) {
   const [title, setTitle] = useState(adventure.title);
   const [description, setDescription] = useState(adventure.description ?? "");
   const [paletteIdx, setPaletteIdx] = useState(adventure.paletteIdx ?? 0);
   const [savePending, startSave] = useTransition();
   const [deletePending, startDelete] = useTransition();
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const canSave = title.trim().length >= 3;
 
   function handleSave() {
     if (!canSave) return;
-    const fd = new FormData();
-    fd.set("id", String(adventure.id));
-    fd.set("title", title.trim());
-    fd.set("description", description);
-    fd.set("status", adventure.status ?? "active");
-    fd.set("paletteIdx", String(paletteIdx));
     startSave(async () => {
-      await updateAdventure(fd);
+      setSaveError(null);
+      const res = await fetch(`/api/mobile/adventures/${adventure.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: title.trim(),
+          description: description || undefined,
+          status: adventure.status ?? "active",
+          paletteIdx,
+        }),
+      });
+      if (res.status === 401) {
+        window.location.href = "/login";
+        return;
+      }
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        setSaveError(body?.error?.message ?? "No se pudo guardar la aventura.");
+        return;
+      }
+      onSaved();
       onClose();
     });
   }
 
   function handleDelete() {
-    const fd = new FormData();
-    fd.set("id", String(adventure.id));
     startDelete(async () => {
-      await deleteAdventure(fd);
+      const res = await fetch(`/api/mobile/adventures/${adventure.id}`, { method: "DELETE" });
+      if (res.status === 401) {
+        window.location.href = "/login";
+        return;
+      }
       onDeleted();
     });
   }
@@ -172,6 +189,10 @@ export default function AdventureEditorModal({ adventure, onClose, onDeleted }: 
               boxSizing: "border-box" as const,
             }}
           />
+
+          {saveError && (
+            <p style={{ color: "#D89C92", fontSize: 13, marginBottom: 14 }}>{saveError}</p>
+          )}
 
           {/* Acciones */}
           <div style={{ display: "flex", gap: 11, alignItems: "center" }}>

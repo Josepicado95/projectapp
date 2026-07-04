@@ -1,33 +1,56 @@
 "use client";
 
-import { useState, useActionState, useEffect } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
-import { createAdventure } from "@/app/actions/adventures";
 import { MISSION_LEVELS, hexToRgb } from "./MissionEditorModal";
 import { PALETTES } from "@/lib/palettes";
 
-type Props = { fullWidth?: boolean };
+type Props = { fullWidth?: boolean; onCreated: () => void };
+type SaveState = { status: "idle" | "saving" | "error"; error?: string };
 
-export default function NewAdventurePanel({ fullWidth }: Props) {
+export default function NewAdventurePanel({ fullWidth, onCreated }: Props) {
   const [open, setOpen] = useState(false);
   const [draftTitle, setDraftTitle] = useState("");
   const [draftGradIdx, setDraftGradIdx] = useState(0);
   const [draftMissions, setDraftMissions] = useState<{ name: string; diff: number }[]>([]);
   const [missionInput, setMissionInput] = useState("");
   const [draftMissionLevel, setDraftMissionLevel] = useState(2);
+  const [saveState, setSaveState] = useState<SaveState>({ status: "idle" });
 
-  const [state, formAction, pending] = useActionState(createAdventure, {});
-
-  useEffect(() => {
-    if (state.message) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setSaveState({ status: "saving" });
+    try {
+      const res = await fetch("/api/mobile/adventures", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: draftTitle,
+          paletteIdx: draftGradIdx,
+          initialMissions: draftMissions.map((m) => ({ title: m.name, difficulty: m.diff })),
+        }),
+      });
+      if (res.status === 401) {
+        window.location.href = "/login";
+        return;
+      }
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        setSaveState({ status: "error", error: body?.error?.message ?? "No se pudo crear la aventura." });
+        return;
+      }
       setOpen(false);
       setDraftTitle("");
       setDraftGradIdx(0);
       setDraftMissions([]);
       setMissionInput("");
       setDraftMissionLevel(2);
+      setSaveState({ status: "idle" });
+      onCreated();
+    } catch {
+      setSaveState({ status: "error", error: "No se pudo crear la aventura." });
     }
-  }, [state.message]);
+  }
 
   function addMission() {
     const v = missionInput.trim();
@@ -80,7 +103,7 @@ export default function NewAdventurePanel({ fullWidth }: Props) {
           }}>
             {/* Modal — flex-column with sticky top + scrollable middle + sticky bottom */}
             <form
-              action={formAction}
+              onSubmit={handleSubmit}
               style={{
                 pointerEvents: "auto",
                 width: 520, maxHeight: 660,
@@ -136,7 +159,6 @@ export default function NewAdventurePanel({ fullWidth }: Props) {
                 </div>
 
                 {/* Name */}
-                <input type="hidden" name="paletteIdx" value={draftGradIdx} />
                 <div style={{ fontSize: 11, letterSpacing: ".12em", textTransform: "uppercase", color: "#7FA8C4", fontWeight: 600, marginBottom: 7 }}>
                   ¿Cómo se llama tu aventura?
                 </div>
@@ -154,8 +176,8 @@ export default function NewAdventurePanel({ fullWidth }: Props) {
                     boxSizing: "border-box",
                   }}
                 />
-                {state.errors?.title && (
-                  <p style={{ color: "#C97B7B", fontSize: 13, margin: "-10px 0 12px" }}>{state.errors.title[0]}</p>
+                {saveState.status === "error" && (
+                  <p style={{ color: "#C97B7B", fontSize: 13, margin: "-10px 0 12px" }}>{saveState.error}</p>
                 )}
 
                 {/* Palette picker */}
@@ -195,8 +217,6 @@ export default function NewAdventurePanel({ fullWidth }: Props) {
                         background: "rgba(236,230,216,.05)", border: "1px solid rgba(236,230,216,.1)",
                         borderRadius: 12, padding: "10px 12px",
                       }}>
-                        <input type="hidden" name="initialMission" value={m.name} />
-                        <input type="hidden" name="initialMissionDiff" value={m.diff} />
                         <div style={{ flexShrink: 0, width: 20, height: 20, borderRadius: "50%", border: `2px solid ${lv.color}` }} />
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ fontWeight: 600, fontSize: 14, color: "#ECE6D8" }}>{m.name}</div>
@@ -301,7 +321,7 @@ export default function NewAdventurePanel({ fullWidth }: Props) {
                   </button>
                   <button
                     type="submit"
-                    disabled={!canCreate || pending}
+                    disabled={!canCreate || saveState.status === "saving"}
                     style={{
                       flex: 1, fontFamily: "var(--font-hanken)", fontWeight: 600, fontSize: 15,
                       color: canCreate ? "#1E282A" : "rgba(30,40,42,.5)",
@@ -314,7 +334,7 @@ export default function NewAdventurePanel({ fullWidth }: Props) {
                     }}
                   >
                     <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#2A332D", flexShrink: 0 }} />
-                    {pending ? "Creando..." : "Crear aventura"}
+                    {saveState.status === "saving" ? "Creando..." : "Crear aventura"}
                   </button>
                 </div>
               </div>
