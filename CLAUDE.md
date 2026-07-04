@@ -253,18 +253,44 @@ algo, está bien dejarlo a medias y anotarlo en `ROADMAP.md` para la próxima.
 (Claude Code: actualiza esta sección al final de cada sesión con un resumen de 2-3 líneas:
 en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
 
-- **Fase/Sesión actual:** Fase 14 completa — sistema de fondos Three.js/R3F terminado
-- **Último checkpoint superado:** Fase 14 completa. 4 escenas Three.js conectadas al momento
-  del día (mañana/tarde/atardecer/noche). ForestScene con GLSL aurora, luna, montañas, pinos
-  con sway, luciérnagas, linternas. AuthCard login+register unificado. CheckInBody y
-  ProgressBody como client components. ProgressBody migrado de CSS-only a ThreeBackground.
-  Bug fixes de performance: Math.random fuera de useFrame, useMemo deps, computeVertexNormals
-  eliminado del loop. Diseños Figma (Login, Progreso) implementados vía claude_design MCP.
+- **Fase/Sesión actual:** migración `web-api-migration-adventures` completa y mergeada a
+  `main` (PR #4) — `/` y `/adventures/[id]` ahora usan fetch contra `/api/mobile/...` en vez
+  de Server Actions, mismo patrón que `/checkin` (PR #3).
+- **Último checkpoint superado:** las 4 tareas del plan
+  `apps/web/docs/superpowers/plans/2026-07-03-web-api-migration-adventures.md` completas vía
+  subagent-driven-development (implementador + revisor por tarea, revisión final de todo el
+  branch). Se encontraron y corrigieron 2 bugs reales durante la revisión: (1) un hueco del
+  plan que habría dejado el dashboard sin fondo 3D/nav/logout (Task 3), y (2) una condición de
+  carrera real en `refresh()`/`load()` donde una respuesta vieja podía pisar datos más nuevos
+  (ej. navegar rápido entre dos aventuras distintas) — el primer intento de arreglo no
+  satisfizo el lint `react-hooks/set-state-in-effect` y se rediseñó separando la función pura
+  de fetch de la lógica que toca estado. Se borraron los Server Actions viejos de
+  adventures/missions y 2 componentes muertos (`NewAdventureForm.tsx`, `AdventureCard.tsx`).
+  Jose confirmó en navegador antes y después del fix de la condición de carrera. Este ciclo
+  completo (explicación + revisión activa + checkpoints) sí se hizo en esta sesión, a
+  diferencia de `sky-engine.ts` (ver pendiente abajo, que sigue sin resolver).
 - **URLs de producción:** Vercel (projectapp-6wqde3z63-josepicado95s-projects.vercel.app),
   Railway recommender (projectapp-production-164a.up.railway.app).
-- **Deuda técnica conocida:** campo `date` en `CheckIn` usa `DateTime` completo (con hora).
-  `status` en `Adventure` es `String` (no enum) intencionalmente. Warning de deprecación
-  httpx/starlette en tests — ignorable.
+- **Deuda técnica conocida:**
+  - Campo `date` en `CheckIn` usa `DateTime` completo (con hora). `status` en `Adventure` es
+    `String` (no enum) intencionalmente. Warning de deprecación httpx/starlette en tests —
+    ignorable.
+  - `AdventureEditorModal.handleDelete`/`MissionEditorModal.handleDelete` no revisan
+    `res.ok` antes de cerrar el modal — un DELETE fallido no muestra error (mismo problema,
+    ya conocido y documentado, que los botones de toggle de misión en `DashboardBody.tsx`).
+  - Los campos `Date` (`createdAt`/`completedAt`) llegan como strings ISO por la API, pero
+    los tipos de TypeScript (heredados de Prisma) siguen diciendo `Date` — no hay bug en
+    tiempo de ejecución, solo un tipo impreciso.
+  - `DashboardBody.tsx` y `AdventureDetailBody.tsx` duplican ~80 líneas de nav rail/bottom
+    nav (con diferencias intencionales: el rail de detalle no tiene logout ni el punto de
+    check-in) — candidato a un componente `AppShell` compartido en una limpieza futura.
 - **Credenciales de prueba:** jose@aventuras.com / aventuras123
-- **Pendiente para la próxima sesión:** Sesión de revisión profunda de componentes acordada
-  (leer y desmenuzar código existente para consolidar aprendizaje). Fase 13 polish si se desea.
+- **Pendiente para la próxima sesión:**
+  1. **Check-ins múltiples por día** — hoy `saveCheckIn` actualiza el único registro del día
+     en vez de crear uno nuevo; Jose quiere poder hacer varios check-ins independientes el
+     mismo día (ej. mañana y noche). Requiere cambiar el schema de Prisma, `saveCheckIn`, y el
+     frontend de `/checkin`/`/progress`. Necesita sesión de brainstorming antes de planear.
+  2. Sesión de revisión profunda de componentes acordada (leer y desmenuzar código existente
+     para consolidar aprendizaje) — debería incluir `sky-engine.ts` y `SkyCanvas.tsx`, que se
+     generaron en Modo B pero sin pasar aún por la explicación línea por línea ni el
+     checkpoint. Fase 13 polish si se desea.
