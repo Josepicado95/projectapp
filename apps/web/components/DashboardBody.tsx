@@ -1,19 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import NewAdventurePanel from "./NewAdventurePanel";
 import MissionEditorModal, { MISSION_LEVELS, hexToRgb } from "./MissionEditorModal";
 import AdventureEditorModal from "./AdventureEditorModal";
+import ThreeBackground from "@/components/background/ThreeBackground";
+import { logoutAction } from "@/app/actions/auth";
 import { MomentTheme } from "@/lib/theme";
 import { PALETTES } from "@/lib/palettes";
-import { toggleMission } from "@/app/actions/missions";
-import type { Adventure, Mission, CheckIn } from "@/lib/generated/prisma/client";
+import type { Adventure, Mission } from "@/lib/generated/prisma/client";
 
 type AdventureWithMissions = Adventure & { missions: Mission[] };
 type Rec = { id: number; title: string; reason: string };
-type RecsResult = { recommendations: Rec[]; message: string } | null;
-
+type RecsResult = { recommendations: Rec[]; message: string };
 
 const DIM = "rgba(236,230,216,.18)";
 
@@ -39,28 +39,144 @@ const INPUT_STYLE: React.CSSProperties = {
 };
 
 type WeekDay = { done: boolean; label: string; isToday: boolean };
+type CheckInValues = { energy: number; mood: number; stress: number; sleep: number };
 
 type Props = {
-  adventures: AdventureWithMissions[];
-  todayCheckIn: CheckIn | null;
-  recommendations: RecsResult;
   theme: MomentTheme;
   firstName: string;
-  streak: number;
-  doneMissions: number;
-  totalMissions: number;
-  weekDays: WeekDay[];
+  initial: string;
 };
 
 type EditorTarget = { adventureId: number; mission: Mission | null };
+type LoadState = "loading" | "ready" | "error";
 
-export default function DashboardBody({ adventures, todayCheckIn, recommendations, theme, firstName, streak, doneMissions, totalMissions, weekDays }: Props) {
+const DAY_LABELS = ["D", "L", "M", "M", "J", "V", "S"] as const;
+
+type DashboardSnapshot = {
+  adventures: AdventureWithMissions[];
+  todayCheckIn: CheckInValues | null;
+  streak: number;
+  weekDays: WeekDay[];
+  recommendations: RecsResult;
+};
+
+// No state access — safe to call from anywhere, including a useEffect's own
+// closure, without tripping the "setState in effect" lint rule.
+async function fetchDashboardSnapshot(): Promise<DashboardSnapshot | null> {
+  const [advRes, todayRes, historyRes, recsRes] = await Promise.all([
+    fetch("/api/mobile/adventures?include=missions"),
+    fetch("/api/mobile/checkins?today=true"),
+    fetch("/api/mobile/checkins?limit=30"),
+    fetch("/api/mobile/recommendations"),
+  ]);
+
+  if ([advRes, todayRes, historyRes, recsRes].some((r) => r.status === 401)) {
+    window.location.href = "/login";
+    return null;
+  }
+  if (!advRes.ok || !todayRes.ok || !historyRes.ok || !recsRes.ok) {
+    throw new Error("load_failed");
+  }
+
+  const adventures = await advRes.json();
+  const todayData: { checkIn: CheckInValues | null } = await todayRes.json();
+  const history: { date: string }[] = await historyRes.json();
+
+  const ciDays = new Set(
+    history.map((ci) => {
+      const d = new Date(ci.date);
+      return `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
+    })
+  );
+  let streak = 0;
+  for (let i = 0; i < 30; i++) {
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() - i);
+    const key = `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
+    if (ciDays.has(key)) {
+      streak++;
+    } else if (i === 0) {
+      continue;
+    } else {
+      break;
+    }
+  }
+
+  const weekDays = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() - (6 - i));
+    const key = `${d.getUTCFullYear()}-${d.getUTCMonth()}-${d.getUTCDate()}`;
+    return { done: ciDays.has(key), label: DAY_LABELS[d.getUTCDay()], isToday: i === 6 };
+  });
+
+  const recommendations = await recsRes.json();
+
+  return { adventures, todayCheckIn: todayData.checkIn, streak, weekDays, recommendations };
+}
+
+export default function DashboardBody({ theme, firstName, initial }: Props) {
+  const [loadState, setLoadState] = useState<LoadState>("loading");
+  const [adventures, setAdventures] = useState<AdventureWithMissions[]>([]);
+  const [todayCheckIn, setTodayCheckIn] = useState<CheckInValues | null>(null);
+  const [streak, setStreak] = useState(0);
+  const [weekDays, setWeekDays] = useState<WeekDay[]>([]);
+  const [recommendations, setRecommendations] = useState<RecsResult | null>(null);
+
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [fadeTick, setFadeTick] = useState(0);
   const [editorTarget, setEditorTarget] = useState<EditorTarget | null>(null);
   const [showAdvModal, setShowAdvModal] = useState(false);
   const [search, setSearch] = useState("");
   const [activeFilter, setActiveFilter] = useState<"all" | "active" | "done">("all");
+
+  // Used by children after a mutation (create/edit/delete) to pull fresh data.
+  const refresh = useCallback(async () => {
+    try {
+      const snap = await fetchDashboardSnapshot();
+      if (!snap) return;
+      setAdventures(snap.adventures);
+      setTodayCheckIn(snap.todayCheckIn);
+      setStreak(snap.streak);
+      setWeekDays(snap.weekDays);
+      setRecommendations(snap.recommendations);
+      setLoadState("ready");
+    } catch {
+      setLoadState((prev) => (prev === "loading" ? "error" : prev));
+    }
+  }, []);
+
+  // Deliberately NOT calling `refresh()` here: this closure lives entirely inside
+  // the effect (never handed out as a stable reference elsewhere), with its own
+  // cancellation guard, so a still-in-flight initial load can't clobber state
+  // after the component unmounts. It duplicates refresh's "commit" step rather
+  // than calling it, because referencing `refresh` here — even just to await it —
+  // would make the effect indistinguishable, to the linter, from calling a
+  // known state-setting function directly inside an effect.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const snap = await fetchDashboardSnapshot();
+        if (cancelled || !snap) return;
+        setAdventures(snap.adventures);
+        setTodayCheckIn(snap.todayCheckIn);
+        setStreak(snap.streak);
+        setWeekDays(snap.weekDays);
+        setRecommendations(snap.recommendations);
+        setLoadState("ready");
+      } catch {
+        if (!cancelled) setLoadState((prev) => (prev === "loading" ? "error" : prev));
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const doneMissions = adventures
+    .filter((a) => a.status !== "completed")
+    .reduce((sum, a) => sum + a.missions.filter((m) => m.completed).length, 0);
+  const totalMissions = adventures
+    .filter((a) => a.status !== "completed")
+    .reduce((sum, a) => sum + a.missions.length, 0);
 
   const activeAdventures = adventures.filter((a) => a.status !== "completed");
   const selected = activeAdventures.find((a) => a.id === selectedId) ?? null;
@@ -90,6 +206,17 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
   const levelRange = currentLevel.max - currentLevel.min;
   const levelPct = levelRange > 0 ? Math.min(100, Math.round(((totalXp - currentLevel.min) / levelRange) * 100)) : 100;
 
+  if (loadState === "loading" || loadState === "error") {
+    return (
+      <div style={{ position: "relative", height: "100vh", overflow: "hidden" }}>
+        <ThreeBackground moment={theme.key} />
+        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", color: theme.cardSub, fontSize: 15, zIndex: 1 }}>
+          {loadState === "loading" ? "Cargando tu dashboard…" : "No se pudo cargar el dashboard. Intenta recargar la página."}
+        </div>
+      </div>
+    );
+  }
+
   function selectAdventure(id: number) {
     if (id === selectedId) {
       setSelectedId(null);
@@ -108,7 +235,87 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
   const glassBorder = `1px solid ${theme.glassBorder}`;
 
   return (
-    <>
+    <div style={{ height: "100vh", overflow: "hidden", position: "relative" }}>
+      <ThreeBackground moment={theme.key} />
+      <div style={{ position: "absolute", inset: 0, display: "flex", zIndex: 1 }}>
+
+        {/* Nav Rail */}
+        <div className="av-nav-rail" style={{
+          flexShrink: 0, width: 84,
+          background: "rgba(10,15,26,.66)",
+          backdropFilter: "blur(12px)",
+          WebkitBackdropFilter: "blur(12px)",
+          borderRight: "1px solid rgba(236,230,216,.1)",
+          display: "flex", flexDirection: "column", alignItems: "center",
+          padding: "22px 0",
+          isolation: "isolate",
+        }}>
+          <div style={{
+            width: 38, height: 38, borderRadius: 11,
+            background: "radial-gradient(circle at 60% 35%, #F0EAD8, #9DB6A4)",
+            boxShadow: "0 0 18px rgba(240,234,216,.3)",
+            marginBottom: 24, flexShrink: 0,
+          }} />
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "center" }}>
+            <Link href="/" style={{ textDecoration: "none" }}>
+              <div style={{
+                width: 56, height: 56, borderRadius: 15,
+                background: "rgba(91,155,209,.2)", border: "1px solid rgba(146,199,230,.45)",
+                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                gap: 4, color: "#CDE6F5", cursor: "pointer",
+              }}>
+                <span style={{ fontSize: 18, lineHeight: 1 }}>⛰</span>
+                <span style={{ fontSize: 9, fontWeight: 600 }}>Aventuras</span>
+              </div>
+            </Link>
+            <Link href="/checkin" style={{ textDecoration: "none" }}>
+              <div style={{
+                position: "relative",
+                width: 56, height: 56, borderRadius: 15,
+                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                gap: 4, color: "#9FB4C6", cursor: "pointer",
+              }}>
+                <span style={{ fontSize: 18, lineHeight: 1 }}>♡</span>
+                <span style={{ fontSize: 9, fontWeight: 600 }}>Check-in</span>
+                {!todayCheckIn && (
+                  <span style={{
+                    position: "absolute", top: 9, right: 13,
+                    width: 9, height: 9, borderRadius: "50%",
+                    background: "#7E9A86", border: "2px solid rgba(10,15,26,.9)",
+                  }} />
+                )}
+              </div>
+            </Link>
+            <Link href="/progress" style={{ textDecoration: "none" }}>
+              <div style={{
+                width: 56, height: 56, borderRadius: 15,
+                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                gap: 4, color: "#9FB4C6", cursor: "pointer",
+              }}>
+                <span style={{ fontSize: 17, lineHeight: 1 }}>◷</span>
+                <span style={{ fontSize: 9, fontWeight: 600 }}>Progreso</span>
+              </div>
+            </Link>
+          </div>
+          <div style={{ marginTop: "auto" }}>
+            <form action={logoutAction}>
+              <button
+                type="submit"
+                title="Cerrar sesión"
+                style={{
+                  width: 38, height: 38, borderRadius: "50%",
+                  background: theme.avatarBg, color: theme.avatarInk,
+                  border: "none", cursor: "pointer",
+                  fontWeight: 600, fontSize: 14,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}
+              >
+                {initial}
+              </button>
+            </form>
+          </div>
+        </div>
+
       <div style={{
         flex: 1, display: "flex", justifyContent: "space-between", gap: 24, overflow: "hidden",
         padding: "30px 34px",
@@ -383,14 +590,14 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
                     </div>
                   </>
                 )}
-                {todayCheckIn && !recommendations && (
+                {todayCheckIn && recommendations && recommendations.recommendations.length === 0 && (
                   <div style={{ fontSize: 13, color: theme.cardSub, lineHeight: 1.5, marginBottom: 14 }}>
-                    Check-in registrado ✓ — Las recomendaciones no están disponibles en este momento.
+                    {recommendations.message}
                   </div>
                 )}
 
                 <div style={{ marginTop: 20, paddingTop: 18, borderTop: "1px solid rgba(236,230,216,.1)" }}>
-                  <NewAdventurePanel fullWidth />
+                  <NewAdventurePanel fullWidth onCreated={refresh} />
                 </div>
               </>
             )}
@@ -443,10 +650,16 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
                           }}
                         >
                           {/* Toggle button */}
-                          <form action={toggleMission} style={{ flexShrink: 0 }}>
-                            <input type="hidden" name="id" value={m.id} />
-                            <input type="hidden" name="adventureId" value={selected.id} />
-                            <button type="submit" style={{
+                          <button
+                            onClick={async () => {
+                              await fetch(`/api/mobile/missions/${m.id}`, {
+                                method: "PATCH",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({ completed: !m.completed }),
+                              });
+                              refresh();
+                            }}
+                            style={{
                               width: 23, height: 23, borderRadius: "50%",
                               border: m.completed ? "2px solid #7E9A86" : "2px solid #5B9BD1",
                               background: m.completed ? "#7E9A86" : "transparent",
@@ -455,7 +668,6 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
                             }}>
                               {m.completed ? "✓" : ""}
                             </button>
-                          </form>
 
                           {/* Content */}
                           <div style={{ flex: 1, minWidth: 0 }}>
@@ -513,11 +725,17 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
 
                 {/* CTA */}
                 <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid rgba(236,230,216,.1)" }}>
-                  <form action={toggleMission}>
-                    <input type="hidden" name="id" value={selected.missions.find((m) => !m.completed)?.id ?? ""} />
-                    <input type="hidden" name="adventureId" value={selected.id} />
                     <button
-                      type="submit"
+                      onClick={async () => {
+                        const next = selected.missions.find((m) => !m.completed);
+                        if (!next) return;
+                        await fetch(`/api/mobile/missions/${next.id}`, {
+                          method: "PATCH",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ completed: true }),
+                        });
+                        refresh();
+                      }}
                       disabled={!selected.missions.find((m) => !m.completed)}
                       style={{
                         width: "100%", fontFamily: "var(--font-hanken)", fontWeight: 600, fontSize: 15,
@@ -529,7 +747,6 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
                     >
                       Completar misión de hoy
                     </button>
-                  </form>
                 </div>
 
                 {/* Adventure editor modal */}
@@ -537,7 +754,8 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
                   <AdventureEditorModal
                     adventure={selected}
                     onClose={() => setShowAdvModal(false)}
-                    onDeleted={() => { setShowAdvModal(false); setSelectedId(null); setFadeTick(t => t + 1); }}
+                    onSaved={refresh}
+                    onDeleted={() => { setShowAdvModal(false); setSelectedId(null); setFadeTick(t => t + 1); refresh(); }}
                   />
                 )}
               </>
@@ -548,14 +766,45 @@ export default function DashboardBody({ adventures, todayCheckIn, recommendation
 
       </div>
 
+      </div>{/* /nav rail + content flex row */}
+
+      {/* Bottom nav — mobile */}
+      <div className="av-bottom-nav" style={{
+        position: "fixed", bottom: 0, left: 0, right: 0,
+        background: "rgba(10,15,26,.88)",
+        backdropFilter: "blur(14px)",
+        WebkitBackdropFilter: "blur(14px)",
+        borderTop: "1px solid rgba(236,230,216,.1)",
+        padding: "10px 0 16px",
+        justifyContent: "space-around", alignItems: "center",
+        zIndex: 60,
+      }}>
+        <Link href="/" style={{ textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, color: "#CDE6F5" }}>
+          <span style={{ fontSize: 22 }}>⛰</span>
+          <span style={{ fontSize: 9, fontWeight: 600 }}>Aventuras</span>
+        </Link>
+        <Link href="/checkin" style={{ textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, color: "#9FB4C6", position: "relative" }}>
+          <span style={{ fontSize: 22 }}>♡</span>
+          <span style={{ fontSize: 9, fontWeight: 600 }}>Check-in</span>
+          {!todayCheckIn && (
+            <span style={{ position: "absolute", top: -1, right: -4, width: 8, height: 8, borderRadius: "50%", background: "#7E9A86", border: "2px solid rgba(10,15,26,.9)" }} />
+          )}
+        </Link>
+        <Link href="/progress" style={{ textDecoration: "none", display: "flex", flexDirection: "column", alignItems: "center", gap: 3, color: "#9FB4C6" }}>
+          <span style={{ fontSize: 22 }}>◷</span>
+          <span style={{ fontSize: 9, fontWeight: 600 }}>Progreso</span>
+        </Link>
+      </div>
+
       {/* Mission editor modal */}
       {editorTarget && (
         <MissionEditorModal
           adventureId={editorTarget.adventureId}
           mission={editorTarget.mission}
           onClose={() => setEditorTarget(null)}
+          onSaved={refresh}
         />
       )}
-    </>
+    </div>
   );
 }

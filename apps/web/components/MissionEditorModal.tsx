@@ -1,8 +1,7 @@
 "use client";
 
-import { useState, useActionState, useEffect, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { createPortal } from "react-dom";
-import { saveMission, deleteMission } from "@/app/actions/missions";
 import type { Mission } from "@/lib/generated/prisma/client";
 
 export const MISSION_LEVELS = [
@@ -24,27 +23,58 @@ type Props = {
   adventureId: number;
   mission?: Mission | null;
   onClose: () => void;
+  onSaved: () => void;
 };
 
-export default function MissionEditorModal({ adventureId, mission, onClose }: Props) {
+type SaveState = { status: "idle" | "saving" | "error"; error?: string };
+
+export default function MissionEditorModal({ adventureId, mission, onClose, onSaved }: Props) {
   const isNew = !mission;
   const [name, setName] = useState(mission?.title ?? "");
   const [difficulty, setDifficulty] = useState<number>(mission?.difficulty ?? 2);
-
-  const [state, formAction, pending] = useActionState(saveMission, {});
+  const [saveState, setSaveState] = useState<SaveState>({ status: "idle" });
   const [deletePending, startDelete] = useTransition();
 
-  useEffect(() => {
-    if (state.message === "ok") onClose();
-  }, [state.message]);
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setSaveState({ status: "saving" });
+    try {
+      const res = isNew
+        ? await fetch(`/api/mobile/adventures/${adventureId}/missions`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title: name.trim(), difficulty }),
+          })
+        : await fetch(`/api/mobile/missions/${mission!.id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ title: name.trim(), difficulty }),
+          });
+      if (res.status === 401) {
+        window.location.href = "/login";
+        return;
+      }
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        setSaveState({ status: "error", error: body?.error?.message ?? "No se pudo guardar la misión." });
+        return;
+      }
+      onSaved();
+      onClose();
+    } catch {
+      setSaveState({ status: "error", error: "No se pudo guardar la misión." });
+    }
+  }
 
   function handleDelete() {
     if (!mission) return;
-    const fd = new FormData();
-    fd.set("id", String(mission.id));
-    fd.set("adventureId", String(adventureId));
     startDelete(async () => {
-      await deleteMission(fd);
+      const res = await fetch(`/api/mobile/missions/${mission.id}`, { method: "DELETE" });
+      if (res.status === 401) {
+        window.location.href = "/login";
+        return;
+      }
+      onSaved();
       onClose();
     });
   }
@@ -72,7 +102,7 @@ export default function MissionEditorModal({ adventureId, mission, onClose }: Pr
         pointerEvents: "none",
       }}>
         <form
-          action={formAction}
+          onSubmit={handleSubmit}
           style={{
             pointerEvents: "auto",
             width: 470,
@@ -134,8 +164,8 @@ export default function MissionEditorModal({ adventureId, mission, onClose }: Pr
               boxSizing: "border-box",
             }}
           />
-          {state.errors?.title && (
-            <p style={{ color: "#C97B7B", fontSize: 13, margin: "-16px 0 16px" }}>{state.errors.title[0]}</p>
+          {saveState.status === "error" && (
+            <p style={{ color: "#C97B7B", fontSize: 13, margin: "-16px 0 16px" }}>{saveState.error}</p>
           )}
 
           {/* Selector de dificultad */}
@@ -191,7 +221,7 @@ export default function MissionEditorModal({ adventureId, mission, onClose }: Pr
             )}
             <button
               type="submit"
-              disabled={!canSave || pending}
+              disabled={!canSave || saveState.status === "saving"}
               style={{
                 flex: 1, fontFamily: "var(--font-hanken)", fontWeight: 600, fontSize: 15,
                 color: canSave ? "#1E282A" : "rgba(30,40,42,.6)",
@@ -202,7 +232,7 @@ export default function MissionEditorModal({ adventureId, mission, onClose }: Pr
                 transition: "background .2s ease",
               }}
             >
-              {pending ? "..." : isNew ? "Añadir misión" : "Guardar cambios"}
+              {saveState.status === "saving" ? "..." : isNew ? "Añadir misión" : "Guardar cambios"}
             </button>
           </div>
         </form>

@@ -3,7 +3,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiError, apiSuccess } from "@/lib/api-response";
 import { withMobileAuth } from "@/lib/mobile-auth";
-import { listAdventures, createAdventure } from "@/lib/services/adventures";
+import { listAdventures, listAdventuresWithMissions, createAdventure } from "@/lib/services/adventures";
 
 const CreateAdventureSchema = z.object({
   title: z.string().min(3, "El título debe tener al menos 3 caracteres"),
@@ -14,8 +14,11 @@ const CreateAdventureSchema = z.object({
     .optional(),
 });
 
-export const GET = withMobileAuth(async (_req, { userId }) => {
-  const adventures = await listAdventures(userId);
+export const GET = withMobileAuth(async (req: NextRequest, { userId }) => {
+  const includeMissions = req.nextUrl.searchParams.get("include") === "missions";
+  const adventures = includeMissions
+    ? await listAdventuresWithMissions(userId)
+    : await listAdventures(userId);
   return apiSuccess(adventures);
 });
 

@@ -3,9 +3,10 @@ import MissionItem from "@/components/MissionItem";
 
 type Props = {
   missions: Mission[];
+  onChanged: () => void;
 };
 
-export default function MissionList({ missions }: Props) {
+export default function MissionList({ missions, onChanged }: Props) {
   if (missions.length === 0) {
     return (
       <p className="text-gray-400 text-sm py-4 text-center">
@@ -25,7 +26,7 @@ export default function MissionList({ missions }: Props) {
             Pendientes ({pending.length})
           </h3>
           {pending.map((mission) => (
-            <MissionItem key={mission.id} mission={mission} />
+            <MissionItem key={mission.id} mission={mission} onChanged={onChanged} />
           ))}
         </div>
       )}
@@ -36,7 +37,7 @@ export default function MissionList({ missions }: Props) {
             Completadas ({completed.length})
           </h3>
           {completed.map((mission) => (
-            <MissionItem key={mission.id} mission={mission} />
+            <MissionItem key={mission.id} mission={mission} onChanged={onChanged} />
           ))}
         </div>
       )}
