@@ -3,7 +3,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiError, apiSuccess } from "@/lib/api-response";
 import { withMobileAuth } from "@/lib/mobile-auth";
-import { saveCheckIn, listCheckIns, listRecentCheckIns, getTodayCheckIn } from "@/lib/services/checkins";
+import { saveCheckIn, listCheckIns, listRecentCheckIns, getLatestCheckInToday } from "@/lib/services/checkins";
 
 const CheckInSchema = z.object({
   energy: z.number().int().min(1).max(5),
@@ -16,7 +16,7 @@ export const GET = withMobileAuth(async (req: NextRequest, { userId }) => {
   const params = req.nextUrl.searchParams;
 
   if (params.get("today") === "true") {
-    const checkIn = await getTodayCheckIn(userId);
+    const checkIn = await getLatestCheckInToday(userId);
     return apiSuccess({ checkIn });
   }
 
@@ -40,6 +40,6 @@ export const POST = withMobileAuth(async (req: NextRequest, { userId }) => {
     return apiError(400, "validation_error", "Los valores deben estar entre 1 y 5");
   }
 
-  const { checkIn, created } = await saveCheckIn(userId, result.data);
-  return apiSuccess(checkIn, created ? 201 : 200);
+  const checkIn = await saveCheckIn(userId, result.data);
+  return apiSuccess(checkIn, 201);
 });

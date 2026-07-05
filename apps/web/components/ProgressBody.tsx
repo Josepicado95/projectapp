@@ -5,6 +5,7 @@
 "use client";
 
 import ForestBackground from "@/components/ForestBackground";
+import { toDailyLatest } from "@/lib/checkin-utils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Mission   = { id: number; label: string; completed: boolean };
@@ -78,8 +79,9 @@ export default function ProgressBody({ adventures, checkIns, userName, streak, l
     return { ...m, linePath, areaPath, lastX, lastY, avg, todayVal, todayLabel, trendArrow, trendColor };
   });
 
-  // Last 7 days bars
-  const last7 = checkIns.slice(-7);
+  // Last 7 days bars — collapse to one entry per calendar day first, since
+  // checkIns may contain multiple check-ins for the same day.
+  const last7 = toDailyLatest(checkIns).slice(-7);
   const todayDow = now.getDay();
   const weekBars = last7.map((c, i) => {
     const offset   = (todayDow - (last7.length - 1 - i) + 7) % 7;
