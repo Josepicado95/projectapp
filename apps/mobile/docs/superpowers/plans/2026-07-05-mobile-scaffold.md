@@ -447,12 +447,13 @@ export default function RootLayout() {
 }
 ```
 
-- [ ] **Step 2: Verify it compiles**
+- [ ] **Step 2: Expected, temporary TypeScript errors — do not block on these**
 
 Run: `npx tsc --noEmit`
-Expected: no output.
 
-- [ ] **Step 3: Commit**
+Expected: **errors**, not a clean pass — something like `Argument of type '"/login"' is not assignable to parameter of type '...'` and the same for `"/(tabs)"`. This is Expo Router's typed-routes feature: it generates the set of valid route strings from files that actually exist under `src/app/`. Since `/login` (Task 7) and `/(tabs)` (Task 8) don't exist as files yet, TypeScript correctly doesn't know about them yet — this is expected at this point in the sequence, not a bug in this task's code. Task 8's own Step 5 (`npx tsc --noEmit`) re-runs this same check after both routes exist, and *that* run must be clean — this task's run is allowed to show exactly these two route-string errors and no others.
+
+- [ ] **Step 3: Commit anyway**
 
 ```bash
 git add src/app/_layout.tsx
