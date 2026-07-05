@@ -4,6 +4,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import Link from "next/link";
 import ForestBackground from "@/components/ForestBackground";
 import { toDailyLatest } from "@/lib/checkin-utils";
 
@@ -423,9 +424,9 @@ export default function CheckInBody({ userName }: Props) {
                   style={{ flex:1, fontFamily:"var(--font-hanken)", fontWeight:700, fontSize:15, color:"#ECE6D8", background:"rgba(236,230,216,.08)", border:"1px solid rgba(236,230,216,.18)", borderRadius:14, padding:15, cursor:"pointer" }}>
                   Hacer otro check-in
                 </button>
-                <a href="/" style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:8, fontFamily:"var(--font-hanken)", fontWeight:700, fontSize:15, color:"#1E282A", background:"linear-gradient(135deg,#E3A878 0%,#C8885A 100%)", textDecoration:"none", borderRadius:14, padding:15, boxShadow:"0 8px 24px rgba(227,168,120,.3)" }}>
+                <Link href="/" style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:8, fontFamily:"var(--font-hanken)", fontWeight:700, fontSize:15, color:"#1E282A", background:"linear-gradient(135deg,#E3A878 0%,#C8885A 100%)", textDecoration:"none", borderRadius:14, padding:15, boxShadow:"0 8px 24px rgba(227,168,120,.3)" }}>
                   <span>Ver mi dashboard</span><span style={{ fontSize:17 }}>→</span>
-                </a>
+                </Link>
               </div>
             </div>
           )}
