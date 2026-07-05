@@ -253,27 +253,25 @@ algo, está bien dejarlo a medias y anotarlo en `ROADMAP.md` para la próxima.
 (Claude Code: actualiza esta sección al final de cada sesión con un resumen de 2-3 líneas:
 en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
 
-- **Fase/Sesión actual:** feature `multiple-checkins-per-day` completa y mergeada a `main`
-  (PR #5) — cada `POST /api/mobile/checkins` crea un registro nuevo en vez de pisar el del
-  día; "el check-in de hoy" (dashboard, recomendador) ahora significa "el más reciente del
-  día" (`getLatestCheckInToday`), no "el único".
-- **Último checkpoint superado:** las 3 tareas del plan
-  `apps/web/docs/superpowers/plans/2026-07-04-multiple-checkins-per-day.md` (spec y plan ya
-  habían quedado escritos y aprobados en la sesión anterior). La implementación de las 3
-  tareas se encontró ya hecha y commiteada al retomar la sesión (el resumen de estado no
-  había quedado actualizado la vez anterior) — en vez de re-implementar, se hizo el ciclo
-  completo de Modo B sobre el código ya escrito: explicación línea por línea, ejercicio de
-  revisión activa (3 preguntas, Jose las resolvió bien) y checkpoints, tarea por tarea. Se
-  detectó y pagó de una vez una deuda técnica preexistente (`<a href="/">` en vez de
-  `next/link`, arrastrada desde antes de esta feature) como commit separado, decisión de Jose
-  para no acumular deuda justo en una migración que cambia el comportamiento del código —
-  confirmado con `npx eslint .` en todo el proyecto que ya no quedan errores
-  `no-html-link-for-pages`. Verificación completa: `tsc`/`eslint` limpios, secuencia de
-  `curl` (dos check-ins mismo día devuelven 201 cada uno, `?today=true` devuelve el más
-  reciente, `?limit=N` los devuelve como registros separados) y Jose confirmó en navegador
-  (reset del formulario, sparkline con variación intra-día, franjas semanales correctas).
-  Pendiente aún: `sky-engine.ts`/`SkyCanvas.tsx` sin pasar por su ciclo de revisión (ver
-  pendiente abajo).
+- **Fase/Sesión actual:** sub-proyecto 2 de `apps/mobile` (scaffold Expo + login) completo,
+  las 9 tareas del plan `apps/mobile/docs/superpowers/plans/2026-07-05-mobile-scaffold.md`
+  implementadas vía `superpowers:subagent-driven-development` (implementador + revisor por
+  tarea + revisión final de todo el branch en `opus`) en el worktree `worktree-mobile-scaffold`
+  (`.claude/worktrees/mobile-scaffold`). **PR #6 abierto en GitHub, aún sin mergear** —
+  pendiente que Jose decida cuándo mergearlo.
+- **Último checkpoint superado:** Tarea 8 (pantallas de tabs Home/Profile) pasó por el ciclo
+  completo de Modo B — explicación línea por línea, ejercicio de revisión activa (Jose
+  identificó correctamente que un parpadeo de "Hola, " sin nombre en el cold-start era un
+  problema estético y no de seguridad, aunque inicialmente atribuyó la causa a un fetch de
+  datos en vez de al `user` siendo `null` en el contexto — se corrigió el mecanismo con él) y
+  un mini-quiz sobre por qué el fix del flash saca las condiciones de redirect del
+  `useEffect` (Jose primero pensó que era por organización/responsabilidades; se le explicó
+  que la razón real es de *timing*: el render necesita la respuesta antes de pintar, no
+  después). Tarea 9 (verificación manual en celular físico vía Expo Go) completada en vivo,
+  los 5 pasos del checklist pasaron. La revisión final de todo el branch (16 commits) no
+  encontró nada Crítico; encontró 2 hallazgos Important (uno de ellos, código muerto del
+  scaffold, arreglado el mismo día) y varios Minor, triados con Jose uno por uno con
+  pros/contras — ver deuda técnica abajo.
 - **URLs de producción:** Vercel (projectapp-6wqde3z63-josepicado95s-projects.vercel.app),
   Railway recommender (projectapp-production-164a.up.railway.app).
 - **Deuda técnica conocida:**
@@ -290,9 +288,27 @@ en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
   - `DashboardBody.tsx` y `AdventureDetailBody.tsx` duplican ~80 líneas de nav rail/bottom
     nav (con diferencias intencionales: el rail de detalle no tiene logout ni el punto de
     check-in) — candidato a un componente `AppShell` compartido en una limpieza futura.
+  - **`apps/mobile/lib/api.ts` — `tryRefresh()` no tiene "single-flight" (mutex).** Hoy es
+    invisible porque solo hay una llamada autenticada (`GET /auth/me`). El refresh token del
+    servidor rota (un solo uso) — si en el futuro dashboard móvil varias pantallas piden
+    datos en paralelo tras expirar el token, cada una intentaría rotar el mismo refresh
+    token; solo la primera gana, el resto recibe `revokedAt` y desloguea a Jose de golpe.
+    **Bloqueante antes de construir el dashboard/misiones en `apps/mobile`** — no antes.
+  - `apps/mobile`: colores hardcodeados en hex por pantalla (`login.tsx`, `(tabs)/*.tsx`) en
+    vez de tokens centralizados en `tailwind.config.js` — candidato a limpieza cuando haya
+    más de 3-4 pantallas.
+  - `apps/mobile`: sin workflow de CI en `.github/workflows/` (web y recommender sí tienen).
+  - `apps/mobile`: los `fetch` de `lib/api.ts` no tienen timeout (`AbortController`) — un
+    Wi-Fi que falla "en silencio" deja el botón de login pegado en "Entrando...".
+  - `apps/mobile`: falta el mensaje "Tu sesión expiró, inicia sesión de nuevo" del spec —
+    no alcanzable hoy (nadie hace una llamada a mitad de sesión), se volverá relevante con
+    el dashboard móvil.
 - **Credenciales de prueba:** jose@aventuras.com / aventuras123
 - **Pendiente para la próxima sesión:**
-  1. Sesión de revisión profunda de componentes acordada (leer y desmenuzar código existente
+  1. Decidir si mergear el PR #6 (`worktree-mobile-scaffold` → `main`) antes de seguir.
+  2. Sesión de revisión profunda de componentes acordada (leer y desmenuzar código existente
      para consolidar aprendizaje) — debería incluir `sky-engine.ts` y `SkyCanvas.tsx`, que se
      generaron en Modo B pero sin pasar aún por la explicación línea por línea ni el
      checkpoint. Fase 13 polish si se desea.
+  3. Antes de construir las pantallas de dashboard/misiones en `apps/mobile`, resolver el
+     single-flight de `tryRefresh()` (ver deuda técnica arriba) — es requisito, no opcional.
