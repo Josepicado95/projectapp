@@ -8,21 +8,23 @@ function RootNavigation() {
   const segments = useSegments();
   const router = useRouter();
 
+  const inTabsGroup = segments[0] === "(tabs)";
+  const onLoginScreen = segments[0] === "login";
+  const willRedirectToLogin = !isLoading && !user && inTabsGroup;
+  const willRedirectToTabs = !isLoading && user && onLoginScreen;
+
   useEffect(() => {
-    if (isLoading) return;
-    const inTabsGroup = segments[0] === "(tabs)";
-    const onLoginScreen = segments[0] === "login";
-    if (!user && inTabsGroup) {
+    if (willRedirectToLogin) {
       router.replace("/login");
-    } else if (user && onLoginScreen) {
+    } else if (willRedirectToTabs) {
       // Only pull an authenticated user out of the login screen specifically —
       // don't force every authenticated route to live inside (tabs). Future
       // screens outside the tab bar (e.g. a detail screen) stay untouched here.
       router.replace("/(tabs)");
     }
-  }, [user, isLoading, segments]);
+  }, [willRedirectToLogin, willRedirectToTabs, router]);
 
-  if (isLoading) return null;
+  if (isLoading || willRedirectToLogin || willRedirectToTabs) return null;
   return <Slot />;
 }
 
