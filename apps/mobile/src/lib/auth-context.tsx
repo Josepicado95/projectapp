@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { getRefreshToken, setTokens, clearTokens } from "./secure-store";
-import { apiRequest } from "./api";
+import { apiRequest, ApiError } from "./api";
 
 type User = { id: number; name: string; email: string };
 
@@ -30,8 +30,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const me = await apiRequest<User>("/api/mobile/auth/me");
       setUser(me);
-    } catch {
-      await clearTokens();
+    } catch (err) {
+      // Only a real 401 means the token is genuinely invalid — a network
+      // failure (flaky mobile signal) shouldn't silently log the user out.
+      if (err instanceof ApiError && err.status === 401) {
+        await clearTokens();
+      }
     } finally {
       setIsLoading(false);
     }
