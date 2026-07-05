@@ -253,28 +253,34 @@ algo, está bien dejarlo a medias y anotarlo en `ROADMAP.md` para la próxima.
 (Claude Code: actualiza esta sección al final de cada sesión con un resumen de 2-3 líneas:
 en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
 
-- **Fase/Sesión actual:** migración `web-api-migration-adventures` completa y mergeada a
-  `main` (PR #4) — `/` y `/adventures/[id]` ahora usan fetch contra `/api/mobile/...` en vez
-  de Server Actions, mismo patrón que `/checkin` (PR #3).
-- **Último checkpoint superado:** las 4 tareas del plan
-  `apps/web/docs/superpowers/plans/2026-07-03-web-api-migration-adventures.md` completas vía
-  subagent-driven-development (implementador + revisor por tarea, revisión final de todo el
-  branch). Se encontraron y corrigieron 2 bugs reales durante la revisión: (1) un hueco del
-  plan que habría dejado el dashboard sin fondo 3D/nav/logout (Task 3), y (2) una condición de
-  carrera real en `refresh()`/`load()` donde una respuesta vieja podía pisar datos más nuevos
-  (ej. navegar rápido entre dos aventuras distintas) — el primer intento de arreglo no
-  satisfizo el lint `react-hooks/set-state-in-effect` y se rediseñó separando la función pura
-  de fetch de la lógica que toca estado. Se borraron los Server Actions viejos de
-  adventures/missions y 2 componentes muertos (`NewAdventureForm.tsx`, `AdventureCard.tsx`).
-  Jose confirmó en navegador antes y después del fix de la condición de carrera. Este ciclo
-  completo (explicación + revisión activa + checkpoints) sí se hizo en esta sesión, a
-  diferencia de `sky-engine.ts` (ver pendiente abajo, que sigue sin resolver).
+- **Fase/Sesión actual:** feature `multiple-checkins-per-day` completa y mergeada a `main`
+  (PR #5) — cada `POST /api/mobile/checkins` crea un registro nuevo en vez de pisar el del
+  día; "el check-in de hoy" (dashboard, recomendador) ahora significa "el más reciente del
+  día" (`getLatestCheckInToday`), no "el único".
+- **Último checkpoint superado:** las 3 tareas del plan
+  `apps/web/docs/superpowers/plans/2026-07-04-multiple-checkins-per-day.md` (spec y plan ya
+  habían quedado escritos y aprobados en la sesión anterior). La implementación de las 3
+  tareas se encontró ya hecha y commiteada al retomar la sesión (el resumen de estado no
+  había quedado actualizado la vez anterior) — en vez de re-implementar, se hizo el ciclo
+  completo de Modo B sobre el código ya escrito: explicación línea por línea, ejercicio de
+  revisión activa (3 preguntas, Jose las resolvió bien) y checkpoints, tarea por tarea. Se
+  detectó y pagó de una vez una deuda técnica preexistente (`<a href="/">` en vez de
+  `next/link`, arrastrada desde antes de esta feature) como commit separado, decisión de Jose
+  para no acumular deuda justo en una migración que cambia el comportamiento del código —
+  confirmado con `npx eslint .` en todo el proyecto que ya no quedan errores
+  `no-html-link-for-pages`. Verificación completa: `tsc`/`eslint` limpios, secuencia de
+  `curl` (dos check-ins mismo día devuelven 201 cada uno, `?today=true` devuelve el más
+  reciente, `?limit=N` los devuelve como registros separados) y Jose confirmó en navegador
+  (reset del formulario, sparkline con variación intra-día, franjas semanales correctas).
+  Pendiente aún: `sky-engine.ts`/`SkyCanvas.tsx` sin pasar por su ciclo de revisión (ver
+  pendiente abajo).
 - **URLs de producción:** Vercel (projectapp-6wqde3z63-josepicado95s-projects.vercel.app),
   Railway recommender (projectapp-production-164a.up.railway.app).
 - **Deuda técnica conocida:**
-  - Campo `date` en `CheckIn` usa `DateTime` completo (con hora). `status` en `Adventure` es
-    `String` (no enum) intencionalmente. Warning de deprecación httpx/starlette en tests —
-    ignorable.
+  - Campo `date` en `CheckIn` usa `DateTime` completo (con hora) — esto ya no es deuda: fue
+    justo lo que permitió implementar check-ins múltiples por día sin migración. `status` en
+    `Adventure` sigue siendo `String` (no enum) intencionalmente. Warning de deprecación
+    httpx/starlette en tests — ignorable.
   - `AdventureEditorModal.handleDelete`/`MissionEditorModal.handleDelete` no revisan
     `res.ok` antes de cerrar el modal — un DELETE fallido no muestra error (mismo problema,
     ya conocido y documentado, que los botones de toggle de misión en `DashboardBody.tsx`).
@@ -286,11 +292,7 @@ en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
     check-in) — candidato a un componente `AppShell` compartido en una limpieza futura.
 - **Credenciales de prueba:** jose@aventuras.com / aventuras123
 - **Pendiente para la próxima sesión:**
-  1. **Check-ins múltiples por día** — hoy `saveCheckIn` actualiza el único registro del día
-     en vez de crear uno nuevo; Jose quiere poder hacer varios check-ins independientes el
-     mismo día (ej. mañana y noche). Requiere cambiar el schema de Prisma, `saveCheckIn`, y el
-     frontend de `/checkin`/`/progress`. Necesita sesión de brainstorming antes de planear.
-  2. Sesión de revisión profunda de componentes acordada (leer y desmenuzar código existente
+  1. Sesión de revisión profunda de componentes acordada (leer y desmenuzar código existente
      para consolidar aprendizaje) — debería incluir `sky-engine.ts` y `SkyCanvas.tsx`, que se
      generaron en Modo B pero sin pasar aún por la explicación línea por línea ni el
      checkpoint. Fase 13 polish si se desea.
