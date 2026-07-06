@@ -5,7 +5,7 @@ import Link from "next/link";
 import ThreeBackground from "@/components/background/ThreeBackground";
 import NewMissionForm from "@/components/NewMissionForm";
 import MissionList from "@/components/MissionList";
-import type { MomentKey } from "@/lib/theme";
+import type { MomentTheme } from "@/lib/theme";
 import type { Mission } from "@/lib/generated/prisma/client";
 
 type AdventureDetail = {
@@ -18,10 +18,10 @@ type AdventureDetail = {
   missions: Mission[];
 };
 
-type Props = { adventureId: number; momentKey: MomentKey };
+type Props = { adventureId: number; theme: MomentTheme };
 type LoadState = "loading" | "ready" | "not-found" | "error";
 
-export default function AdventureDetailBody({ adventureId, momentKey }: Props) {
+export default function AdventureDetailBody({ adventureId, theme }: Props) {
   const [loadState, setLoadState] = useState<LoadState>("loading");
   const [adventure, setAdventure] = useState<AdventureDetail | null>(null);
 
@@ -77,8 +77,8 @@ export default function AdventureDetailBody({ adventureId, momentKey }: Props) {
 
   if (loadState === "loading") {
     return (
-      <div style={{ position: "relative", height: "100vh", overflow: "hidden", fontFamily: "var(--font-hanken), sans-serif", display: "flex", alignItems: "center", justifyContent: "center", color: "#7A8FA0" }}>
-        <ThreeBackground moment={momentKey} />
+      <div style={{ position: "relative", height: "100vh", overflow: "hidden", fontFamily: "var(--font-hanken), sans-serif", display: "flex", alignItems: "center", justifyContent: "center", color: theme.cardSub }}>
+        <ThreeBackground moment={theme.key} />
         <div style={{ position: "relative", zIndex: 1 }}>Cargando aventura…</div>
       </div>
     );
@@ -86,8 +86,8 @@ export default function AdventureDetailBody({ adventureId, momentKey }: Props) {
 
   if (loadState === "not-found" || loadState === "error") {
     return (
-      <div style={{ position: "relative", height: "100vh", overflow: "hidden", fontFamily: "var(--font-hanken), sans-serif", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, color: "#7A8FA0" }}>
-        <ThreeBackground moment={momentKey} />
+      <div style={{ position: "relative", height: "100vh", overflow: "hidden", fontFamily: "var(--font-hanken), sans-serif", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 16, color: theme.cardSub }}>
+        <ThreeBackground moment={theme.key} />
         <div style={{ position: "relative", zIndex: 1 }}>
           {loadState === "not-found" ? "Aventura no encontrada." : "No se pudo cargar la aventura."}
         </div>
@@ -104,7 +104,7 @@ export default function AdventureDetailBody({ adventureId, momentKey }: Props) {
 
   return (
     <div style={{ position: "relative", height: "100vh", overflow: "hidden", fontFamily: "var(--font-hanken), sans-serif" }}>
-      <ThreeBackground moment={momentKey} />
+      <ThreeBackground moment={theme.key} />
 
       <div style={{ position: "absolute", inset: 0, display: "flex", zIndex: 1 }}>
 
@@ -159,10 +159,10 @@ export default function AdventureDetailBody({ adventureId, momentKey }: Props) {
 
           {/* Adventure header */}
           <div style={{
-            background: "rgba(14,20,36,.82)",
+            background: theme.glassBgStrong,
             backdropFilter: "blur(24px)",
             WebkitBackdropFilter: "blur(24px)",
-            border: "1px solid rgba(236,230,216,.14)",
+            border: `1px solid ${theme.glassBorder}`,
             borderRadius: 24,
             padding: "28px 28px 22px",
             marginBottom: 16,
@@ -170,7 +170,7 @@ export default function AdventureDetailBody({ adventureId, momentKey }: Props) {
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16, marginBottom: 14 }}>
               <h1 style={{
                 fontFamily: "var(--font-schibsted)",
-                fontWeight: 700, fontSize: 22, color: "#F2EFE6", lineHeight: 1.25, margin: 0,
+                fontWeight: 700, fontSize: 22, color: theme.headerInk, lineHeight: 1.25, margin: 0,
               }}>
                 {adv.title}
               </h1>
@@ -187,7 +187,7 @@ export default function AdventureDetailBody({ adventureId, momentKey }: Props) {
             </div>
 
             {adv.description && (
-              <p style={{ fontSize: 14, color: "#7A8FA0", lineHeight: 1.55, marginBottom: 16 }}>
+              <p style={{ fontSize: 14, color: theme.cardSub, lineHeight: 1.55, marginBottom: 16 }}>
                 {adv.description}
               </p>
             )}
@@ -201,7 +201,7 @@ export default function AdventureDetailBody({ adventureId, momentKey }: Props) {
                   transition: "width .5s cubic-bezier(.2,0,0,1)",
                 }} />
               </div>
-              <span style={{ flexShrink: 0, fontSize: 12, color: "#5A6A78" }}>
+              <span style={{ flexShrink: 0, fontSize: 12, color: theme.cardSub }}>
                 {completedCount} / {adv.missions.length} misiones
               </span>
             </div>
@@ -209,16 +209,16 @@ export default function AdventureDetailBody({ adventureId, momentKey }: Props) {
 
           {/* Missions */}
           <div style={{
-            background: "rgba(14,20,36,.78)",
+            background: theme.glassBg,
             backdropFilter: "blur(20px)",
             WebkitBackdropFilter: "blur(20px)",
-            border: "1px solid rgba(236,230,216,.12)",
+            border: `1px solid ${theme.glassBorder}`,
             borderRadius: 20,
             padding: "22px 24px",
           }}>
             <p style={{
               fontSize: 11, fontWeight: 600, letterSpacing: ".09em",
-              textTransform: "uppercase", color: "#4E6070", marginBottom: 18,
+              textTransform: "uppercase", color: theme.cardSub, marginBottom: 18,
             }}>
               Misiones
             </p>
