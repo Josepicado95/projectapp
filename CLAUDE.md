@@ -253,14 +253,34 @@ algo, está bien dejarlo a medias y anotarlo en `ROADMAP.md` para la próxima.
 (Claude Code: actualiza esta sección al final de cada sesión con un resumen de 2-3 líneas:
 en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
 
-- **Fase/Sesión actual:** sub-proyecto 2 de `apps/mobile` (scaffold Expo + login) completo,
-  mergeado a `main` (PR #6, commit `f45165a`) — las 9 tareas del plan
-  `apps/mobile/docs/superpowers/plans/2026-07-05-mobile-scaffold.md` implementadas vía
-  `superpowers:subagent-driven-development`, worktree y ramas ya limpiados. Además, en esta
-  misma sesión se cerró la revisión profunda pendiente de `apps/web/lib/sky-engine.ts` +
-  `apps/web/components/background/SkyCanvas.tsx` (ver checkpoint abajo) — con esto, **la app
-  web queda sin pendientes de revisión Modo B abiertos**; el próximo foco es montar el resto
-  de `apps/mobile` (dashboard/misiones).
+- **Fase/Sesión actual:** sesión larga con 3 hilos cerrados de punta a punta:
+  1. Sub-proyecto 2 de `apps/mobile` (scaffold Expo + login) completo, mergeado a `main`
+     (PR #6, commit `f45165a`).
+  2. Revisión profunda pendiente de `apps/web/lib/sky-engine.ts` +
+     `apps/web/components/background/SkyCanvas.tsx` cerrada (ver checkpoint abajo).
+  3. **Migración de consistencia de tema** (bug reportado por Jose: Check-in/Progress
+     siempre mostraban cielo de noche sin importar la hora real) — mergeada a `main` (PR #7,
+     commit `5300d5b`). Causa raíz: `ForestBackground.tsx`, un wrapper viejo, tenía
+     `moment="noche"` fijo. La investigación reveló que el problema era más grande: incluso
+     donde el cielo ya era correcto (`AdventureDetailBody.tsx`), los paneles seguían con
+     paleta oscura fija — solo `DashboardBody.tsx` estaba 100% adaptado al momento del día.
+     Jose eligió el alcance más completo (Opción C): migrar Check-in, Progress, Adventure
+     Detail **y** Login/Registro (este último se sumó a mitad de camino, tras descubrir que
+     `AuthCard.tsx` era el segundo consumidor de `ForestBackground.tsx`) al mismo patrón
+     `theme.*` que ya usaba Dashboard. Se agregó `glassBgStrong` a `MomentTheme` (mismo color
+     base por momento, más opacidad) para preservar la jerarquía visual de dos niveles que
+     Jose no quería perder, en vez de colapsarla a un solo valor. Se extrajo
+     `getRequestMoment()` para eliminar la lógica de zona horaria duplicada en 4+ páginas.
+     `ForestBackground.tsx` quedó completamente borrado. Implementado con
+     `superpowers:subagent-driven-development` (5 tareas + 3 fixes post-revisión: track de
+     progreso inconsistente en Adventure Detail, `colorScheme` fijo en los inputs de
+     Auth —detectado por Jose mismo en su ejercicio de revisión activa—, y sombras de
+     tarjeta sin tematizar en Check-in/Auth). Revisión final de todo el branch (`opus`) sin
+     hallazgos Críticos. Worktree y ramas ya limpiados.
+
+  Con esto, **la app web queda sin pendientes de revisión Modo B abiertos** y el fondo
+  animado ya es consistente en las 5 pantallas que lo usan. El próximo foco es montar el
+  resto de `apps/mobile` (dashboard/misiones).
 - **Último checkpoint superado (mobile scaffold):** Tarea 8 (pantallas de tabs Home/Profile)
   pasó por el ciclo completo de Modo B — explicación línea por línea, ejercicio de revisión
   activa (Jose identificó correctamente que un parpadeo de "Hola, " sin nombre en el
@@ -320,6 +340,12 @@ en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
   - `apps/mobile`: falta el mensaje "Tu sesión expiró, inicia sesión de nuevo" del spec —
     no alcanzable hoy (nadie hace una llamada a mitad de sesión), se volverá relevante con
     el dashboard móvil.
+  - `apps/web`: el track de nivel sin completar en la mini-tarjeta de resumen de
+    `CheckInBody.tsx` (los "puntitos" de energía/ánimo/estrés/sueño) sigue con un tinte
+    crema fijo en vez de `theme.trackBg` — casi invisible en los momentos de día claro.
+  - `apps/web`: el color del pulgar del scrollbar en `ProgressBody.tsx` sigue fijo
+    (`rgba(236,230,216,.18)`) — bajo contraste en momentos de día claro. Cosmético, no
+    urgente.
 - **Credenciales de prueba:** jose@aventuras.com / aventuras123
 - **Pendiente para la próxima sesión:**
   1. Siguiente foco: sub-proyecto 3 de `apps/mobile` — dashboard/misiones. Antes de construir
@@ -328,4 +354,5 @@ en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
      token lo haría fallar).
   2. Deuda menor ya documentada, sin fecha fija: colores hardcodeados en `apps/mobile`, CI
      para `apps/mobile`, timeout de `fetch`, mensaje de "sesión expiró", `AppShell`
-     compartido en `apps/web`, `handleDelete` sin revisar `res.ok`.
+     compartido en `apps/web`, `handleDelete` sin revisar `res.ok`, los dos detalles
+     cosméticos de la migración de tema (track de Check-in, scrollbar de Progress).
