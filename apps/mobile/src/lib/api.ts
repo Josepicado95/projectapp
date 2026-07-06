@@ -24,23 +24,35 @@ async function rawRequest(path: string, options: RequestInit, accessToken?: stri
   return fetch(`${API_URL}${path}`, { ...options, headers });
 }
 
+let refreshPromise: Promise<string | null> | null = null;
+
 async function tryRefresh(): Promise<string | null> {
-  const refreshToken = await getRefreshToken();
-  if (!refreshToken) return null;
+  if (refreshPromise) return refreshPromise;
 
-  const res = await rawRequest("/api/mobile/auth/refresh", {
-    method: "POST",
-    body: JSON.stringify({ refreshToken }),
-  });
+  refreshPromise = (async () => {
+    const refreshToken = await getRefreshToken();
+    if (!refreshToken) return null;
 
-  if (!res.ok) {
-    await clearTokens();
-    return null;
+    const res = await rawRequest("/api/mobile/auth/refresh", {
+      method: "POST",
+      body: JSON.stringify({ refreshToken }),
+    });
+
+    if (!res.ok) {
+      await clearTokens();
+      return null;
+    }
+
+    const data = await res.json();
+    await setTokens(data.accessToken, data.refreshToken);
+    return data.accessToken as string;
+  })();
+
+  try {
+    return await refreshPromise;
+  } finally {
+    refreshPromise = null;
   }
-
-  const data = await res.json();
-  await setTokens(data.accessToken, data.refreshToken);
-  return data.accessToken as string;
 }
 
 export async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
