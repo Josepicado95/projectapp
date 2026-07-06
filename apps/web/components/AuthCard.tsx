@@ -3,7 +3,8 @@
 import { useActionState, useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
-import ForestBackground from "@/components/ForestBackground";
+import ThreeBackground from "@/components/background/ThreeBackground";
+import type { MomentTheme } from "@/lib/theme";
 import { loginAction } from "@/app/actions/auth";
 import { registerAction } from "@/app/actions/auth";
 
@@ -28,20 +29,22 @@ function RegisteredBanner() {
   );
 }
 
-const inputBase: React.CSSProperties = {
-  width: "100%",
-  fontFamily: "var(--font-hanken), sans-serif",
-  fontSize: 15,
-  color: "#ECE6D8",
-  background: "rgba(236,230,216,.07)",
-  border: "1px solid rgba(236,230,216,.18)",
-  borderRadius: 13,
-  padding: "13px 15px",
-  boxSizing: "border-box",
-  colorScheme: "dark",
-};
+function getInputBase(theme: MomentTheme): React.CSSProperties {
+  return {
+    width: "100%",
+    fontFamily: "var(--font-hanken), sans-serif",
+    fontSize: 15,
+    color: theme.cardInk,
+    background: theme.trackBg,
+    border: `1px solid ${theme.glassBorder}`,
+    borderRadius: 13,
+    padding: "13px 15px",
+    boxSizing: "border-box",
+    colorScheme: theme.key === "noche" ? "dark" : "light",
+  };
+}
 
-export default function AuthCard({ initialMode = "login" as Mode }: { initialMode?: Mode }) {
+export default function AuthCard({ initialMode = "login" as Mode, theme }: { initialMode?: Mode; theme: MomentTheme }) {
   const [mode, setMode]               = useState<Mode>(initialMode);
   const [transitioning, setTransitioning] = useState(false);
   const router = useRouter();
@@ -77,12 +80,12 @@ export default function AuthCard({ initialMode = "login" as Mode }: { initialMod
         .av-input::placeholder { color:rgba(236,230,216,.3); }
       `}} />
 
-      <ForestBackground static />
+      <ThreeBackground moment={theme.key} isStatic />
 
       {/* Dawn curtain — fades out on mount */}
       <div style={{
         position: "absolute", inset: 0, zIndex: 8, pointerEvents: "none",
-        background: "linear-gradient(180deg,#0E1630 0%,#1B2647 42%,#27375E 74%,#34496F 100%)",
+        background: theme.skyGradient,
         animation: "av-dawn 3.8s cubic-bezier(.4,0,.15,1) .15s forwards",
       }} />
 
@@ -115,23 +118,23 @@ export default function AuthCard({ initialMode = "login" as Mode }: { initialMod
         {/* Glass card */}
         <div style={{
           width: "100%", maxWidth: 420,
-          background: "rgba(12,18,30,.84)",
+          background: theme.glassBgStrong,
           backdropFilter: "blur(28px) saturate(1.3)",
           WebkitBackdropFilter: "blur(28px) saturate(1.3)",
-          border: "1px solid rgba(236,230,216,.16)",
+          border: `1px solid ${theme.glassBorder}`,
           borderRadius: 28,
-          boxShadow: "0 32px 80px rgba(0,0,0,.6), inset 0 1px 0 rgba(236,230,216,.12)",
+          boxShadow: `0 32px 80px ${theme.glassShadow}, inset 0 1px 0 ${theme.glassInner}`,
           padding: "36px 34px 32px",
           animation: "lg-rise .55s ease .08s both",
         }}>
 
           <div style={{
             fontFamily: "var(--font-schibsted), sans-serif", fontWeight: 700,
-            fontSize: 26, color: "#F2EFE6", lineHeight: 1.15, marginBottom: 6,
+            fontSize: 26, color: theme.headerInk, lineHeight: 1.15, marginBottom: 6,
           }}>
             {title}
           </div>
-          <div style={{ fontSize: 14, color: "#7A8FA0", marginBottom: 28, lineHeight: 1.4 }}>
+          <div style={{ fontSize: 14, color: theme.headerSub, marginBottom: 28, lineHeight: 1.4 }}>
             {subtitle}
           </div>
 
@@ -152,7 +155,7 @@ export default function AuthCard({ initialMode = "login" as Mode }: { initialMod
                 <input
                   name="name" type="text" required placeholder="Tu nombre"
                   className="av-input"
-                  style={{ ...inputBase, borderColor: registerState.errors?.name ? "rgba(216,100,100,.5)" : undefined }}
+                  style={{ ...getInputBase(theme), borderColor: registerState.errors?.name ? "rgba(216,100,100,.5)" : undefined }}
                 />
                 {registerState.errors?.name && (
                   <p style={{ fontSize: 12.5, color: "#E8A0A0", marginTop: 5 }}>{registerState.errors.name[0]}</p>
@@ -166,7 +169,7 @@ export default function AuthCard({ initialMode = "login" as Mode }: { initialMod
                 <input
                   name="email" type="email" required placeholder="tu@email.com"
                   className="av-input"
-                  style={{ ...inputBase, borderColor: registerState.errors?.email ? "rgba(216,100,100,.5)" : undefined }}
+                  style={{ ...getInputBase(theme), borderColor: registerState.errors?.email ? "rgba(216,100,100,.5)" : undefined }}
                 />
                 {registerState.errors?.email && (
                   <p style={{ fontSize: 12.5, color: "#E8A0A0", marginTop: 5 }}>{registerState.errors.email[0]}</p>
@@ -180,7 +183,7 @@ export default function AuthCard({ initialMode = "login" as Mode }: { initialMod
                 <input
                   name="password" type="password" required placeholder="••••••••"
                   className="av-input"
-                  style={{ ...inputBase, borderColor: registerState.errors?.password ? "rgba(216,100,100,.5)" : undefined }}
+                  style={{ ...getInputBase(theme), borderColor: registerState.errors?.password ? "rgba(216,100,100,.5)" : undefined }}
                 />
                 {registerState.errors?.password && (
                   <p style={{ fontSize: 12.5, color: "#E8A0A0", marginTop: 5 }}>{registerState.errors.password[0]}</p>
@@ -222,7 +225,7 @@ export default function AuthCard({ initialMode = "login" as Mode }: { initialMod
                 </label>
                 <input
                   id="lg-email" name="email" type="email" required placeholder="tu@email.com"
-                  className="av-input" style={inputBase}
+                  className="av-input" style={getInputBase(theme)}
                 />
               </div>
 
@@ -232,7 +235,7 @@ export default function AuthCard({ initialMode = "login" as Mode }: { initialMod
                 </label>
                 <input
                   id="lg-password" name="password" type="password" required placeholder="••••••••"
-                  className="av-input" style={inputBase}
+                  className="av-input" style={getInputBase(theme)}
                 />
               </div>
 
@@ -271,7 +274,7 @@ export default function AuthCard({ initialMode = "login" as Mode }: { initialMod
           </div>
 
           {/* Mode toggle */}
-          <div style={{ textAlign: "center", fontSize: 14, color: "#7A8FA0" }}>
+          <div style={{ textAlign: "center", fontSize: 14, color: theme.cardSub }}>
             {toggleMsg}{" "}
             <button
               type="button"
@@ -300,7 +303,7 @@ export default function AuthCard({ initialMode = "login" as Mode }: { initialMod
       {transitioning && (
         <div style={{
           position: "fixed", inset: 0, zIndex: 99, pointerEvents: "none",
-          background: "linear-gradient(180deg,#0C1428 0%,#172040 35%,#243358 68%,#2E4168 100%)",
+          background: theme.skyGradient,
           animation: "lg-fade-in 600ms cubic-bezier(.4,0,.15,1) forwards",
         }} />
       )}

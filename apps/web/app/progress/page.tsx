@@ -4,10 +4,18 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { logoutAction } from "@/app/actions/auth";
 import ProgressBody from "@/components/ProgressBody";
+import { getRequestMoment } from "@/lib/get-request-moment";
 
-export default async function ProgressPage() {
+export default async function ProgressPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ hour?: string }>;
+}) {
   const session = await auth();
   if (!session?.user) redirect("/login");
+
+  const { hour } = await searchParams;
+  const theme = await getRequestMoment(hour !== undefined ? parseInt(hour, 10) : undefined);
 
   const userId = Number(session.user.id);
 
@@ -65,6 +73,7 @@ export default async function ProgressPage() {
         userName={session.user.name ?? session.user.email ?? "?"}
         streak={streak}
         logoutAction={logoutAction}
+        theme={theme}
       />
 
       {/* Mobile bottom nav (hidden on desktop via global CSS) */}

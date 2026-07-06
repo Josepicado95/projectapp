@@ -4,7 +4,8 @@
  */
 "use client";
 
-import ForestBackground from "@/components/ForestBackground";
+import ThreeBackground from "@/components/background/ThreeBackground";
+import type { MomentTheme } from "@/lib/theme";
 import { toDailyLatest } from "@/lib/checkin-utils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -18,6 +19,7 @@ type Props = {
   userName:      string;
   streak:        number;
   logoutAction?: () => Promise<void>;
+  theme:         MomentTheme;
 };
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -62,7 +64,7 @@ function trendInfo(series: number[], inverted: boolean) {
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export default function ProgressBody({ adventures, checkIns, userName, streak, logoutAction }: Props) {
+export default function ProgressBody({ adventures, checkIns, userName, streak, logoutAction, theme }: Props) {
   const now = new Date();
   const monthStr = now.toLocaleDateString("es-ES", { month: "long", year: "numeric" });
 
@@ -103,7 +105,6 @@ export default function ProgressBody({ adventures, checkIns, userName, streak, l
 
   return (
     <div style={{ position: "relative", width: "100%", height: "100vh", overflow: "hidden",
-      background: "linear-gradient(180deg,#0E1630 0%,#1B2647 42%,#27375E 74%,#34496F 100%)",
       fontFamily: "var(--font-hanken), sans-serif" }}>
 
       <style dangerouslySetInnerHTML={{ __html: `
@@ -113,11 +114,11 @@ export default function ProgressBody({ adventures, checkIns, userName, streak, l
         @keyframes av-dawn { 0%{opacity:1} 55%{opacity:.65} 100%{opacity:0} }
       `}} />
 
-      <ForestBackground />
+      <ThreeBackground moment={theme.key} />
 
       {/* Dawn curtain */}
       <div style={{ position: "absolute", inset: 0, zIndex: 8, pointerEvents: "none",
-        background: "linear-gradient(180deg,#0E1630 0%,#1B2647 42%,#27375E 74%,#34496F 100%)",
+        background: theme.skyGradient,
         animation: "av-dawn 3.8s cubic-bezier(.4,0,.15,1) .15s forwards" }} />
 
       {/* ── Layout ── */}
@@ -151,15 +152,15 @@ export default function ProgressBody({ adventures, checkIns, userName, streak, l
             {logoutAction ? (
               <form action={logoutAction}>
                 <button type="submit" title="Cerrar sesión" style={{ width:38, height:38,
-                  borderRadius:"50%", background:"#E3A878", color:"#1E282A", border:"none",
+                  borderRadius:"50%", background:theme.avatarBg, color:theme.avatarInk, border:"none",
                   cursor:"pointer", fontWeight:600, fontSize:14,
                   display:"flex", alignItems:"center", justifyContent:"center" }}>
                   {userName.charAt(0).toUpperCase()}
                 </button>
               </form>
             ) : (
-              <div style={{ width:38, height:38, borderRadius:"50%", background:"#E3A878",
-                color:"#1E282A", display:"flex", alignItems:"center", justifyContent:"center",
+              <div style={{ width:38, height:38, borderRadius:"50%", background:theme.avatarBg,
+                color:theme.avatarInk, display:"flex", alignItems:"center", justifyContent:"center",
                 fontWeight:600, fontSize:14 }}>
                 {userName.charAt(0).toUpperCase()}
               </div>
@@ -173,8 +174,8 @@ export default function ProgressBody({ adventures, checkIns, userName, streak, l
           {/* Header */}
           <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:24 }}>
             <div>
-              <h1 style={{ fontFamily:"var(--font-schibsted)", fontWeight:700, fontSize:24, color:"#F2EFE6", lineHeight:1.2 }}>Mi Progreso</h1>
-              <p style={{ fontSize:13, color:"#5A6A78", marginTop:2, textTransform:"capitalize" }}>{monthStr}</p>
+              <h1 style={{ fontFamily:"var(--font-schibsted)", fontWeight:700, fontSize:24, color:theme.headerInk, lineHeight:1.2 }}>Mi Progreso</h1>
+              <p style={{ fontSize:13, color:theme.headerSub, marginTop:2, textTransform:"capitalize" }}>{monthStr}</p>
             </div>
             {streak > 0 && (
               <div style={{ display:"flex", alignItems:"center", gap:8,
@@ -194,19 +195,19 @@ export default function ProgressBody({ adventures, checkIns, userName, streak, l
 
             {/* ── LEFT: Bienestar ── */}
             <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
-              <p style={{ fontSize:11, fontWeight:600, letterSpacing:".1em", textTransform:"uppercase", color:"#4E6070" }}>
+              <p style={{ fontSize:11, fontWeight:600, letterSpacing:".1em", textTransform:"uppercase", color:theme.cardSub }}>
                 Bienestar · 14 días
               </p>
 
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
                 {metrics.map(m => (
-                  <div key={m.key} style={{ background:"rgba(14,20,36,.82)", backdropFilter:"blur(20px)",
-                    WebkitBackdropFilter:"blur(20px)", border:"1px solid rgba(236,230,216,.12)",
+                  <div key={m.key} style={{ background:theme.glassBgStrong, backdropFilter:"blur(20px)",
+                    WebkitBackdropFilter:"blur(20px)", border:`1px solid ${theme.glassBorder}`,
                     borderRadius:20, padding:"16px 16px 14px", display:"flex", flexDirection:"column" }}>
                     <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
                       <div style={{ display:"flex", alignItems:"center", gap:7 }}>
                         <span style={{ fontSize:16, lineHeight:1 }}>{m.icon}</span>
-                        <span style={{ fontSize:12, fontWeight:600, color:"#8A9AA6", letterSpacing:".04em" }}>{m.label}</span>
+                        <span style={{ fontSize:12, fontWeight:600, color:theme.cardSub, letterSpacing:".04em" }}>{m.label}</span>
                       </div>
                       <div style={{ fontSize:11, fontWeight:700, color:m.color,
                         background:"rgba(255,255,255,.06)", borderRadius:8, padding:"3px 8px" }}>
@@ -222,9 +223,9 @@ export default function ProgressBody({ adventures, checkIns, userName, streak, l
                       </svg>
                     </div>
                     <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-                      <span style={{ fontSize:11, color:"#4E6070" }}>Promedio</span>
+                      <span style={{ fontSize:11, color:theme.cardSub }}>Promedio</span>
                       <div style={{ display:"flex", alignItems:"center", gap:5 }}>
-                        <span style={{ fontFamily:"var(--font-schibsted)", fontSize:16, fontWeight:700, color:"#F2EFE6", lineHeight:1 }}>{m.avg}</span>
+                        <span style={{ fontFamily:"var(--font-schibsted)", fontSize:16, fontWeight:700, color:theme.cardInk, lineHeight:1 }}>{m.avg}</span>
                         <span style={{ fontSize:14, color:m.trendColor, fontWeight:700, lineHeight:1 }}>{m.trendArrow}</span>
                       </div>
                     </div>
@@ -234,15 +235,15 @@ export default function ProgressBody({ adventures, checkIns, userName, streak, l
               </div>
 
               {weekBars.length > 0 && (
-                <div style={{ background:"rgba(14,20,36,.7)", backdropFilter:"blur(16px)",
-                  WebkitBackdropFilter:"blur(16px)", border:"1px solid rgba(236,230,216,.1)",
+                <div style={{ background:theme.glassBg, backdropFilter:"blur(16px)",
+                  WebkitBackdropFilter:"blur(16px)", border:`1px solid ${theme.glassBorder}`,
                   borderRadius:18, padding:"16px 18px" }}>
-                  <p style={{ fontSize:11, color:"#4E6070", fontWeight:600, letterSpacing:".06em", marginBottom:12 }}>ÚLTIMOS 7 DÍAS</p>
+                  <p style={{ fontSize:11, color:theme.cardSub, fontWeight:600, letterSpacing:".06em", marginBottom:12 }}>ÚLTIMOS 7 DÍAS</p>
                   <div style={{ display:"flex", gap:6, alignItems:"flex-end" }}>
                     {weekBars.map((wb, i) => (
                       <div key={i} style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:5 }}>
                         <div style={{ width:"100%", borderRadius:4, background:wb.barColor, height:wb.barH, transition:"height .3s ease" }} />
-                        <span style={{ fontSize:9, color:"#3E4E58", fontWeight:600 }}>{wb.day}</span>
+                        <span style={{ fontSize:9, color:theme.cardSub, fontWeight:600 }}>{wb.day}</span>
                       </div>
                     ))}
                   </div>
@@ -252,48 +253,48 @@ export default function ProgressBody({ adventures, checkIns, userName, streak, l
 
             {/* ── RIGHT: Aventuras ── */}
             <div style={{ display:"flex", flexDirection:"column", gap:14 }}>
-              <p style={{ fontSize:11, fontWeight:600, letterSpacing:".1em", textTransform:"uppercase", color:"#4E6070" }}>
+              <p style={{ fontSize:11, fontWeight:600, letterSpacing:".1em", textTransform:"uppercase", color:theme.cardSub }}>
                 Aventuras activas
               </p>
 
               {adventureCards.length === 0 && (
-                <div style={{ background:"rgba(14,20,36,.7)", border:"1px solid rgba(236,230,216,.1)",
-                  borderRadius:20, padding:"28px 20px", textAlign:"center", color:"#4A5A64", fontSize:14 }}>
+                <div style={{ background:theme.glassBg, border:`1px solid ${theme.glassBorder}`,
+                  borderRadius:20, padding:"28px 20px", textAlign:"center", color:theme.cardSub, fontSize:14 }}>
                   Aún no tienes aventuras. ¡Crea tu primera!
                 </div>
               )}
 
               {adventureCards.map(a => (
-                <div key={a.id} style={{ background:"rgba(14,20,36,.82)", backdropFilter:"blur(20px)",
-                  WebkitBackdropFilter:"blur(20px)", border:"1px solid rgba(236,230,216,.12)",
+                <div key={a.id} style={{ background:theme.glassBgStrong, backdropFilter:"blur(20px)",
+                  WebkitBackdropFilter:"blur(20px)", border:`1px solid ${theme.glassBorder}`,
                   borderRadius:20, padding:"18px 18px 16px" }}>
                   <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:12, gap:8 }}>
                     <div style={{ display:"flex", alignItems:"flex-start", gap:8 }}>
                       <div style={{ width:8, height:8, borderRadius:"50%", background:a.color,
                         boxShadow:`0 0 8px ${a.color}88`, flexShrink:0, marginTop:4 }} />
                       <span style={{ fontFamily:"var(--font-schibsted)", fontWeight:600, fontSize:14,
-                        color:"#ECE6D8", lineHeight:1.35 }}>{a.title}</span>
+                        color:theme.cardInk, lineHeight:1.35 }}>{a.title}</span>
                     </div>
                     <span style={{ fontFamily:"var(--font-schibsted)", fontWeight:700, fontSize:18,
                       color:a.color, flexShrink:0, lineHeight:1 }}>{a.pct}%</span>
                   </div>
-                  <div style={{ height:6, borderRadius:6, background:"rgba(236,230,216,.1)", marginBottom:4, overflow:"hidden" }}>
+                  <div style={{ height:6, borderRadius:6, background:theme.trackBg, marginBottom:4, overflow:"hidden" }}>
                     <div style={{ height:"100%", borderRadius:6,
                       background:`linear-gradient(90deg,${a.color}99,${a.color})`,
                       width:`${a.pct}%`, transition:"width .5s cubic-bezier(.2,0,0,1)" }} />
                   </div>
-                  <p style={{ fontSize:11, color:"#4A5A64", marginBottom:14 }}>{a.completed} de {a.total} misiones</p>
+                  <p style={{ fontSize:11, color:theme.cardSub, marginBottom:14 }}>{a.completed} de {a.total} misiones</p>
                   <div style={{ display:"flex", flexDirection:"column", gap:7 }}>
                     {a.missions.map(m => (
                       <div key={m.id} style={{ display:"flex", alignItems:"center", gap:9 }}>
                         <div style={{ flexShrink:0, width:18, height:18, borderRadius:"50%",
-                          background: m.completed ? a.color : "rgba(236,230,216,.07)",
-                          border: `1.5px solid ${m.completed ? a.color : "rgba(236,230,216,.2)"}`,
+                          background: m.completed ? a.color : theme.trackBg,
+                          border: `1.5px solid ${m.completed ? a.color : theme.glassBorder}`,
                           display:"flex", alignItems:"center", justifyContent:"center" }}>
                           {m.completed && <span style={{ fontSize:9, color:"#1E2830", fontWeight:700, lineHeight:1 }}>✓</span>}
                         </div>
                         <span style={{ fontSize:12, lineHeight:1.3,
-                          color: m.completed ? "rgba(236,230,216,.82)" : "rgba(236,230,216,.3)" }}>
+                          color: m.completed ? theme.cardInk : theme.cardSub }}>
                           {m.label}
                         </span>
                       </div>
