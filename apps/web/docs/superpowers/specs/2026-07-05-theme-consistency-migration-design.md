@@ -39,6 +39,29 @@ Read closely, Dashboard does **not** make everything moment-dependent — it dra
 - Adding new automated visual regression tooling (no such tooling exists in this repo today).
 - Reworking the semantic/category color system (metrics, XP levels, mission difficulty) — explicitly out of scope, these stay fixed.
 
+## Addendum (2026-07-05, discovered during Task 3): `AuthCard.tsx` is in scope after all
+
+Task 3's implementer found that `ForestBackground.tsx` has a second consumer this spec didn't originally account for: `components/AuthCard.tsx` (the login/register screen, rendered by `app/login/page.tsx` and `app/register/page.tsx`). This spec originally assumed Check-in + Progress were `ForestBackground`'s only importers.
+
+Jose's decision: extend the migration to `AuthCard.tsx` too (Option B — full consistency across every page, not just the four already covered), rather than leaving `ForestBackground.tsx` alive as a login-only exception. This becomes Task 5; `ForestBackground.tsx`'s deletion moves from Task 3 to Task 5 (it can only be deleted once it truly has zero importers).
+
+### `AuthCard.tsx` mapping
+
+| Current (hardcoded) | Becomes |
+|---|---|
+| `<ForestBackground static />` | `<ThreeBackground moment={theme.key} isStatic />` |
+| "Dawn curtain" reveal overlay gradient (hardcoded to the night `skyGradient`) | `theme.skyGradient` — same treatment as Progress's reveal curtain (Task 3 precedent) |
+| Glass card background `rgba(12,18,30,.84)` (a primary/foreground card) | `theme.glassBgStrong` |
+| Glass card border `rgba(236,230,216,.16)` | `theme.glassBorder` |
+| Title ("Bienvenido de vuelta" / "Empieza tu aventura") `#F2EFE6` | `theme.headerInk` |
+| Subtitle `#7A8FA0` | `theme.headerSub` (mirrors Dashboard's greeting+subtext pairing) |
+| Mode-toggle prompt text `#7A8FA0` | `theme.cardSub` |
+| Form inputs: text `#ECE6D8`, background `rgba(236,230,216,.07)`, border `rgba(236,230,216,.18)` | `theme.cardInk`, `theme.trackBg`, `theme.glassBorder` — mirrors Dashboard's search-input treatment (`DashboardBody.tsx`'s search input already uses exactly this trio) |
+| "Transition curtain" (fixed gradient shown for 700ms after a successful login, before redirecting) | `theme.skyGradient`, for the same consistency reason as the dawn curtain — low visual stakes given how brief it is, implementer discretion if this feels like overkill |
+| **NOT changed (semantic/brand, not moment-dependent):** the primary CTA button gradient (`#E3A878`/`#C8885A` — the app's fixed brand accent, no Dashboard equivalent exists to mirror, treated like the always-fixed nav-link accents); the logo/wordmark circle (`radial-gradient(... #F0EAD8, #9DB6A4)` — a static brand mark, not a user avatar); error banner colors (red) and the "cuenta creada" success banner (green) — both match the existing error/success color pattern from Check-in/Progress; divider line/"o" label opacpoint — very low-emphasis chrome, implementer discretion, leaning toward leaving fixed | stays hardcoded |
+
+**Files touched:** `app/login/page.tsx`, `app/register/page.tsx` (both need the same `getRequestMoment()` + `?hour=` wiring as the other pages — currently neither is even `async`), `components/AuthCard.tsx`.
+
 ## Architecture
 
 ### Shared `getRequestMoment()` helper

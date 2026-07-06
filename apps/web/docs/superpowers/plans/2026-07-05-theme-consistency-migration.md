@@ -182,12 +182,20 @@ git commit -m "feat(theme): make Check-in time-of-day aware (sky + chrome)"
 
 ---
 
-### Task 3: Migrate Progress to the theme system; delete `ForestBackground.tsx`
+### Task 3: Migrate Progress to the theme system
+
+> **Update (post-implementation):** this task's original Step 5 assumed `ProgressBody.tsx`
+> was `ForestBackground.tsx`'s last remaining importer and planned to delete it here. The
+> implementer correctly caught that `components/AuthCard.tsx` (login/register) is a second,
+> previously-unaccounted-for consumer, and did not delete the file or make that commit.
+> Jose decided (Option B) to extend this migration to `AuthCard.tsx` as a new Task 5, which
+> now owns the `ForestBackground.tsx` deletion once it truly has zero importers. Step 5
+> below is retained for historical record but was not executed as written.
 
 **Files:**
 - Modify: `apps/web/app/progress/page.tsx` (compute + pass `theme`)
 - Modify: `apps/web/components/ProgressBody.tsx` (accept `theme: MomentTheme`, use it for chrome, drop `ForestBackground`)
-- Delete: `apps/web/components/ForestBackground.tsx`
+- ~~Delete: `apps/web/components/ForestBackground.tsx`~~ — moved to Task 5
 
 **Interfaces:**
 - Same as Task 2, for the Progress page.
@@ -225,20 +233,17 @@ Per the spec's Design Decision 1, preserve the existing two-tier depth instead o
 
 Do **not** touch `ADVENTURE_COLORS`, `METRIC_DEFS[].color`, trend arrow colors, or the streak flame styling.
 
-- [ ] **Step 5: Delete `ForestBackground.tsx` and confirm nothing else imports it**
+- [x] ~~Step 5: Delete `ForestBackground.tsx` and confirm nothing else imports it~~
 
-Run `grep -rn "ForestBackground" apps/web/` (excluding the file itself) — expect zero remaining matches after Task 2 and this task. Delete `apps/web/components/ForestBackground.tsx`.
+**Not executed as written.** The implementer ran the `grep -rn "ForestBackground" apps/web/` check this step calls for and found a real remaining importer, `components/AuthCard.tsx` — this step's premise (zero remaining importers after Task 2+3) was false. Correctly stopped short of deleting the file. See the update note at the top of this task and Task 5 below.
 
-- [ ] **Step 6: Verify**
+- [x] **Step 6: Verify** — done (`tsc --noEmit`/`eslint .` clean; visual check across `?hour=` values via authenticated curl smoke test, see task-3-report.md)
 
-`tsc --noEmit` and `eslint .` clean. Visually check `/progress?hour=8`, `?hour=13`, `?hour=19`, `?hour=23` — sky, panels, and the dawn-curtain reveal all shift together; `ADVENTURE_COLORS`/metric colors/streak flame stay fixed.
-
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit** — done as a single commit covering Steps 1-4 only (no `ForestBackground.tsx` deletion):
 
 ```bash
 git add app/progress/page.tsx components/ProgressBody.tsx
-git rm components/ForestBackground.tsx
-git commit -m "feat(theme): make Progress time-of-day aware, remove dead ForestBackground"
+git commit -m "feat(theme): make Progress time-of-day aware"
 ```
 
 ---
@@ -297,8 +302,62 @@ git commit -m "feat(theme): make Adventure Detail's chrome time-of-day aware (sk
 
 ---
 
+### Task 5: Migrate `AuthCard.tsx` (login/register) to the theme system; delete `ForestBackground.tsx`
+
+> **Added 2026-07-05, after Task 3.** `ForestBackground.tsx` turned out to have a second
+> consumer this plan didn't originally account for: `AuthCard.tsx`. Jose chose to extend
+> the migration here for full consistency (Option B) rather than leave it as an exception.
+> See the spec's "Addendum" section for the full color-mapping table.
+
+**Files:**
+- Modify: `apps/web/app/login/page.tsx` (currently not even `async` — add `getRequestMoment()` + `?hour=` wiring, pass `theme` to `AuthCard`)
+- Modify: `apps/web/app/register/page.tsx` (same)
+- Modify: `apps/web/components/AuthCard.tsx` (accept `theme: MomentTheme`, use it for chrome, drop `ForestBackground`)
+- Delete: `apps/web/components/ForestBackground.tsx`
+
+**Interfaces:**
+- Consumes: `getRequestMoment()` (Task 1).
+
+- [ ] **Step 1: Wire both auth pages**
+
+Neither `login/page.tsx` nor `register/page.tsx` is currently `async` or reads `searchParams` — both need the full treatment (not just a refactor like Task 1's Dashboard/Adventure-Detail pages). Follow the same pattern as Task 2 Step 1 (`checkin/page.tsx`): accept `searchParams: Promise<{ hour?: string }>`, call `getRequestMoment(hour !== undefined ? parseInt(hour, 10) : undefined)`, pass the result as a `theme` prop to `<AuthCard theme={theme} .../>` (register page keeps its existing `initialMode="register"` prop alongside).
+
+- [ ] **Step 2: Update `AuthCard`'s props and imports**
+
+```ts
+import ThreeBackground from "@/components/background/ThreeBackground";
+import type { MomentTheme } from "@/lib/theme";
+
+export default function AuthCard({ initialMode = "login" as Mode, theme }: { initialMode?: Mode; theme: MomentTheme }) {
+```
+Remove the `ForestBackground` import.
+
+- [ ] **Step 3: Replace the background and migrate chrome per the spec's mapping table**
+
+`<ForestBackground static />` → `<ThreeBackground moment={theme.key} isStatic />`. Then, per the spec's Addendum table: dawn-curtain overlay gradient → `theme.skyGradient`; glass card background → `theme.glassBgStrong`, border → `theme.glassBorder`; title → `theme.headerInk`; subtitle → `theme.headerSub`; mode-toggle prompt text → `theme.cardSub`; form inputs (text/background/border) → `theme.cardInk`/`theme.trackBg`/`theme.glassBorder`; the post-login "transition curtain" → `theme.skyGradient` (optional given how brief it is — implementer discretion).
+
+Do **not** touch: the primary CTA button gradient (`#E3A878`/`#C8885A`), the logo/wordmark circle gradient, error-banner red, the "cuenta creada" success-banner green, or the divider line/"o" label (implementer discretion on this last one, leaning toward leaving it fixed).
+
+- [ ] **Step 4: Delete `ForestBackground.tsx` and confirm nothing else imports it**
+
+Run `grep -rn "ForestBackground" apps/web/` (excluding the file itself) — this time expect zero remaining matches (Tasks 2, 3, and this task cover all three known consumers). If anything unexpected still matches, stop and report back rather than deleting. Otherwise, delete `apps/web/components/ForestBackground.tsx`.
+
+- [ ] **Step 5: Verify**
+
+`tsc --noEmit` and `eslint .` clean. Visually check `/login?hour=8`, `?hour=13`, `?hour=19`, `?hour=23` (and spot-check `/register` once) — sky, dawn curtain, and glass card all shift together; CTA button/logo/error colors stay fixed.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add app/login/page.tsx app/register/page.tsx components/AuthCard.tsx
+git rm components/ForestBackground.tsx
+git commit -m "feat(theme): make login/register time-of-day aware, remove dead ForestBackground"
+```
+
+---
+
 ## Self-Review Notes
 
-- **Spec coverage:** all three non-Dashboard pages are covered (Tasks 2–4); the shared helper and its dev-only override are covered (Task 1); the dead-code cleanup (`ForestBackground.tsx`) is covered (Task 3, once it's provably unused).
+- **Spec coverage:** all four non-Dashboard pages are covered (Tasks 2–5, `AuthCard.tsx` added after Task 3 revealed it as a second `ForestBackground` consumer); the shared helper and its dev-only override are covered (Task 1); the dead-code cleanup (`ForestBackground.tsx`) is covered (Task 5, once it's provably unused).
 - **Scope check:** Dashboard, `sky-engine.ts`/`SkyCanvas.tsx`, and `apps/mobile` are never touched by any task. Semantic/category colors are called out as a negative constraint in every task that migrates chrome.
-- **Ordering:** Task 1 must land first (Tasks 2–4 all depend on `getRequestMoment()`). Tasks 2 and 3 are independent of each other but both must complete before Task 3's Step 5 (confirming `ForestBackground.tsx` is dead) is valid — do not reorder Task 3 before Task 2.
+- **Ordering:** Task 1 must land first (Tasks 2–5 all depend on `getRequestMoment()`). Tasks 2, 3, and 5 are independent of each other and of Task 4, but Task 5's Step 4 (confirming `ForestBackground.tsx` is dead) is only valid once Tasks 2 and 3 have both landed.
