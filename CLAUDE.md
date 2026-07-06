@@ -253,73 +253,24 @@ algo, está bien dejarlo a medias y anotarlo en `ROADMAP.md` para la próxima.
 (Claude Code: actualiza esta sección al final de cada sesión con un resumen de 2-3 líneas:
 en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
 
-- **Fase/Sesión actual:** sesión larga con 4 hilos cerrados de punta a punta:
-  1. Sub-proyecto 2 de `apps/mobile` (scaffold Expo + login) completo, mergeado a `main`
-     (PR #6, commit `f45165a`).
-  2. Revisión profunda pendiente de `apps/web/lib/sky-engine.ts` +
-     `apps/web/components/background/SkyCanvas.tsx` cerrada (ver checkpoint abajo).
-  3. **Migración de consistencia de tema** (bug reportado por Jose: Check-in/Progress
-     siempre mostraban cielo de noche sin importar la hora real) — mergeada a `main` (PR #7,
-     commit `5300d5b`). Causa raíz: `ForestBackground.tsx`, un wrapper viejo, tenía
-     `moment="noche"` fijo. La investigación reveló que el problema era más grande: incluso
-     donde el cielo ya era correcto (`AdventureDetailBody.tsx`), los paneles seguían con
-     paleta oscura fija — solo `DashboardBody.tsx` estaba 100% adaptado al momento del día.
-     Jose eligió el alcance más completo (Opción C): migrar Check-in, Progress, Adventure
-     Detail **y** Login/Registro (este último se sumó a mitad de camino, tras descubrir que
-     `AuthCard.tsx` era el segundo consumidor de `ForestBackground.tsx`) al mismo patrón
-     `theme.*` que ya usaba Dashboard. Se agregó `glassBgStrong` a `MomentTheme` (mismo color
-     base por momento, más opacidad) para preservar la jerarquía visual de dos niveles que
-     Jose no quería perder, en vez de colapsarla a un solo valor. Se extrajo
-     `getRequestMoment()` para eliminar la lógica de zona horaria duplicada en 4+ páginas.
-     `ForestBackground.tsx` quedó completamente borrado. Implementado con
-     `superpowers:subagent-driven-development` (5 tareas + 3 fixes post-revisión: track de
-     progreso inconsistente en Adventure Detail, `colorScheme` fijo en los inputs de
-     Auth —detectado por Jose mismo en su ejercicio de revisión activa—, y sombras de
-     tarjeta sin tematizar en Check-in/Auth). Revisión final de todo el branch (`opus`) sin
-     hallazgos Críticos. Worktree y ramas ya limpiados.
-  4. **Fix del single-flight de `tryRefresh()`** en `apps/mobile/src/lib/api.ts` — el
-     requisito bloqueante documentado antes de construir el dashboard móvil. Se agregó una
-     promesa compartida a nivel de módulo (`refreshPromise`) para que llamadas concurrentes
-     compartan el mismo intento de refresh en vez de que cada una dispare el suyo con un
-     refresh token que el servidor ya rotó. Mergeado a `main` (PR #8). Explicado a fondo con
-     Jose (concepto de "single-flight"/condición de carrera, "para dummies") antes de generar
-     el código; su primera hipótesis sobre por qué el check-y-asignación es atómico fue
-     "el código corre hasta el final" (dirección correcta pero imprecisa) — se afinó a "no
-     hay ningún `await` entre la revisión y la asignación, así que son un solo bloque
-     síncrono indivisible". Revisión independiente confirmó que el manejo de errores queda
-     idéntico al original (sin nuevas fugas ni tragado de excepciones).
-
-  Con esto, **la app web queda sin pendientes de revisión Modo B abiertos**, el fondo
-  animado ya es consistente en las 5 pantallas que lo usan, y **ya no quedan bloqueantes
-  para empezar el sub-proyecto 3 de `apps/mobile`** (dashboard/misiones) — es el próximo foco.
-- **Último checkpoint superado (mobile scaffold):** Tarea 8 (pantallas de tabs Home/Profile)
-  pasó por el ciclo completo de Modo B — explicación línea por línea, ejercicio de revisión
-  activa (Jose identificó correctamente que un parpadeo de "Hola, " sin nombre en el
-  cold-start era un problema estético y no de seguridad, aunque inicialmente atribuyó la
-  causa a un fetch de datos en vez de al `user` siendo `null` en el contexto) y un mini-quiz
-  sobre por qué el fix del flash saca las condiciones de redirect del `useEffect` (Jose
-  primero pensó que era por organización/responsabilidades; se le explicó que la razón real
-  es de *timing*: el render necesita la respuesta antes de pintar, no después). Tarea 9
-  (verificación manual en celular físico vía Expo Go) completada en vivo, los 5 pasos del
-  checklist pasaron. La revisión final de todo el branch (16 commits) no encontró nada
-  Crítico; encontró 2 hallazgos Important (uno de ellos, código muerto del scaffold,
-  arreglado el mismo día) y varios Minor, triados con Jose uno por uno con pros/contras —
-  ver deuda técnica abajo.
-- **Último checkpoint superado (sky-engine/SkyCanvas):** revisión profunda de
-  `SkyCanvas.tsx` (línea por línea completo) y `sky-engine.ts` (arquitectura general +
-  `addStars` a fondo como ejemplo del patrón repetido en las ~20 funciones `addX`). Ejercicio
-  de revisión activa con 3 preguntas: (1) race de montaje/desmontaje rápido en
-  `SkyCanvas.tsx` — Jose sospechó de un bug, se le explicó por qué el flag `destroyed` +
-  "run-to-completion" de JS ya lo cubre correctamente (no había bug real ahí); (2) el
-  `try/catch` silencioso por-updater en el loop de animación (`sky-engine.ts`) — Jose
-  identificó bien que ser decorativo hace tolerable el fallo, pero atribuyó el mecanismo a
-  una "alerta" inexistente; se afinó a "aislamiento de fallas" (sin el try/catch, un updater
-  roto congelaría TODO el fondo, no solo esa pieza); (3) `onResize` reconstruyendo toda la
-  escena sin debounce — Jose mezcló este punto con el anterior (atribuyó tirones de FPS al
-  try/catch); se separaron los dos ejes con claridad: manejo de errores (Punto 2) vs.
-  frecuencia/costo de un trabajo caro que sí funciona bien (Punto 1, debounce). Ningún cambio
-  de código en esta revisión — fue puramente explicativa, ambos archivos ya estaban
-  aprobados/funcionando en producción.
+- **Fase/Sesión actual:** sesión muy larga, 5 hilos cerrados + 1 en curso (detalle completo
+  en `git log` y en el "Registro de avance" de `ROADMAP.md`, este resumen es solo lo
+  esencial para retomar):
+  1. Mobile scaffold + login completo y mergeado (PR #6).
+  2. Revisión profunda de `sky-engine.ts`/`SkyCanvas.tsx` cerrada (sin cambios de código).
+  3. Migración de consistencia de tema (bug del cielo de noche fijo en Check-in/Progress)
+     mergeada (PR #7) — las 5 pantallas de `apps/web` ya son consistentes con el momento
+     del día real; `ForestBackground.tsx` borrado.
+  4. Fix del single-flight de `tryRefresh()` en `apps/mobile` mergeado (PR #8).
+  5. **Sub-proyecto 3 de `apps/mobile` (dashboard/misiones), Ronda A:** brainstorming
+     completo con Jose (decidió trocear el sub-proyecto en rondas más chicas, y separar el
+     port del cielo animado a React Native en su propia ronda futura — A.5 — por la
+     complejidad técnica real de que las texturas de `sky-engine.ts` usan Canvas 2D del DOM,
+     inexistente en React Native). Spec y plan de la Ronda A (Dashboard de solo lectura +
+     toggle de misión, Adventure Detail, fondo plano por momento del día sin motor 3D) ya
+     escritos, aprobados por Jose y commiteados. **Implementación aún no empezada** — queda
+     para la próxima sesión, vía `superpowers:subagent-driven-development` en un worktree
+     nuevo.
 - **URLs de producción:** Vercel (projectapp-6wqde3z63-josepicado95s-projects.vercel.app),
   Railway recommender (projectapp-production-164a.up.railway.app).
 - **Deuda técnica conocida:**
@@ -353,9 +304,10 @@ en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
     urgente.
 - **Credenciales de prueba:** jose@aventuras.com / aventuras123
 - **Pendiente para la próxima sesión:**
-  1. Siguiente foco: sub-proyecto 3 de `apps/mobile` — dashboard/misiones. Sin bloqueantes
-     pendientes (el single-flight de `tryRefresh()` ya se resolvió). Necesita brainstorming +
-     spec + plan antes de implementar (aún no existen).
+  1. Siguiente foco: implementar la Ronda A de `apps/mobile` sub-proyecto 3, siguiendo
+     `apps/mobile/docs/superpowers/plans/2026-07-06-mobile-dashboard.md` (5 tareas, ya
+     escrito y aprobado) — worktree nuevo + `subagent-driven-development` + ciclo de
+     revisión Modo B por tarea, mismo proceso de siempre.
   2. Deuda menor ya documentada, sin fecha fija: colores hardcodeados en `apps/mobile`, CI
      para `apps/mobile`, timeout de `fetch`, mensaje de "sesión expiró", `AppShell`
      compartido en `apps/web`, `handleDelete` sin revisar `res.ok`, los dos detalles

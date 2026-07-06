@@ -528,14 +528,24 @@ porque solo había una llamada autenticada, pero rompería con llamadas paralela
 una promesa compartida a nivel de módulo para que llamadas concurrentes compartan el mismo
 intento de refresh en vez de que cada una dispare el suyo con un refresh token ya rotado.
 
-### Sub-proyecto 3 — Dashboard / misiones móvil ⏳ Siguiente
+### Sub-proyecto 3 — Dashboard / misiones móvil ⏳ En progreso
 
-Aún sin spec/plan escrito. Pantallas de dashboard, detalle de aventura, check-in y progreso
-en `apps/mobile`, reutilizando los endpoints ya construidos en el Sub-proyecto 1.
+Pantallas de dashboard, detalle de aventura, check-in y progreso en `apps/mobile`,
+reutilizando los endpoints ya construidos en el Sub-proyecto 1. Jose decidió trocearlo en
+rondas más chicas en vez de una sola spec gigante:
 
 - [x] Resolver el single-flight de `tryRefresh()` (PR #8, 2026-07-06)
-- [ ] Spec + plan del sub-proyecto (brainstorming primero)
-- [ ] Implementación (Modo B, vía subagent-driven-development)
+- [x] Brainstorming: decisión de trocear en rondas (A, A.5, B, C) — ver spec de la Ronda A
+- [ ] **Ronda A** — Dashboard de solo lectura (aventuras + racha + recomendaciones) + toggle
+      de misión + Adventure Detail, fondo plano por momento del día (sin motor 3D). Spec y
+      plan ya escritos y aprobados (2026-07-06); **implementación pendiente**.
+- [ ] Ronda A.5 — port de `sky-engine.ts` a React Native (`expo-gl`/Three.js) — sin spec aún;
+      riesgo técnico ya identificado: las texturas usan Canvas 2D del DOM, inexistente en RN
+- [ ] Ronda B — flujo de check-in (formulario de sliders) — sin spec aún
+- [ ] Ronda C — CRUD de aventuras/misiones + pantalla de Progress — sin spec aún
+
+**Spec/plan Ronda A:** `apps/mobile/docs/superpowers/specs/2026-07-06-mobile-dashboard-design.md`,
+`apps/mobile/docs/superpowers/plans/2026-07-06-mobile-dashboard.md`
 
 ---
 
@@ -564,4 +574,5 @@ en `apps/mobile`, reutilizando los endpoints ya construidos en el Sub-proyecto 1
 - 2026-07-05 — Fase 14, checkpoint de revisión Modo B completo — `sky-engine.ts` + `SkyCanvas.tsx` (pendiente desde el 2026-06-30) explicados línea por línea / por arquitectura, con 3 preguntas de revisión activa resueltas junto con Jose (ver detalle en la sección de Fase 14 y en `CLAUDE.md`). Sin cambios de código — puramente explicativo. Con esto, `apps/web` queda sin pendientes de revisión Modo B abiertos.
 - 2026-07-05 — Documentación (`ROADMAP.md`, `CLAUDE.md`) puesta al día en un solo pase: casillas de las Fases 4-12 corregidas (estaban `[ ]` aunque ya completas), Fase 14 reescrita para reflejar el motor Three.js real (el plan original de escenas SVG con scroll horizontal se archivó como referencia histórica), y se agregó la Fase 15 (App móvil) con sus 3 sub-proyectos. Próximo pendiente: Sub-proyecto 3 (dashboard/misiones móvil), empezando por resolver el single-flight de `tryRefresh()`.
 - 2026-07-06 — Fix del single-flight de `tryRefresh()` completo — `apps/mobile/src/lib/api.ts` ganó una promesa compartida a nivel de módulo (`refreshPromise`) para que llamadas concurrentes compartan el mismo intento de refresh en vez de que cada una dispare el suyo con un refresh token que el servidor ya rotó. Explicado a fondo con Jose antes de generar el código (concepto de condición de carrera/"single-flight"); revisión independiente confirmó que el check-y-asignación es atómico (sin `await` entre medio) y que el manejo de errores queda idéntico al original. `tsc` limpio. Mergeado a `main` vía PR #8, worktree y ramas limpiados. Con esto, el Sub-proyecto 3 (dashboard/misiones móvil) ya no tiene bloqueantes — solo falta su spec/plan.
+- 2026-07-06 — Brainstorming + spec + plan de la Ronda A del Sub-proyecto 3 (dashboard móvil) completos. Jose decidió trocear el sub-proyecto en rondas más chicas (A: dashboard solo lectura + adventure detail; A.5: port del cielo animado; B: check-in; C: CRUD + progress) en vez de una spec gigante. Se identificó un riesgo técnico real durante el brainstorming: las funciones de textura de `sky-engine.ts` usan `document.createElement('canvas')`/Canvas 2D del DOM, que no existen en React Native — por eso el port del cielo se separó en su propia ronda (A.5), para no bloquear el dashboard con un problema de gráficos sin resolver. Ronda A: Dashboard (aventuras + racha + recomendaciones, sin mostrar misiones) + Adventure Detail (dueña exclusiva de la lista de misiones y el toggle de completado) + `mobile-theme.ts` (colores planos por momento del día, reusando los valores exactos de `sky-engine.ts`/`theme.ts` de la web). Plan de 5 tareas, con Adventure Detail deliberadamente antes que Dashboard para evitar un hueco transitorio de typed-routes. Spec y plan commiteados y aprobados por Jose; implementación queda para la próxima sesión.
 - 2026-07-05 — Migración de consistencia de tema completa (bug reportado por Jose: Check-in/Progress siempre mostraban cielo de noche) — spec/plan en `apps/web/docs/superpowers/`, ejecutado vía `subagent-driven-development`. Causa raíz: `ForestBackground.tsx` tenía `moment="noche"` fijo; además solo `DashboardBody.tsx` estaba 100% adaptado al momento del día (cielo + paneles), el resto solo tenía el cielo (o ni eso). Jose eligió el alcance completo (Opción C): Check-in, Progress, Adventure Detail y Login/Registro (sumado a mitad de camino al descubrir que `AuthCard.tsx` era el segundo consumidor de `ForestBackground.tsx`) migrados al mismo patrón `theme.*` de Dashboard. Se agregó `glassBgStrong` a `MomentTheme` para preservar la jerarquía visual de dos niveles (decisión de Jose, no quería perder el efecto glassmorphism). Se extrajo `getRequestMoment()`, eliminando la lógica de zona horaria duplicada. `ForestBackground.tsx` borrado. 5 tareas + 3 fixes post-revisión (track inconsistente en Adventure Detail, `colorScheme` fijo detectado por el propio Jose en su ejercicio de revisión, sombras de tarjeta sin tematizar). Revisión final del branch (`opus`) sin hallazgos Críticos. Mergeado a `main` vía PR #7, worktree y ramas limpiados.
