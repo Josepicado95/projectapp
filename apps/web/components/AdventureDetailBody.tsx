@@ -193,7 +193,7 @@ export default function AdventureDetailBody({ adventureId, theme }: Props) {
             )}
 
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <div style={{ flex: 1, height: 5, borderRadius: 5, background: "rgba(236,230,216,.1)", overflow: "hidden" }}>
+              <div style={{ flex: 1, height: 5, borderRadius: 5, background: theme.trackBg, overflow: "hidden" }}>
                 <div style={{
                   height: "100%", borderRadius: 5,
                   background: "linear-gradient(90deg,#7E9A8699,#7E9A86)",
