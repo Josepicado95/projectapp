@@ -16,6 +16,7 @@ export interface MomentTheme {
   headerInk: string;
   headerSub: string;
   glassBg: string;
+  glassBgStrong: string;
   glassBorder: string;
   glassShadow: string;
   glassInner: string;
@@ -51,7 +52,7 @@ const MOMENTS: Record<MomentKey, MomentTheme> = {
     hazeBand: "rgba(251,248,241,.45)",
     hillFar: "#A9BFA8", hillNear: "#7E9A86", hillSheen: "rgba(255,252,242,.35)",
     headerInk: "#2A332D", headerSub: "#4C5A4E",
-    glassBg: "rgba(251,248,241,.56)", glassBorder: "rgba(255,255,255,.72)",
+    glassBg: "rgba(251,248,241,.56)", glassBgStrong: "rgba(251,248,241,.82)", glassBorder: "rgba(255,255,255,.72)",
     glassShadow: "rgba(42,51,45,.14)", glassInner: "rgba(255,255,255,.55)",
     cardInk: "#2A332D", cardSub: "#6A746C", trackBg: "rgba(42,51,45,.12)",
     avatarBg: "#2A332D", avatarInk: "#FBF8F1", starOpacity: 0,
@@ -73,7 +74,7 @@ const MOMENTS: Record<MomentKey, MomentTheme> = {
     hazeBand: "rgba(255,255,255,.4)",
     hillFar: "#94B49E", hillNear: "#76927F", hillSheen: "rgba(255,255,255,.4)",
     headerInk: "#14242A", headerSub: "#2E4750",
-    glassBg: "rgba(251,250,246,.5)", glassBorder: "rgba(255,255,255,.78)",
+    glassBg: "rgba(251,250,246,.5)", glassBgStrong: "rgba(251,250,246,.80)", glassBorder: "rgba(255,255,255,.78)",
     glassShadow: "rgba(20,40,60,.18)", glassInner: "rgba(255,255,255,.6)",
     cardInk: "#1E2A2C", cardSub: "#5E6B6E", trackBg: "rgba(20,40,50,.12)",
     avatarBg: "#1E2A2C", avatarInk: "#FBF8F1", starOpacity: 0,
@@ -95,7 +96,7 @@ const MOMENTS: Record<MomentKey, MomentTheme> = {
     hazeBand: "rgba(247,196,150,.4)",
     hillFar: "#9A9376", hillNear: "#73704F", hillSheen: "rgba(255,225,180,.4)",
     headerInk: "#FBF2E6", headerSub: "rgba(251,242,230,.86)",
-    glassBg: "rgba(251,243,233,.46)", glassBorder: "rgba(255,250,240,.6)",
+    glassBg: "rgba(251,243,233,.46)", glassBgStrong: "rgba(251,243,233,.78)", glassBorder: "rgba(255,250,240,.6)",
     glassShadow: "rgba(60,30,40,.22)", glassInner: "rgba(255,250,240,.5)",
     cardInk: "#2C2522", cardSub: "#6E5F55", trackBg: "rgba(60,40,30,.14)",
     avatarBg: "#3A2A30", avatarInk: "#FBF2E6", starOpacity: 0,
@@ -117,7 +118,7 @@ const MOMENTS: Record<MomentKey, MomentTheme> = {
     hazeBand: "rgba(52,73,111,.5)",
     hillFar: "#2E4742", hillNear: "#233A38", hillSheen: "rgba(120,160,150,.16)",
     headerInk: "#ECE6D8", headerSub: "#A7B2AE",
-    glassBg: "rgba(26,36,42,.5)", glassBorder: "rgba(236,230,216,.16)",
+    glassBg: "rgba(26,36,42,.5)", glassBgStrong: "rgba(26,36,42,.84)", glassBorder: "rgba(236,230,216,.16)",
     glassShadow: "rgba(0,0,0,.4)", glassInner: "rgba(236,230,216,.1)",
     cardInk: "#ECE6D8", cardSub: "#93A0A0", trackBg: "rgba(236,230,216,.14)",
     avatarBg: "#E3A878", avatarInk: "#1E282A", starOpacity: 1,

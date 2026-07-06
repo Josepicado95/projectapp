@@ -1,7 +1,6 @@
 import { redirect, notFound } from "next/navigation";
-import { headers } from "next/headers";
 import { auth } from "@/auth";
-import { getMoment } from "@/lib/theme";
+import { getRequestMoment } from "@/lib/get-request-moment";
 import AdventureDetailBody from "@/components/AdventureDetailBody";
 
 export default async function AdventureDetailPage({
@@ -16,13 +15,7 @@ export default async function AdventureDetailPage({
   const adventureId = Number(id);
   if (isNaN(adventureId)) notFound();
 
-  const reqHeaders = await headers();
-  const tz = reqHeaders.get("x-vercel-ip-timezone") ?? Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const localHour = parseInt(
-    new Intl.DateTimeFormat("en-US", { hour: "numeric", hour12: false, timeZone: tz }).format(new Date()),
-    10,
-  );
-  const theme = getMoment(localHour);
+  const theme = await getRequestMoment();
 
   return <AdventureDetailBody adventureId={adventureId} momentKey={theme.key} />;
 }
