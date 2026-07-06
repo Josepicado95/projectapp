@@ -38,6 +38,8 @@ actualizando (marcando checkboxes, agregando notas) al final de cada sesión.
 | 11 | CI con GitHub Actions | Pipelines, lint, tests automáticos | 1 semana |
 | 12 | Deploy a producción | Vercel, Railway/Neon, CD | 1-1.5 semanas |
 | 13 | Pulir / iterar | Lo que tú quieras agregar después | Continuo |
+| 14 | Fondo cinematográfico animado | Three.js/WebGL, shaders, animación por canvas | ✅ Completa |
+| 15 | App móvil (Expo/React Native) | Expo Router, NativeWind, auth JWT, hooks de React Native | En progreso (ver sección propia) |
 
 ---
 
@@ -184,14 +186,14 @@ UI.
 
 ### Sub-tareas
 
-- [ ] Reemplazar el array mock del Dashboard por una consulta real a la DB (leer todas las
+- [x] Reemplazar el array mock del Dashboard por una consulta real a la DB (leer todas las
       Aventuras)
-- [ ] Formulario "Crear nueva Aventura" → Server Action que inserta en la DB
-- [ ] Editar/eliminar una Aventura
-- [ ] Dentro de una Aventura: crear, editar, marcar como completada y eliminar Misiones
-- [ ] Validar los datos de entrada con `zod` antes de guardar (entender qué problema
+- [x] Formulario "Crear nueva Aventura" → Server Action que inserta en la DB
+- [x] Editar/eliminar una Aventura
+- [x] Dentro de una Aventura: crear, editar, marcar como completada y eliminar Misiones
+- [x] Validar los datos de entrada con `zod` antes de guardar (entender qué problema
       resuelve la validación)
-- [ ] Manejo básico de errores (¿qué pasa si el formulario está incompleto?)
+- [x] Manejo básico de errores (¿qué pasa si el formulario está incompleto?)
 
 **Checkpoint de cierre de Fase 4:** ¿puedes explicar qué pasa, paso a paso, desde que haces
 clic en "Guardar" en el formulario hasta que el dato aparece en PostgreSQL?
@@ -208,15 +210,15 @@ pertenecen a un usuario específico; rutas privadas redirigen a login si no hay 
 
 ### Sub-tareas
 
-- [ ] Conceptos: ¿qué es una sesión?, ¿qué es un hash de contraseña y por qué nunca se
+- [x] Conceptos: ¿qué es una sesión?, ¿qué es un hash de contraseña y por qué nunca se
       guarda en texto plano?
-- [ ] Agregar el modelo `User` con campos de autenticación (o usar el de Auth.js como
+- [x] Agregar el modelo `User` con campos de autenticación (o usar el de Auth.js como
       referencia)
-- [ ] Configurar Auth.js (proveedor de credenciales email/contraseña, o un proveedor OAuth
+- [x] Configurar Auth.js (proveedor de credenciales email/contraseña, o un proveedor OAuth
       si prefieres empezar por ahí)
-- [ ] Páginas de registro y login
-- [ ] Middleware/lógica para proteger rutas privadas
-- [ ] Asociar Aventuras y Check-ins existentes (y nuevos) al `userId` de la sesión
+- [x] Páginas de registro y login
+- [x] Middleware/lógica para proteger rutas privadas
+- [x] Asociar Aventuras y Check-ins existentes (y nuevos) al `userId` de la sesión
 
 **Checkpoint de cierre de Fase 5:** ¿puedes explicar qué información se guarda en la cookie
 de sesión y qué pasaría si alguien la roba? (no necesitas resolverlo todavía, solo
@@ -235,15 +237,26 @@ check-ins.
 
 ### Sub-tareas
 
-- [ ] Confirmar/ajustar el modelo `CheckIn` (energía, ánimo, estrés, descanso, fecha,
+- [x] Confirmar/ajustar el modelo `CheckIn` (energía, ánimo, estrés, descanso, fecha,
       `userId`)
-- [ ] Server Action que guarda el check-in del día
-- [ ] Regla: solo un check-in por usuario por día (¿qué hacer si ya existe uno? ¿se
-      actualiza o se bloquea?)
-- [ ] Página/sección que muestra los últimos N check-ins del usuario
+- [x] Server Action que guarda el check-in del día
+- [x] Regla: solo un check-in por usuario por día (¿qué hacer si ya existe uno? ¿se
+      actualiza o se bloquea?) — **superado más adelante:** desde la feature
+      `multiple-checkins-per-day` (2026-07-04) esto cambió a "varios check-ins
+      independientes por día"; ver la Fase 6 (extra) al final de esta sección.
+- [x] Página/sección que muestra los últimos N check-ins del usuario
 
 **Checkpoint de cierre de Fase 6:** ¿cómo decidiste manejar el caso de "el usuario ya
 hizo check-in hoy y quiere cambiarlo"? Explica tu decisión.
+
+### Fase 6 (extra) — check-ins múltiples por día (2026-07-04)
+
+La regla original de "un check-in por día" se reemplazó: `POST /api/mobile/checkins` ahora
+crea un registro nuevo en vez de pisar el del día. "El check-in de hoy" (dashboard,
+recomendador) pasó a significar "el más reciente del día" (`getLatestCheckInToday`), no "el
+único". Motivo: Jose quería poder registrar, por ejemplo, mañana y noche por separado.
+Implementado vía plan `apps/web/docs/superpowers/plans/2026-07-04-multiple-checkins-per-day.md`,
+mergeado a `main` en PR #5.
 
 ---
 
@@ -259,17 +272,17 @@ una lista priorizada de misiones recomendadas para hoy, con pruebas automatizada
 
 ### Sub-tareas
 
-- [ ] (Si hace falta) repaso rápido de fundamentos de Python: variables, funciones,
+- [x] (Si hace falta) repaso rápido de fundamentos de Python: variables, funciones,
       listas, diccionarios, condicionales — con ejercicios cortos antes de meterte al
       proyecto
-- [ ] Diseñar la "regla de negocio" en lenguaje humano primero: ej. "si energía es baja,
+- [x] Diseñar la "regla de negocio" en lenguaje humano primero: ej. "si energía es baja,
       priorizar misiones de dificultad 1-2; si es alta, permitir dificultad 3+; si estrés
       es alto, limitar a máximo 2 misiones sugeridas"
-- [ ] Definir modelos Pydantic para el request (estado del usuario + misiones disponibles)
+- [x] Definir modelos Pydantic para el request (estado del usuario + misiones disponibles)
       y el response (misiones recomendadas + por qué)
-- [ ] Implementar el endpoint `/recommendations` con la lógica de reglas
-- [ ] Escribir 3-5 tests con pytest que verifiquen distintos escenarios (energía baja,
-      alta, estrés alto, sin misiones disponibles, etc.)
+- [x] Implementar el endpoint `/recommendations` con la lógica de reglas
+- [x] Escribir 3-5 tests con pytest que verifiquen distintos escenarios (energía baja,
+      alta, estrés alto, sin misiones disponibles, etc.) — 11 tests pasando
 
 **Checkpoint de cierre de Fase 7:** ¿puedes explicar, en una frase, qué hace tu función de
 recomendación para cada uno de los 3-5 escenarios que probaste?
@@ -286,10 +299,10 @@ obtiene sus datos llamando al servicio Python.
 
 ### Sub-tareas
 
-- [ ] Desde un Route Handler/Server Action de Next.js, hacer `fetch` al servicio Python
+- [x] Desde un Route Handler/Server Action de Next.js, hacer `fetch` al servicio Python
       (usando una variable de entorno para la URL, no hardcodeada)
-- [ ] Mostrar las recomendaciones en el Dashboard
-- [ ] Manejar el caso en que el servicio Python no responde (mensaje amigable, no un error
+- [x] Mostrar las recomendaciones en el Dashboard
+- [x] Manejar el caso en que el servicio Python no responde (mensaje amigable, no un error
       feo)
 
 **Checkpoint de cierre de Fase 8:** ¿por qué es importante usar una variable de entorno
@@ -308,10 +321,10 @@ check-ins.
 
 ### Sub-tareas
 
-- [ ] Calcular el % de misiones completadas por Aventura (consulta o cálculo en el
+- [x] Calcular el % de misiones completadas por Aventura (consulta o cálculo en el
       servidor)
-- [ ] Gráfico de barras o de progreso por Aventura
-- [ ] Gráfico de líneas con energía/ánimo en el tiempo (usando los check-ins históricos)
+- [x] Gráfico de barras o de progreso por Aventura
+- [x] Gráfico de líneas con energía/ánimo en el tiempo (usando los check-ins históricos)
 - [ ] (Opcional) calcular una "racha" de días consecutivos con check-in
 
 **Checkpoint de cierre de Fase 9:** ¿qué decidiste mostrar como "métrica principal" de
@@ -329,11 +342,11 @@ servicio `recommender`, listos para que `apps/web` se conecte a ambos.
 
 ### Sub-tareas
 
-- [ ] Escribir un `Dockerfile` para `apps/recommender` (explicado línea por línea)
-- [ ] Escribir `docker-compose.yml` con los servicios `db` (Postgres) y `recommender`
-- [ ] Configurar variables de entorno y la red interna entre contenedores (¿por qué
+- [x] Escribir un `Dockerfile` para `apps/recommender` (explicado línea por línea)
+- [x] Escribir `docker-compose.yml` con los servicios `db` (Postgres) y `recommender`
+- [x] Configurar variables de entorno y la red interna entre contenedores (¿por qué
       `apps/web` le habla al contenedor por su nombre de servicio y no por `localhost`?)
-- [ ] Probar el flujo completo: `docker compose up`, y `apps/web` corriendo localmente
+- [x] Probar el flujo completo: `docker compose up`, y `apps/web` corriendo localmente
       (fuera de Docker por ahora) conectándose a ambos
 
 **Checkpoint de cierre de Fase 10:** ¿qué ventaja tiene poder levantar todo el entorno con
@@ -351,10 +364,10 @@ tests de `apps/web` y `apps/recommender`, y bloquea el merge si algo falla.
 
 ### Sub-tareas
 
-- [ ] Conceptos: ¿qué problema resuelve la integración continua? (ejemplo: "funciona en mi
+- [x] Conceptos: ¿qué problema resuelve la integración continua? (ejemplo: "funciona en mi
       máquina" vs "funciona siempre")
-- [ ] Workflow de GitHub Actions para `apps/web` (instalar dependencias, lint, build)
-- [ ] Workflow para `apps/recommender` (instalar dependencias, lint, `pytest`)
+- [x] Workflow de GitHub Actions para `apps/web` (instalar dependencias, lint, build)
+- [x] Workflow para `apps/recommender` (instalar dependencias, lint, `pytest`)
 - [ ] Configurar branch protection en `main` para requerir que el CI pase antes de mergear
 
 **Checkpoint de cierre de Fase 11:** rompe algo a propósito (ej: un error de sintaxis), abre
@@ -372,14 +385,17 @@ en la nube, y cada push a `main` desplegando automáticamente.
 
 ### Sub-tareas
 
-- [ ] Crear una base de datos PostgreSQL administrada (ej: Neon o Railway) y correr las
+- [x] Crear una base de datos PostgreSQL administrada (ej: Neon o Railway) y correr las
       migraciones de Prisma contra ella
-- [ ] Desplegar `apps/recommender` (Railway o Render, usando el Dockerfile de la Fase 10)
-- [ ] Desplegar `apps/web` en Vercel, configurando todas las variables de entorno
-      (conexión a DB, secretos de Auth.js, URL del servicio recommender)
-- [ ] Confirmar que el deploy se dispara automáticamente con cada push a `main` (CD)
-- [ ] Probar el flujo completo en producción: registrarte, crear una aventura, hacer un
-      check-in, ver una recomendación
+- [x] Desplegar `apps/recommender` (Railway, `projectapp-production-164a.up.railway.app`)
+- [x] Desplegar `apps/web` en Vercel (`projectapp-6wqde3z63-josepicado95s-projects.vercel.app`),
+      configurando todas las variables de entorno
+- [x] Confirmar que el deploy se dispara automáticamente con cada push a `main` (CD) —
+      comportamiento por defecto de la integración de Vercel con GitHub
+- [ ] Probar el flujo completo en producción explícitamente con Jose presente (registrarte,
+      crear una aventura, hacer un check-in, ver una recomendación) — no hay evidencia
+      registrada de una pasada de principio a fin en producción, solo que cada pieza
+      individual se desplegó y las URLs responden
 
 **Checkpoint de cierre de Fase 12:** ¡felicidades, tienes una app full-stack en producción!
 Escribe (para ti, no para Claude) un resumen de 5-10 líneas de todo lo que construiste y
@@ -402,42 +418,123 @@ Ideas para después del MVP (no es obligatorio hacerlas todas, ni en este orden)
 
 ---
 
-## Fase 14 — Fondo cinematográfico con escenas animadas
+## Fase 14 — Fondo cinematográfico animado ✅ Completa
 
 **Objetivo:** convertir el paisaje de fondo en una experiencia visual viva que acompaña
 al usuario mientras avanza en sus aventuras — sin tocar la UI (tarjetas, header, botones),
 que permanece estática y flotando sobre las escenas.
 
-**Entregable:** el fondo se desplaza suavemente hacia la izquierda mostrando una secuencia
-de escenas con clima animado. La sensación es de "caminar hacia algo", en sintonía con el
-concepto de aventuras y progreso.
+> **Nota:** el plan original de esta fase (más abajo, en "Concepto original descartado")
+> proponía escenas SVG/CSS con scroll horizontal. Lo que realmente se construyó, en su
+> lugar, fue un motor Three.js/WebGL con 4 "momentos del día" (dawn/noon/dusk/night) que
+> hacen crossfade entre sí — más simple de mantener y más alineado con el resto de la app
+> (que ya organiza el tema visual por momento del día, no por "escena"). Se deja documentado
+> el concepto original solo como referencia histórica.
 
-### Escenas propuestas (de izquierda a derecha)
+**Entregable (lo que existe hoy):** `apps/web/lib/sky-engine.ts` — motor Three.js vanilla
+(ES module, sin React Three Fiber) que dibuja un cielo con gradiente animado, cuerpo celeste
+(sol/luna), nubes, montañas/colinas en silueta, agua o suelo según el momento, aurora
+boreal (de noche), estrellas, nieve, pradera con flores/mariposas (de día), y transiciones
+suaves entre los 4 momentos vía `setMoment()`. Envuelto en
+`apps/web/components/background/SkyCanvas.tsx`, que lo integra con React (montaje único,
+limpieza al desmontar, cambio de momento sin recrear el motor).
 
+### Sub-tareas
+
+- [x] Motor base con cámara ortográfica + shader de gradiente para el cielo
+- [x] Los 4 momentos del día (dawn/noon/dusk/night), cada uno con su propia configuración
+      de colores, elementos y densidad de partículas
+- [x] Transición con crossfade (`setMoment()`) en vez de corte abrupto entre momentos
+- [x] Clima/elementos animados: nubes, viento compartido (`windAt`), nieve, aurora GLSL,
+      pradera con flores y mariposas, risco paramétrico con mar animado
+- [x] Limpieza de recursos (`destroy()`: cancela el loop, quita el listener de resize,
+      libera el contexto WebGL) para no dejar fugas de memoria al desmontar
+- [x] Revisión profunda Modo B (explicación línea por línea + ejercicio de revisión activa
+      + checkpoint) — completada 2026-07-05, ver Registro de avance
+
+**Checkpoint de cierre de Fase 14 (superado 2026-07-05):** Jose explicó correctamente por
+qué el fix de una race de montaje/desmontaje en `SkyCanvas.tsx` no era necesario (el flag
+`destroyed` + el modelo de "run-to-completion" de JS ya lo cubre), y distinguió (con una
+corrección de por medio) entre aislamiento de fallas (`try/catch` por-updater) y
+frecuencia/costo de un `resize` sin debounce — dos preguntas de revisión activa distintas.
+
+<details>
+<summary>Concepto original descartado (solo referencia histórica)</summary>
+
+**Entregable original:** el fondo se desplaza suavemente hacia la izquierda mostrando una
+secuencia de escenas con clima animado. La sensación es de "caminar hacia algo", en
+sintonía con el concepto de aventuras y progreso.
+
+**Escenas propuestas (de izquierda a derecha):**
 1. Montañas verdes — viento suave entre hierbas
 2. Cerezos — hojas cayendo en espiral
 3. Mirador con ciudad al fondo — nubes lentas
 4. Playa — olas que suben y bajan
 5. Montaña nevada — nieve ligera cayendo
 
-### Sub-tareas (a definir cuando llegue el momento)
+</details>
 
-- [ ] Diseñar cada escena como una capa SVG/CSS independiente, con sus proporciones
-      para que encajen en el scroll horizontal (cada escena ≈ 100vw)
-- [ ] Animación de desplazamiento horizontal: CSS `@keyframes` o JS scroll (decidir
-      si el avance es automático/lento, o responde a algún evento — ej. nuevas misiones
-      completadas)
-- [ ] Clima animado por escena: hojas (SVG + keyframes), olas (clip-path animado),
-      nieve (partículas CSS o canvas ligero)
-- [ ] Transición entre escenas: crossfade por opacidad de capas, o parallax por velocidad
-      diferente entre elementos del fondo y primer plano
-- [ ] Asegurarse de que `backdrop-filter` en las tarjetas siga funcionando con el fondo
-      en movimiento (puede haber issues de performance en mobile)
-- [ ] Test de rendimiento: la animación no debe bajar de 60fps en hardware normal
+---
 
-**Nota técnica a considerar:** el fondo en movimiento + `backdrop-filter` en las tarjetas
-es costoso para el GPU. Evaluar si vale la práctica reducir el blur durante la transición
-y recuperarlo cuando la escena está quieta.
+## Fase 15 — App móvil (Expo/React Native)
+
+**Objetivo:** un segundo cliente para la misma app, esta vez nativo (Android/iOS vía Expo
+Go), consumiendo la misma base de datos a través de una API REST propia (en vez de los
+Server Actions que usa `apps/web`). Se trabaja como una serie de sub-proyectos
+independientes, cada uno con su propio spec + plan en `apps/web/docs/superpowers/` (backend)
+o `apps/mobile/docs/superpowers/` (cliente), ejecutados en un worktree y mergeados por PR.
+
+### Sub-proyecto 1 — Capa de API móvil (backend) ✅ Completo (2026-07-02, PR #2)
+
+Expone `/api/mobile/*` en `apps/web` con autenticación por JWT + refresh token (en vez de
+las cookies de sesión que usa la versión web), para que un cliente que no es un navegador
+(Expo) pueda autenticarse y operar sobre los mismos datos.
+
+- [x] Modelo `RefreshToken` + migración de Prisma
+- [x] Helpers de JWT + refresh token, errores de servicio tipados
+- [x] Endpoints de auth: registro, login, refresh, logout, `me`
+- [x] Endpoints de adventures, missions, check-ins, recommendations — cada uno extraído a
+      un "service" compartido con la lógica de `apps/web` (mismo comportamiento, sin
+      duplicar reglas de negocio)
+- [x] Fix de una IDOR (Insecure Direct Object Reference) cross-user detectado en missions
+      durante la extracción a service
+- [x] Fix de una race condition en la rotación de refresh tokens
+
+**Spec/plan:** `apps/web/docs/superpowers/specs/2026-07-01-mobile-api-design.md`,
+`apps/web/docs/superpowers/plans/2026-07-01-mobile-api.md`
+
+### Sub-proyecto 2 — Scaffold Expo + login ✅ Completo (2026-07-05, PR #6)
+
+Proyecto Expo independiente en `apps/mobile` (Expo Router, NativeWind, TypeScript) con el
+ciclo completo de login → sesión → logout contra la API del Sub-proyecto 1, verificado en
+un celular físico vía Expo Go.
+
+- [x] Scaffold Expo Router + NativeWind + TypeScript
+- [x] Almacenamiento seguro de tokens (`expo-secure-store`)
+- [x] Cliente de API con refresh automático en `401 token_expired`
+- [x] Contexto de auth (`useAuth`: user, isLoading, login, logout)
+- [x] Redirect protegido entre `/login` y `(tabs)` en el layout raíz
+- [x] Pantalla de login + shell de tabs (Home/Profile)
+- [x] Verificación manual end-to-end en celular físico (5/5 pasos del checklist)
+- [x] Revisión final de todo el branch (sin hallazgos Críticos) + limpieza de código muerto
+      del scaffold
+
+**Spec/plan:** `apps/mobile/docs/superpowers/specs/2026-07-05-mobile-scaffold-design.md`,
+`apps/mobile/docs/superpowers/plans/2026-07-05-mobile-scaffold.md`
+
+**Deuda técnica heredada a resolver antes del Sub-proyecto 3** (detalle en `CLAUDE.md`,
+sección 10): `tryRefresh()` en `apps/mobile/src/lib/api.ts` no tiene "single-flight" — hoy
+invisible porque solo hay una llamada autenticada, pero rompería con llamadas paralelas.
+
+### Sub-proyecto 3 — Dashboard / misiones móvil ⏳ Siguiente
+
+Aún sin spec/plan escrito. Pantallas de dashboard, detalle de aventura, check-in y progreso
+en `apps/mobile`, reutilizando los endpoints ya construidos en el Sub-proyecto 1.
+
+- [ ] Resolver el single-flight de `tryRefresh()` (requisito antes de escribir pantallas
+      que disparen varias llamadas en paralelo)
+- [ ] Spec + plan del sub-proyecto (brainstorming primero)
+- [ ] Implementación (Modo B, vía subagent-driven-development)
 
 ---
 
@@ -459,5 +556,9 @@ y recuperarlo cuando la escena está quieta.
 - 2026-06-28 — Fase 14 completa — Sistema de fondos Three.js/R3F: MorningScene, AfternoonScene, SunsetScene, ForestScene (noche). ForestScene reemplaza NightScene. Bug fixes: useMemo deps, computeVertexNormals removido de SunsetScene, Math.random sacado del loop en MorningScene. AuthCard unificado (login+register). CheckInBody y ProgressBody migrados a componentes cliente. Todas las páginas usan ThreeBackground con la escena correcta por momento del día. ProgressBody migrado de fondo CSS a ThreeBackground.
 - 2026-06-28 — Fase 14 (extra) — ForestScene: GroundMist + GroundPools (shaders GLSL, niebla y charcos bioluminiscentes teal), fog más azul-teal, luces ambiente/hemisferio más brillantes.
 - 2026-06-30 — Fase 14 (extra) — Reemplazo de las 4 escenas R3F por `lib/sky-engine.ts`: motor Three.js vanilla (ES module) con 4 momentos (dawn/noon/dusk/night), crossfade vía `setMoment()`, envuelto en `SkyCanvas.tsx`. v2: viento compartido (`windAt`), aurora GLSL, nieve, pradera con flores/mariposas, risco paramétrico con mar animado. Overhaul final: tipos extraídos (`MomentDef`, `AuroraBand`, etc.), código muerto eliminado, `build()` reorganizado. **Pendiente:** este código todavía no pasó por el ciclo de revisión de Modo B (explicación línea por línea + revisión activa + checkpoint) — queda para la sesión de revisión profunda.
-- 2026-07-03 — Migración web-api-migration-adventures completa (rama worktree, plan `apps/web/docs/superpowers/plans/2026-07-03-web-api-migration-adventures.md`) — Tasks 1-4: `/` (dashboard) y `/adventures/[id]` migrados de Server Actions a fetch contra `/api/mobile/...`, Server Actions viejos de adventures/missions y componentes muertos (`NewAdventureForm.tsx`, `AdventureCard.tsx`) borrados. Revisión final del branch encontró y se corrigió una condición de carrera real en `refresh()`/`load()` (respuestas viejas podían pisar datos nuevos); el primer intento de arreglo no satisfizo el lint `react-hooks/set-state-in-effect` y se rediseñó correctamente separando la función pura de fetch de la lógica que toca estado. `tsc` y `eslint` limpios, confirmado en navegador. **Pendiente:** decidir cómo integrar esta rama a `main` (merge/PR/dejar como está).
-- 2026-07-03 — Pendiente para próxima sesión: **check-ins múltiples por día**. Hoy solo existe un registro de `CheckIn` por día (se actualiza si ya existe); Jose quiere poder hacer varios check-ins independientes en el mismo día (ej. mañana y noche). Esto requiere cambiar `saveCheckIn` (crear en vez de actualizar), probablemente el schema de Prisma (ya no "uno por día"), y el frontend de `/checkin` y `/progress`. Necesita sesión de brainstorming antes de planear — no es parte de la rama web-api-migration-adventures.
+- 2026-07-02 — Fase 15, Sub-proyecto 1 completo (mobile-api) — plan `apps/web/docs/superpowers/plans/2026-07-01-mobile-api.md` — capa `/api/mobile/*` con auth JWT + refresh token (modelo `RefreshToken`, helpers, errores tipados), endpoints de auth/adventures/missions/checkins/recommendations, cada uno extraído a un service compartido con `apps/web` (mismo comportamiento, sin duplicar reglas). Se detectaron y corrigieron en el camino: una IDOR cross-user en missions y una race condition en la rotación de refresh tokens. Mergeado a `main` vía PR #2.
+- 2026-07-03 — Migración web-api-migration-adventures completa (rama worktree, plan `apps/web/docs/superpowers/plans/2026-07-03-web-api-migration-adventures.md`) — Tasks 1-4: `/` (dashboard) y `/adventures/[id]` migrados de Server Actions a fetch contra `/api/mobile/...`, Server Actions viejos de adventures/missions y componentes muertos (`NewAdventureForm.tsx`, `AdventureCard.tsx`) borrados. Revisión final del branch encontró y se corrigió una condición de carrera real en `refresh()`/`load()` (respuestas viejas podían pisar datos nuevos); el primer intento de arreglo no satisfizo el lint `react-hooks/set-state-in-effect` y se rediseñó correctamente separando la función pura de fetch de la lógica que toca estado. `tsc` y `eslint` limpios, confirmado en navegador. Mergeado a `main` vía PR #4.
+- 2026-07-04 — Fase 6 (extra) completa — check-ins múltiples por día: `saveCheckIn` pasó de actualizar a crear un registro nuevo cada vez, `getLatestCheckInToday` reemplaza el concepto de "el único check-in del día" por "el más reciente", week-strip del progreso colapsado a una entrada por día cuando hay varios. Deuda preexistente pagada de una vez (`<a href="/">` → `next/link`, decisión de Jose para no acumularla justo en una migración de comportamiento). `tsc`/`eslint` limpios, verificado con `curl` y en navegador. Mergeado a `main` vía PR #5.
+- 2026-07-05 — Fase 15, Sub-proyecto 2 completo (mobile scaffold + login) — specs/plan en `apps/mobile/docs/superpowers/`, ejecutado vía `subagent-driven-development` (implementador + revisor por tarea + revisión final del branch en `opus`). 9 tareas: scaffold Expo Router + NativeWind, secure-store, cliente API con refresh-on-401, auth context, redirect protegido, login, tabs Home/Profile, verificación manual en celular (5/5). Revisión final sin hallazgos Críticos; 2 Important corregidos el mismo día (código muerto del scaffold, flash de un frame antes del redirect de auth). Mergeado a `main` vía PR #6, worktree y ramas limpiados.
+- 2026-07-05 — Fase 14, checkpoint de revisión Modo B completo — `sky-engine.ts` + `SkyCanvas.tsx` (pendiente desde el 2026-06-30) explicados línea por línea / por arquitectura, con 3 preguntas de revisión activa resueltas junto con Jose (ver detalle en la sección de Fase 14 y en `CLAUDE.md`). Sin cambios de código — puramente explicativo. Con esto, `apps/web` queda sin pendientes de revisión Modo B abiertos.
+- 2026-07-05 — Documentación (`ROADMAP.md`, `CLAUDE.md`) puesta al día en un solo pase: casillas de las Fases 4-12 corregidas (estaban `[ ]` aunque ya completas), Fase 14 reescrita para reflejar el motor Three.js real (el plan original de escenas SVG con scroll horizontal se archivó como referencia histórica), y se agregó la Fase 15 (App móvil) con sus 3 sub-proyectos. Próximo pendiente: Sub-proyecto 3 (dashboard/misiones móvil), empezando por resolver el single-flight de `tryRefresh()`.
