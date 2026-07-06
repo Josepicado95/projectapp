@@ -254,24 +254,41 @@ algo, está bien dejarlo a medias y anotarlo en `ROADMAP.md` para la próxima.
 en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
 
 - **Fase/Sesión actual:** sub-proyecto 2 de `apps/mobile` (scaffold Expo + login) completo,
-  las 9 tareas del plan `apps/mobile/docs/superpowers/plans/2026-07-05-mobile-scaffold.md`
-  implementadas vía `superpowers:subagent-driven-development` (implementador + revisor por
-  tarea + revisión final de todo el branch en `opus`) en el worktree `worktree-mobile-scaffold`
-  (`.claude/worktrees/mobile-scaffold`). **PR #6 abierto en GitHub, aún sin mergear** —
-  pendiente que Jose decida cuándo mergearlo.
-- **Último checkpoint superado:** Tarea 8 (pantallas de tabs Home/Profile) pasó por el ciclo
-  completo de Modo B — explicación línea por línea, ejercicio de revisión activa (Jose
-  identificó correctamente que un parpadeo de "Hola, " sin nombre en el cold-start era un
-  problema estético y no de seguridad, aunque inicialmente atribuyó la causa a un fetch de
-  datos en vez de al `user` siendo `null` en el contexto — se corrigió el mecanismo con él) y
-  un mini-quiz sobre por qué el fix del flash saca las condiciones de redirect del
-  `useEffect` (Jose primero pensó que era por organización/responsabilidades; se le explicó
-  que la razón real es de *timing*: el render necesita la respuesta antes de pintar, no
-  después). Tarea 9 (verificación manual en celular físico vía Expo Go) completada en vivo,
-  los 5 pasos del checklist pasaron. La revisión final de todo el branch (16 commits) no
-  encontró nada Crítico; encontró 2 hallazgos Important (uno de ellos, código muerto del
-  scaffold, arreglado el mismo día) y varios Minor, triados con Jose uno por uno con
-  pros/contras — ver deuda técnica abajo.
+  mergeado a `main` (PR #6, commit `f45165a`) — las 9 tareas del plan
+  `apps/mobile/docs/superpowers/plans/2026-07-05-mobile-scaffold.md` implementadas vía
+  `superpowers:subagent-driven-development`, worktree y ramas ya limpiados. Además, en esta
+  misma sesión se cerró la revisión profunda pendiente de `apps/web/lib/sky-engine.ts` +
+  `apps/web/components/background/SkyCanvas.tsx` (ver checkpoint abajo) — con esto, **la app
+  web queda sin pendientes de revisión Modo B abiertos**; el próximo foco es montar el resto
+  de `apps/mobile` (dashboard/misiones).
+- **Último checkpoint superado (mobile scaffold):** Tarea 8 (pantallas de tabs Home/Profile)
+  pasó por el ciclo completo de Modo B — explicación línea por línea, ejercicio de revisión
+  activa (Jose identificó correctamente que un parpadeo de "Hola, " sin nombre en el
+  cold-start era un problema estético y no de seguridad, aunque inicialmente atribuyó la
+  causa a un fetch de datos en vez de al `user` siendo `null` en el contexto) y un mini-quiz
+  sobre por qué el fix del flash saca las condiciones de redirect del `useEffect` (Jose
+  primero pensó que era por organización/responsabilidades; se le explicó que la razón real
+  es de *timing*: el render necesita la respuesta antes de pintar, no después). Tarea 9
+  (verificación manual en celular físico vía Expo Go) completada en vivo, los 5 pasos del
+  checklist pasaron. La revisión final de todo el branch (16 commits) no encontró nada
+  Crítico; encontró 2 hallazgos Important (uno de ellos, código muerto del scaffold,
+  arreglado el mismo día) y varios Minor, triados con Jose uno por uno con pros/contras —
+  ver deuda técnica abajo.
+- **Último checkpoint superado (sky-engine/SkyCanvas):** revisión profunda de
+  `SkyCanvas.tsx` (línea por línea completo) y `sky-engine.ts` (arquitectura general +
+  `addStars` a fondo como ejemplo del patrón repetido en las ~20 funciones `addX`). Ejercicio
+  de revisión activa con 3 preguntas: (1) race de montaje/desmontaje rápido en
+  `SkyCanvas.tsx` — Jose sospechó de un bug, se le explicó por qué el flag `destroyed` +
+  "run-to-completion" de JS ya lo cubre correctamente (no había bug real ahí); (2) el
+  `try/catch` silencioso por-updater en el loop de animación (`sky-engine.ts`) — Jose
+  identificó bien que ser decorativo hace tolerable el fallo, pero atribuyó el mecanismo a
+  una "alerta" inexistente; se afinó a "aislamiento de fallas" (sin el try/catch, un updater
+  roto congelaría TODO el fondo, no solo esa pieza); (3) `onResize` reconstruyendo toda la
+  escena sin debounce — Jose mezcló este punto con el anterior (atribuyó tirones de FPS al
+  try/catch); se separaron los dos ejes con claridad: manejo de errores (Punto 2) vs.
+  frecuencia/costo de un trabajo caro que sí funciona bien (Punto 1, debounce). Ningún cambio
+  de código en esta revisión — fue puramente explicativa, ambos archivos ya estaban
+  aprobados/funcionando en producción.
 - **URLs de producción:** Vercel (projectapp-6wqde3z63-josepicado95s-projects.vercel.app),
   Railway recommender (projectapp-production-164a.up.railway.app).
 - **Deuda técnica conocida:**
@@ -288,7 +305,7 @@ en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
   - `DashboardBody.tsx` y `AdventureDetailBody.tsx` duplican ~80 líneas de nav rail/bottom
     nav (con diferencias intencionales: el rail de detalle no tiene logout ni el punto de
     check-in) — candidato a un componente `AppShell` compartido en una limpieza futura.
-  - **`apps/mobile/lib/api.ts` — `tryRefresh()` no tiene "single-flight" (mutex).** Hoy es
+  - **`apps/mobile/src/lib/api.ts` — `tryRefresh()` no tiene "single-flight" (mutex).** Hoy es
     invisible porque solo hay una llamada autenticada (`GET /auth/me`). El refresh token del
     servidor rota (un solo uso) — si en el futuro dashboard móvil varias pantallas piden
     datos en paralelo tras expirar el token, cada una intentaría rotar el mismo refresh
@@ -305,10 +322,10 @@ en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
     el dashboard móvil.
 - **Credenciales de prueba:** jose@aventuras.com / aventuras123
 - **Pendiente para la próxima sesión:**
-  1. Decidir si mergear el PR #6 (`worktree-mobile-scaffold` → `main`) antes de seguir.
-  2. Sesión de revisión profunda de componentes acordada (leer y desmenuzar código existente
-     para consolidar aprendizaje) — debería incluir `sky-engine.ts` y `SkyCanvas.tsx`, que se
-     generaron en Modo B pero sin pasar aún por la explicación línea por línea ni el
-     checkpoint. Fase 13 polish si se desea.
-  3. Antes de construir las pantallas de dashboard/misiones en `apps/mobile`, resolver el
-     single-flight de `tryRefresh()` (ver deuda técnica arriba) — es requisito, no opcional.
+  1. Siguiente foco: sub-proyecto 3 de `apps/mobile` — dashboard/misiones. Antes de construir
+     esas pantallas, resolver el single-flight de `tryRefresh()` (ver deuda técnica arriba) —
+     es requisito, no opcional (varias pantallas pidiendo datos en paralelo tras expirar el
+     token lo haría fallar).
+  2. Deuda menor ya documentada, sin fecha fija: colores hardcodeados en `apps/mobile`, CI
+     para `apps/mobile`, timeout de `fetch`, mensaje de "sesión expiró", `AppShell`
+     compartido en `apps/web`, `handleDelete` sin revisar `res.ok`.
