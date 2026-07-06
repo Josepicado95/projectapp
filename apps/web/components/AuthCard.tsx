@@ -40,7 +40,7 @@ function getInputBase(theme: MomentTheme): React.CSSProperties {
     borderRadius: 13,
     padding: "13px 15px",
     boxSizing: "border-box",
-    colorScheme: "dark",
+    colorScheme: theme.key === "noche" ? "dark" : "light",
   };
 }
 
