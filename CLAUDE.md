@@ -253,7 +253,7 @@ algo, está bien dejarlo a medias y anotarlo en `ROADMAP.md` para la próxima.
 (Claude Code: actualiza esta sección al final de cada sesión con un resumen de 2-3 líneas:
 en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
 
-- **Fase/Sesión actual:** sesión larga con 3 hilos cerrados de punta a punta:
+- **Fase/Sesión actual:** sesión larga con 4 hilos cerrados de punta a punta:
   1. Sub-proyecto 2 de `apps/mobile` (scaffold Expo + login) completo, mergeado a `main`
      (PR #6, commit `f45165a`).
   2. Revisión profunda pendiente de `apps/web/lib/sky-engine.ts` +
@@ -277,10 +277,21 @@ en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
      Auth —detectado por Jose mismo en su ejercicio de revisión activa—, y sombras de
      tarjeta sin tematizar en Check-in/Auth). Revisión final de todo el branch (`opus`) sin
      hallazgos Críticos. Worktree y ramas ya limpiados.
+  4. **Fix del single-flight de `tryRefresh()`** en `apps/mobile/src/lib/api.ts` — el
+     requisito bloqueante documentado antes de construir el dashboard móvil. Se agregó una
+     promesa compartida a nivel de módulo (`refreshPromise`) para que llamadas concurrentes
+     compartan el mismo intento de refresh en vez de que cada una dispare el suyo con un
+     refresh token que el servidor ya rotó. Mergeado a `main` (PR #8). Explicado a fondo con
+     Jose (concepto de "single-flight"/condición de carrera, "para dummies") antes de generar
+     el código; su primera hipótesis sobre por qué el check-y-asignación es atómico fue
+     "el código corre hasta el final" (dirección correcta pero imprecisa) — se afinó a "no
+     hay ningún `await` entre la revisión y la asignación, así que son un solo bloque
+     síncrono indivisible". Revisión independiente confirmó que el manejo de errores queda
+     idéntico al original (sin nuevas fugas ni tragado de excepciones).
 
-  Con esto, **la app web queda sin pendientes de revisión Modo B abiertos** y el fondo
-  animado ya es consistente en las 5 pantallas que lo usan. El próximo foco es montar el
-  resto de `apps/mobile` (dashboard/misiones).
+  Con esto, **la app web queda sin pendientes de revisión Modo B abiertos**, el fondo
+  animado ya es consistente en las 5 pantallas que lo usan, y **ya no quedan bloqueantes
+  para empezar el sub-proyecto 3 de `apps/mobile`** (dashboard/misiones) — es el próximo foco.
 - **Último checkpoint superado (mobile scaffold):** Tarea 8 (pantallas de tabs Home/Profile)
   pasó por el ciclo completo de Modo B — explicación línea por línea, ejercicio de revisión
   activa (Jose identificó correctamente que un parpadeo de "Hola, " sin nombre en el
@@ -325,12 +336,6 @@ en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
   - `DashboardBody.tsx` y `AdventureDetailBody.tsx` duplican ~80 líneas de nav rail/bottom
     nav (con diferencias intencionales: el rail de detalle no tiene logout ni el punto de
     check-in) — candidato a un componente `AppShell` compartido en una limpieza futura.
-  - **`apps/mobile/src/lib/api.ts` — `tryRefresh()` no tiene "single-flight" (mutex).** Hoy es
-    invisible porque solo hay una llamada autenticada (`GET /auth/me`). El refresh token del
-    servidor rota (un solo uso) — si en el futuro dashboard móvil varias pantallas piden
-    datos en paralelo tras expirar el token, cada una intentaría rotar el mismo refresh
-    token; solo la primera gana, el resto recibe `revokedAt` y desloguea a Jose de golpe.
-    **Bloqueante antes de construir el dashboard/misiones en `apps/mobile`** — no antes.
   - `apps/mobile`: colores hardcodeados en hex por pantalla (`login.tsx`, `(tabs)/*.tsx`) en
     vez de tokens centralizados en `tailwind.config.js` — candidato a limpieza cuando haya
     más de 3-4 pantallas.
@@ -348,10 +353,9 @@ en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
     urgente.
 - **Credenciales de prueba:** jose@aventuras.com / aventuras123
 - **Pendiente para la próxima sesión:**
-  1. Siguiente foco: sub-proyecto 3 de `apps/mobile` — dashboard/misiones. Antes de construir
-     esas pantallas, resolver el single-flight de `tryRefresh()` (ver deuda técnica arriba) —
-     es requisito, no opcional (varias pantallas pidiendo datos en paralelo tras expirar el
-     token lo haría fallar).
+  1. Siguiente foco: sub-proyecto 3 de `apps/mobile` — dashboard/misiones. Sin bloqueantes
+     pendientes (el single-flight de `tryRefresh()` ya se resolvió). Necesita brainstorming +
+     spec + plan antes de implementar (aún no existen).
   2. Deuda menor ya documentada, sin fecha fija: colores hardcodeados en `apps/mobile`, CI
      para `apps/mobile`, timeout de `fetch`, mensaje de "sesión expiró", `AppShell`
      compartido en `apps/web`, `handleDelete` sin revisar `res.ok`, los dos detalles
