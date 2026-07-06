@@ -191,7 +191,7 @@ export default function CheckInBody({ userName, theme }: Props) {
     WebkitBackdropFilter: "blur(28px) saturate(1.3)",
     border: `1px solid ${theme.glassBorder}`,
     borderRadius: 28,
-    boxShadow: "0 32px 80px rgba(0,0,0,.55), inset 0 1px 0 rgba(236,230,216,.1)",
+    boxShadow: `0 32px 80px ${theme.glassShadow}, inset 0 1px 0 ${theme.glassInner}`,
     animation: `${anim} .4s cubic-bezier(.2,0,0,1) both`,
   };
 
@@ -201,7 +201,7 @@ export default function CheckInBody({ userName, theme }: Props) {
     WebkitBackdropFilter: "blur(28px) saturate(1.3)",
     border: `1px solid ${theme.glassBorder}`,
     borderRadius: 28,
-    boxShadow: "0 32px 80px rgba(0,0,0,.55), inset 0 1px 0 rgba(236,230,216,.1)",
+    boxShadow: `0 32px 80px ${theme.glassShadow}, inset 0 1px 0 ${theme.glassInner}`,
   };
 
   if (loadState === "loading" || loadState === "error") {

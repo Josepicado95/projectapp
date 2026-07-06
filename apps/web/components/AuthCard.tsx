@@ -123,7 +123,7 @@ export default function AuthCard({ initialMode = "login" as Mode, theme }: { ini
           WebkitBackdropFilter: "blur(28px) saturate(1.3)",
           border: `1px solid ${theme.glassBorder}`,
           borderRadius: 28,
-          boxShadow: "0 32px 80px rgba(0,0,0,.6), inset 0 1px 0 rgba(236,230,216,.12)",
+          boxShadow: `0 32px 80px ${theme.glassShadow}, inset 0 1px 0 ${theme.glassInner}`,
           padding: "36px 34px 32px",
           animation: "lg-rise .55s ease .08s both",
         }}>
