@@ -89,6 +89,14 @@ export default function DashboardScreen() {
         <Text style={{ color: theme.textPrimary, fontSize: 18, fontWeight: "700", marginBottom: 12 }}>
           Tus aventuras
         </Text>
+
+        <Pressable
+          onPress={() => router.push("/adventures/new")}
+          style={{ borderColor: theme.textSecondary, borderWidth: 1, borderRadius: 16, padding: 14, marginBottom: 12, alignItems: "center" }}
+        >
+          <Text style={{ color: theme.textPrimary, fontWeight: "700", fontSize: 14 }}>+ Nueva aventura</Text>
+        </Pressable>
+
         {adventures.length === 0 ? (
           <Text style={{ color: theme.textSecondary, marginBottom: 24 }}>
             Todavía no tienes aventuras.
