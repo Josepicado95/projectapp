@@ -63,6 +63,14 @@ const DEFAULT_VALUES: Values = { energy: 3, mood: 3, stress: 3, sleep: 3 };
 type LoadState = "loading" | "ready" | "error";
 type SaveState = { status: "idle" | "saving" | "error"; error?: string };
 
+function toDailyLatest(checkIns: CheckInData[]): CheckInData[] {
+  const byDay = new Map<string, CheckInData>();
+  for (const c of checkIns) {
+    byDay.set(c.date.slice(0, 10), c);
+  }
+  return Array.from(byDay.values());
+}
+
 export default function CheckInScreen() {
   const router = useRouter();
   const theme = getMobileMoment(new Date().getHours());
@@ -140,7 +148,7 @@ export default function CheckInScreen() {
     );
   }
 
-  const weekBars = weekStrip.slice(-7).map((c) => {
+  const weekBars = toDailyLatest(weekStrip).slice(-7).map((c) => {
     const avg = (c.energy + c.mood + c.sleep) / 3;
     const barH = Math.max(6, Math.round((avg / 5) * 28));
     const color = avg >= 4 ? "#7E9A86" : avg >= 3 ? "#7EB8D8" : avg >= 2 ? "#E3A878" : "#C48FB4";
