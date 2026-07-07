@@ -119,24 +119,43 @@ export default function AdventureDetailScreen() {
           {done} de {total} misiones completadas
         </Text>
 
+        <Pressable
+          onPress={() => router.push(`/adventures/${id}/missions/new`)}
+          style={{ borderColor: theme.textSecondary, borderWidth: 1, borderRadius: 16, padding: 14, marginBottom: 12, alignItems: "center" }}
+        >
+          <Text style={{ color: theme.textPrimary, fontWeight: "700", fontSize: 14 }}>+ Agregar misión</Text>
+        </Pressable>
+
         {adventure.missions.map((m) => (
-          <Pressable
+          <View
             key={m.id}
-            onPress={() => toggleMission(m)}
             style={{ backgroundColor: theme.cardBg, borderRadius: 16, padding: 16, marginBottom: 12, flexDirection: "row", alignItems: "center" }}
           >
-            <Text style={{ fontSize: 18, marginRight: 12 }}>{m.completed ? "✓" : "○"}</Text>
-            <Text
-              style={{
-                color: theme.textPrimary,
-                fontWeight: "500",
-                flex: 1,
-                textDecorationLine: m.completed ? "line-through" : "none",
-              }}
+            <Pressable onPress={() => toggleMission(m)} style={{ flex: 1, flexDirection: "row", alignItems: "center" }}>
+              <Text style={{ fontSize: 18, marginRight: 12 }}>{m.completed ? "✓" : "○"}</Text>
+              <Text
+                style={{
+                  color: theme.textPrimary,
+                  fontWeight: "500",
+                  flex: 1,
+                  textDecorationLine: m.completed ? "line-through" : "none",
+                }}
+              >
+                {m.title}
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() =>
+                router.push({
+                  pathname: "/adventures/[id]/missions/[missionId]",
+                  params: { id, missionId: String(m.id), title: m.title, difficulty: String(m.difficulty) },
+                })
+              }
+              style={{ marginLeft: 12 }}
             >
-              {m.title}
-            </Text>
-          </Pressable>
+              <Text style={{ color: theme.textSecondary, fontWeight: "600" }}>Editar</Text>
+            </Pressable>
+          </View>
         ))}
       </ScrollView>
     </LinearGradient>
