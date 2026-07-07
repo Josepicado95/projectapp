@@ -318,8 +318,26 @@ en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
      merge`, 0 Críticos/Importantes, 1 Menor de gramática corregido en el momento, resto
      deuda ya conocida. Verificado en celular: flujo crear→editar→borrar de punta a punta
      confirmado; servidor caído volvió a topar con la misma deuda de timeout de `fetch`
-     (cuarta vez). Mergeado a `main` vía PR #12. **Pendiente: Ronda C2b (CRUD de misiones),
-     sin spec todavía.**
+     (cuarta vez). Mergeado a `main` vía PR #12.
+  10. **Ronda C2b (CRUD de misiones) completa de punta a punta**, mismo flujo
+      `subagent-driven-development` en worktree `mobile-mission-crud-round-c2b`. **Con esto
+      queda cerrado el Sub-proyecto 3 completo** (Rondas A, B, C1, C2a, C2b) — solo falta la
+      Ronda A.5 (cielo animado), desacoplada desde el inicio por su propio riesgo técnico.
+      Decisión de arquitectura: una sola pantalla compartida
+      `adventures/[id]/missions/[missionId].tsx` (crear/editar/borrar, `missionId === "new"`
+      como bandera de modo) en vez de dos pantallas separadas como C2a — justificado porque
+      el formulario es más simple (solo título+dificultad). Sin `fetch` al montar: no existe
+      `GET /api/mobile/missions/:id` en el backend, así que Adventure Detail le pasa el
+      título/dificultad actuales como parámetros de navegación. Botón "+ Agregar misión" +
+      separación del toggle existente y un nuevo botón "Editar" por fila (dos `Pressable`
+      hermanos). Revisión final: `Ready to merge`, 0 Críticos/Importantes; 1 Menor real
+      (guardar+borrar casi simultáneo dispara dos `router.back()`) — Jose decidió arreglarlo,
+      cerrado con una traba `useRef` de 2 líneas (`goBackOnce()`). Verificado en celular:
+      crear→editar (precargado sin spinner)→borrar confirmado. Durante la verificación: una
+      falsa alarma (servidor de desarrollo con muchas horas corriendo dejó de reconocer una
+      ruta real, confirmado con `curl` que era el proceso y no el código) y una misión de
+      prueba mía que se limpió; servidor caído volvió a topar con la misma deuda de timeout
+      de `fetch` (quinta vez, cinco rondas distintas). Mergeado a `main` vía PR #13.
 - **URLs de producción:** Vercel (projectapp-6wqde3z63-josepicado95s-projects.vercel.app),
   Railway recommender (projectapp-production-164a.up.railway.app).
 - **Deuda técnica conocida:**
@@ -376,6 +394,10 @@ en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
   - `apps/mobile` (Ronda C2a, CRUD de aventuras, 2026-07-07): sin `KeyboardAvoidingView` en
     `adventures/new.tsx`/`adventures/[id]/edit.tsx` — el input de título podría quedar tapado
     por el teclado en pantallas chicas; cosmético, no bloqueante.
+  - `apps/mobile` (Ronda C2b, CRUD de misiones, 2026-07-07): sin hallazgos Menores
+    pendientes — el único real (doble `router.back()` en guardar+borrar concurrente) se
+    arregló en el momento con una traba `useRef`. Quedan solo cosméticos ya conocidos de
+    otras rondas (colores hardcodeados, botón "Editar" con área táctil chica).
   - `apps/web`: el track de nivel sin completar en la mini-tarjeta de resumen de
     `CheckInBody.tsx` (los "puntitos" de energía/ánimo/estrés/sueño) sigue con un tinte
     crema fijo en vez de `theme.trackBg` — casi invisible en los momentos de día claro.
@@ -384,13 +406,14 @@ en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
     urgente.
 - **Credenciales de prueba:** jose@aventuras.com / aventuras123
 - **Pendiente para la próxima sesión:**
-  1. Siguiente foco: empezar la Ronda A.5 (port de `sky-engine.ts` a React Native) o la
-     Ronda C2b (CRUD de misiones), a decidir con Jose — ambas sin spec todavía, empezar por
-     `superpowers:brainstorming`.
+  1. Siguiente foco: con el Sub-proyecto 3 completo (Rondas A, B, C1, C2a, C2b cerradas),
+     solo queda la Ronda A.5 (port de `sky-engine.ts` a React Native) sin spec todavía —
+     empezar por `superpowers:brainstorming`. Riesgo técnico ya identificado desde el
+     principio: las texturas de `sky-engine.ts` usan Canvas 2D del DOM, inexistente en RN.
   2. Deuda menor ya documentada, sin fecha fija: colores hardcodeados en `apps/mobile`, CI
-     para `apps/mobile`, timeout de `fetch` (confirmado en vivo cuatro veces — Rondas A, B,
-     C1 y C2a, ver deuda técnica arriba), mensaje de "sesión expiró", `AppShell` compartido
-     en `apps/web`, `handleDelete` sin revisar `res.ok`, los dos detalles cosméticos de la
-     migración de tema (track de Check-in, scrollbar de Progress), los 5 Menores de la
-     Ronda B, los 3 Menores de la Ronda C1, y el `KeyboardAvoidingView` faltante de la
-     Ronda C2a (todos arriba, en deuda técnica).
+     para `apps/mobile`, timeout de `fetch` (confirmado en vivo cinco veces — Rondas A, B,
+     C1, C2a y C2b, ver deuda técnica arriba), mensaje de "sesión expiró", `AppShell`
+     compartido en `apps/web`, `handleDelete` sin revisar `res.ok`, los dos detalles
+     cosméticos de la migración de tema (track de Check-in, scrollbar de Progress), los 5
+     Menores de la Ronda B, los 3 Menores de la Ronda C1, y el `KeyboardAvoidingView`
+     faltante de la Ronda C2a (todos arriba, en deuda técnica).
