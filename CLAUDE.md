@@ -267,10 +267,19 @@ en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
      port del cielo animado a React Native en su propia ronda futura — A.5 — por la
      complejidad técnica real de que las texturas de `sky-engine.ts` usan Canvas 2D del DOM,
      inexistente en React Native). Spec y plan de la Ronda A (Dashboard de solo lectura +
-     toggle de misión, Adventure Detail, fondo plano por momento del día sin motor 3D) ya
-     escritos, aprobados por Jose y commiteados. **Implementación aún no empezada** — queda
-     para la próxima sesión, vía `superpowers:subagent-driven-development` en un worktree
-     nuevo.
+     toggle de misión, Adventure Detail, fondo plano por momento del día sin motor 3D)
+     escritos y aprobados por Jose.
+  6. **Ronda A implementada y verificada** (worktree `mobile-dashboard-round-a`, ciclo Modo B
+     tarea por tarea, sin subagentes paralelos): `types.ts`/`mobile-theme.ts`, hook
+     `useDashboardData` (fetch paralelo, todo-o-nada en error), pantalla Adventure Detail
+     (optimistic update con revert por `id` de misión), Dashboard real reemplazando el
+     placeholder de Home (racha vía `Set` de días). `tsc` limpio en las 4 tareas de código.
+     Verificación manual en celular: pasos 1-6 del checklist confirmados por Jose; el paso 7
+     (servidor caído) confirmó manejo de error sin crash, y de paso reprodujo en vivo la
+     deuda ya conocida de `fetch` sin timeout (pantalla en blanco indefinida al hacer Reload
+     con el servidor apagado, porque `restoreSession()` en `auth-context.tsx` nunca resuelve
+     su `finally` — no es regresión de esta ronda). **Pendiente: decidir merge/PR** (worktree
+     aún sin integrar a `main`).
 - **URLs de producción:** Vercel (projectapp-6wqde3z63-josepicado95s-projects.vercel.app),
   Railway recommender (projectapp-production-164a.up.railway.app).
 - **Deuda técnica conocida:**
@@ -292,7 +301,11 @@ en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
     más de 3-4 pantallas.
   - `apps/mobile`: sin workflow de CI en `.github/workflows/` (web y recommender sí tienen).
   - `apps/mobile`: los `fetch` de `lib/api.ts` no tienen timeout (`AbortController`) — un
-    Wi-Fi que falla "en silencio" deja el botón de login pegado en "Entrando...".
+    Wi-Fi que falla "en silencio" deja el botón de login pegado en "Entrando...". Confirmado
+    en vivo el 2026-07-06 durante la verificación de la Ronda A: con el servidor apagado, un
+    "Reload" de la app deja la pantalla en blanco indefinidamente porque `restoreSession()`
+    en `auth-context.tsx` nunca resuelve su `finally` (la promesa de `fetch` cuelga en vez de
+    rechazar).
   - `apps/mobile`: falta el mensaje "Tu sesión expiró, inicia sesión de nuevo" del spec —
     no alcanzable hoy (nadie hace una llamada a mitad de sesión), se volverá relevante con
     el dashboard móvil.
@@ -304,11 +317,12 @@ en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
     urgente.
 - **Credenciales de prueba:** jose@aventuras.com / aventuras123
 - **Pendiente para la próxima sesión:**
-  1. Siguiente foco: implementar la Ronda A de `apps/mobile` sub-proyecto 3, siguiendo
-     `apps/mobile/docs/superpowers/plans/2026-07-06-mobile-dashboard.md` (5 tareas, ya
-     escrito y aprobado) — worktree nuevo + `subagent-driven-development` + ciclo de
-     revisión Modo B por tarea, mismo proceso de siempre.
+  1. Siguiente foco: decidir merge/PR de la Ronda A (worktree `mobile-dashboard-round-a`,
+     rama `worktree-mobile-dashboard-round-a`) vía `superpowers:finishing-a-development-branch`,
+     luego empezar la Ronda A.5 (port de `sky-engine.ts` a React Native) o la Ronda B
+     (check-in), a decidir con Jose.
   2. Deuda menor ya documentada, sin fecha fija: colores hardcodeados en `apps/mobile`, CI
-     para `apps/mobile`, timeout de `fetch`, mensaje de "sesión expiró", `AppShell`
-     compartido en `apps/web`, `handleDelete` sin revisar `res.ok`, los dos detalles
-     cosméticos de la migración de tema (track de Check-in, scrollbar de Progress).
+     para `apps/mobile`, timeout de `fetch` (confirmado en vivo el 2026-07-06, ver deuda
+     técnica arriba), mensaje de "sesión expiró", `AppShell` compartido en `apps/web`,
+     `handleDelete` sin revisar `res.ok`, los dos detalles cosméticos de la migración de tema
+     (track de Check-in, scrollbar de Progress).
