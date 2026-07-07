@@ -302,7 +302,24 @@ en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
      Críticos/Importantes, 3 Menores (ver abajo). Verificado en celular: navegación y
      cruce de números contra Dashboard/Adventure Detail confirmados; servidor caído volvió a
      topar con la misma deuda de timeout de `fetch` (tercera vez). Mergeado a `main` vía
-     PR #11. **Pendiente: Ronda C2 (CRUD), sin spec todavía.**
+     PR #11.
+  9. **Ronda C2 decompuesta en C2a (aventuras) y C2b (misiones)** al empezar el
+     brainstorming — piezas independientes por pantalla. **Ronda C2a completa de punta a
+     punta**, mismo flujo `subagent-driven-development` en worktree
+     `mobile-adventure-crud-round-c2a`. Pantallas `adventures/new.tsx` (crear: solo
+     título+paisaje, sin misiones iniciales en vivo como web — decisión de Jose para
+     simplificar el formulario) y `adventures/[id]/edit.tsx` (editar + borrar con
+     `Alert.alert` de confirmación nativa; `status`/`description` se reenvían sin cambios,
+     tomados de la aventura ya cargada, nunca de un campo editable) + botón "Editar" y
+     `useFocusEffect` en Adventure Detail + botón "+ Nueva aventura" en el Dashboard.
+     Detalle técnico clave: el array de paisajes se tipa como tuplas fijas
+     (`[string, string, string][]`), no `string[][]`, porque `LinearGradient` exige un
+     mínimo de 2 colores garantizados en tiempo de compilación. Revisión final: `Ready to
+     merge`, 0 Críticos/Importantes, 1 Menor de gramática corregido en el momento, resto
+     deuda ya conocida. Verificado en celular: flujo crear→editar→borrar de punta a punta
+     confirmado; servidor caído volvió a topar con la misma deuda de timeout de `fetch`
+     (cuarta vez). Mergeado a `main` vía PR #12. **Pendiente: Ronda C2b (CRUD de misiones),
+     sin spec todavía.**
 - **URLs de producción:** Vercel (projectapp-6wqde3z63-josepicado95s-projects.vercel.app),
   Railway recommender (projectapp-production-164a.up.railway.app).
 - **Deuda técnica conocida:**
@@ -356,6 +373,9 @@ en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
       está activado en este proyecto.
     - `progress.tsx`: la barra de progreso por aventura reutiliza `theme.gradientFrom` como
       color de track — mismo patrón de reutilización ya usado en check-in.
+  - `apps/mobile` (Ronda C2a, CRUD de aventuras, 2026-07-07): sin `KeyboardAvoidingView` en
+    `adventures/new.tsx`/`adventures/[id]/edit.tsx` — el input de título podría quedar tapado
+    por el teclado en pantallas chicas; cosmético, no bloqueante.
   - `apps/web`: el track de nivel sin completar en la mini-tarjeta de resumen de
     `CheckInBody.tsx` (los "puntitos" de energía/ánimo/estrés/sueño) sigue con un tinte
     crema fijo en vez de `theme.trackBg` — casi invisible en los momentos de día claro.
@@ -365,11 +385,12 @@ en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
 - **Credenciales de prueba:** jose@aventuras.com / aventuras123
 - **Pendiente para la próxima sesión:**
   1. Siguiente foco: empezar la Ronda A.5 (port de `sky-engine.ts` a React Native) o la
-     Ronda C2 (CRUD de aventuras/misiones), a decidir con Jose — ambas sin spec todavía,
-     empezar por `superpowers:brainstorming`.
+     Ronda C2b (CRUD de misiones), a decidir con Jose — ambas sin spec todavía, empezar por
+     `superpowers:brainstorming`.
   2. Deuda menor ya documentada, sin fecha fija: colores hardcodeados en `apps/mobile`, CI
-     para `apps/mobile`, timeout de `fetch` (confirmado en vivo tres veces — Rondas A, B y C1,
-     ver deuda técnica arriba), mensaje de "sesión expiró", `AppShell` compartido en
-     `apps/web`, `handleDelete` sin revisar `res.ok`, los dos detalles cosméticos de la
+     para `apps/mobile`, timeout de `fetch` (confirmado en vivo cuatro veces — Rondas A, B,
+     C1 y C2a, ver deuda técnica arriba), mensaje de "sesión expiró", `AppShell` compartido
+     en `apps/web`, `handleDelete` sin revisar `res.ok`, los dos detalles cosméticos de la
      migración de tema (track de Check-in, scrollbar de Progress), los 5 Menores de la
-     Ronda B, y los 3 Menores de la Ronda C1 (todos arriba, en deuda técnica).
+     Ronda B, los 3 Menores de la Ronda C1, y el `KeyboardAvoidingView` faltante de la
+     Ronda C2a (todos arriba, en deuda técnica).
