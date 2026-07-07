@@ -74,9 +74,16 @@ export default function DashboardScreen() {
 
         <Pressable
           onPress={() => router.push("/checkin")}
-          style={{ backgroundColor: theme.cardBg, borderRadius: 16, padding: 16, marginBottom: 24 }}
+          style={{ backgroundColor: theme.cardBg, borderRadius: 16, padding: 16, marginBottom: 12 }}
         >
           <Text style={{ color: theme.textPrimary, fontWeight: "700", fontSize: 15 }}>Hacer check-in</Text>
+        </Pressable>
+
+        <Pressable
+          onPress={() => router.push("/progress")}
+          style={{ backgroundColor: theme.cardBg, borderRadius: 16, padding: 16, marginBottom: 24 }}
+        >
+          <Text style={{ color: theme.textPrimary, fontWeight: "700", fontSize: 15 }}>Ver mi progreso</Text>
         </Pressable>
 
         <Text style={{ color: theme.textPrimary, fontSize: 18, fontWeight: "700", marginBottom: 12 }}>
