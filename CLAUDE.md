@@ -406,10 +406,22 @@ en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
     urgente.
 - **Credenciales de prueba:** jose@aventuras.com / aventuras123
 - **Pendiente para la próxima sesión:**
-  1. Siguiente foco: con el Sub-proyecto 3 completo (Rondas A, B, C1, C2a, C2b cerradas),
-     solo queda la Ronda A.5 (port de `sky-engine.ts` a React Native) sin spec todavía —
-     empezar por `superpowers:brainstorming`. Riesgo técnico ya identificado desde el
-     principio: las texturas de `sky-engine.ts` usan Canvas 2D del DOM, inexistente en RN.
+  1. **Con el Sub-proyecto 3 (dashboard/misiones móvil) completo, Jose definió el orden de
+     prioridades para cerrar la migración a móvil por completo (2026-07-07), de mayor a
+     menor prioridad:**
+     1. **Ronda D — Registro de cuenta nueva en móvil** (siguiente foco inmediato). Hoy
+        `apps/mobile` solo tiene login; un usuario nuevo debe registrarse primero desde
+        `apps/web` y luego entrar en móvil. Sin spec todavía — empezar por
+        `superpowers:brainstorming`. Objetivo: que todas las funcionalidades de web puedan
+        hacerse desde la app móvil sin depender de web.
+     2. **Saldar la deuda técnica conocida** (ver lista completa abajo) — en particular el
+        timeout de `fetch` faltante (confirmado en vivo cinco veces — Rondas A, B, C1, C2a
+        y C2b), que es la de mayor impacto real percibido.
+     3. **Ronda A.5 — pulir el cielo animado o rediseñar la interfaz móvil.** Port de
+        `sky-engine.ts` a React Native, o alternativamente una revisión de diseño visual
+        más amplia de `apps/mobile` — a decidir cuál quiere Jose cuando llegue el turno.
+        Riesgo técnico ya identificado: las texturas de `sky-engine.ts` usan Canvas 2D del
+        DOM, inexistente en RN.
   2. Deuda menor ya documentada, sin fecha fija: colores hardcodeados en `apps/mobile`, CI
      para `apps/mobile`, timeout de `fetch` (confirmado en vivo cinco veces — Rondas A, B,
      C1, C2a y C2b, ver deuda técnica arriba), mensaje de "sesión expiró", `AppShell`
