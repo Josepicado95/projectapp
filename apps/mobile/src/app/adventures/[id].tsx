@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { View, Text, Pressable, ScrollView, ActivityIndicator } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { apiRequest, ApiError } from "@/lib/api";
 import { getMobileMoment } from "@/lib/mobile-theme";
@@ -29,6 +29,12 @@ export default function AdventureDetailScreen() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load])
+  );
 
   async function toggleMission(mission: MissionData) {
     if (!adventure) return;
@@ -96,9 +102,14 @@ export default function AdventureDetailScreen() {
           <Text style={{ color: theme.textSecondary }}>{"< Volver"}</Text>
         </Pressable>
 
-        <Text style={{ color: theme.textPrimary, fontSize: 24, fontWeight: "700", marginBottom: 4 }}>
-          {adventure.title}
-        </Text>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
+          <Text style={{ color: theme.textPrimary, fontSize: 24, fontWeight: "700", flex: 1 }}>
+            {adventure.title}
+          </Text>
+          <Pressable onPress={() => router.push(`/adventures/${id}/edit`)}>
+            <Text style={{ color: theme.textSecondary, fontWeight: "600" }}>Editar</Text>
+          </Pressable>
+        </View>
         {adventure.description ? (
           <Text style={{ color: theme.textSecondary, fontSize: 14, marginBottom: 16 }}>
             {adventure.description}
