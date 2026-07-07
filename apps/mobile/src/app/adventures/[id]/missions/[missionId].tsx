@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { View, Text, Pressable, ScrollView, TextInput, Alert } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
@@ -30,6 +30,14 @@ export default function MissionFormScreen() {
   const [saveState, setSaveState] = useState<SaveState>({ status: "idle" });
   const [deleteState, setDeleteState] = useState<DeleteState>({ status: "idle" });
 
+  const hasNavigatedRef = useRef(false);
+
+  function goBackOnce() {
+    if (hasNavigatedRef.current) return;
+    hasNavigatedRef.current = true;
+    router.back();
+  }
+
   const canSave = title.trim().length >= 3;
 
   async function handleSave() {
@@ -47,7 +55,7 @@ export default function MissionFormScreen() {
           body: JSON.stringify({ title: title.trim(), difficulty }),
         });
       }
-      router.back();
+      goBackOnce();
     } catch (err) {
       const message = err instanceof ApiError ? err.message : "No se pudo guardar la misión.";
       setSaveState({ status: "error", error: message });
@@ -58,7 +66,7 @@ export default function MissionFormScreen() {
     setDeleteState({ status: "deleting" });
     try {
       await apiRequest(`/api/mobile/missions/${missionId}`, { method: "DELETE" });
-      router.back();
+      goBackOnce();
     } catch (err) {
       const message = err instanceof ApiError ? err.message : "No se pudo borrar la misión.";
       setDeleteState({ status: "error", error: message });
