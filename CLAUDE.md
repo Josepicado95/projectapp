@@ -278,8 +278,19 @@ en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
      (servidor caído) confirmó manejo de error sin crash, y de paso reprodujo en vivo la
      deuda ya conocida de `fetch` sin timeout (pantalla en blanco indefinida al hacer Reload
      con el servidor apagado, porque `restoreSession()` en `auth-context.tsx` nunca resuelve
-     su `finally` — no es regresión de esta ronda). **Pendiente: decidir merge/PR** (worktree
-     aún sin integrar a `main`).
+     su `finally` — no es regresión de esta ronda). Mergeado a `main` vía PR #9.
+  7. **Ronda B (check-in) completa de punta a punta en una sola sesión**, vía
+     `subagent-driven-development` en worktree `mobile-checkin-round-b` (brainstorming → spec
+     → plan → implementador/revisor por tarea → revisión final del branch en `opus`).
+     Pantalla `checkin.tsx` (wizard de 4 métricas, franja de 7 días, salto a resumen si ya
+     hay check-in hoy) + botón "Hacer check-in" y `useFocusEffect` en el Dashboard. La
+     primera revisión encontró un bug real (franja sin deduplicar check-ins del mismo día),
+     corregido con `toDailyLatest()` y re-revisado limpio. Revisión final: `Ready to merge`,
+     0 Críticos/Importantes, 5 Menores anotados como deuda (ver abajo). Verificado en
+     celular: wizard, revisita-salta-a-resumen, refresco de racha al volver, reset con
+     "Hacer otro check-in" — todos confirmados; el caso de servidor caído volvió a topar con
+     la misma deuda del timeout de `fetch` (segunda vez, confirma que es real). Mergeado a
+     `main` vía PR #10.
 - **URLs de producción:** Vercel (projectapp-6wqde3z63-josepicado95s-projects.vercel.app),
   Railway recommender (projectapp-production-164a.up.railway.app).
 - **Deuda técnica conocida:**
@@ -309,6 +320,18 @@ en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
   - `apps/mobile`: falta el mensaje "Tu sesión expiró, inicia sesión de nuevo" del spec —
     no alcanzable hoy (nadie hace una llamada a mitad de sesión), se volverá relevante con
     el dashboard móvil.
+  - `apps/mobile` (Ronda B, check-in, 2026-07-06): 5 hallazgos Menores de la revisión final,
+    ninguno bloqueante (`Ready to merge: Yes`) — anotados en vez de arreglados:
+    - `checkin.tsx`: la franja de 7 días no se refresca al tocar "Hacer otro check-in" en la
+      misma sesión (queda con datos previos hasta recargar la pantalla).
+    - `checkin.tsx`: `values` guarda de más (`id`/`date`) al inicializar desde el check-in de
+      hoy — inofensivo, confirmado que `CheckInSchema` (sin `.strict()`) los ignora al guardar.
+    - `checkin.tsx`: los campos `low`/`high` de `METRICS` están declarados pero nunca se leen.
+    - `checkin.tsx`: `theme` no está memoizado con `useMemo` (sí lo está en el Dashboard) —
+      inconsistencia menor, sin impacto real (la función es pura y barata).
+    - `(tabs)/index.tsx`: doble fetch al montar el Dashboard (`useFocusEffect` se dispara
+      también en el primer montaje, además del `useEffect` propio de `useDashboardData`) —
+      inofensivo por ser `GET`s idempotentes.
   - `apps/web`: el track de nivel sin completar en la mini-tarjeta de resumen de
     `CheckInBody.tsx` (los "puntitos" de energía/ánimo/estrés/sueño) sigue con un tinte
     crema fijo en vez de `theme.trackBg` — casi invisible en los momentos de día claro.
@@ -317,12 +340,13 @@ en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
     urgente.
 - **Credenciales de prueba:** jose@aventuras.com / aventuras123
 - **Pendiente para la próxima sesión:**
-  1. Siguiente foco: decidir merge/PR de la Ronda A (worktree `mobile-dashboard-round-a`,
-     rama `worktree-mobile-dashboard-round-a`) vía `superpowers:finishing-a-development-branch`,
-     luego empezar la Ronda A.5 (port de `sky-engine.ts` a React Native) o la Ronda B
-     (check-in), a decidir con Jose.
+  1. Siguiente foco: empezar la Ronda A.5 (port de `sky-engine.ts` a React Native) o la
+     Ronda C (CRUD de aventuras/misiones + pantalla de Progress), a decidir con Jose — ambas
+     sin spec todavía, empezar por `superpowers:brainstorming`.
   2. Deuda menor ya documentada, sin fecha fija: colores hardcodeados en `apps/mobile`, CI
-     para `apps/mobile`, timeout de `fetch` (confirmado en vivo el 2026-07-06, ver deuda
-     técnica arriba), mensaje de "sesión expiró", `AppShell` compartido en `apps/web`,
+     para `apps/mobile`, timeout de `fetch` (confirmado en vivo dos veces — Rondas A y B, ver
+     deuda técnica arriba), mensaje de "sesión expiró", `AppShell` compartido en `apps/web`,
      `handleDelete` sin revisar `res.ok`, los dos detalles cosméticos de la migración de tema
-     (track de Check-in, scrollbar de Progress).
+     (track de Check-in, scrollbar de Progress), y los 5 Menores de la Ronda B (franja sin
+     refrescar tras "Hacer otro check-in", `values` con campos de más, `low`/`high` muertos,
+     `theme` sin memoizar, doble fetch al montar el Dashboard).
