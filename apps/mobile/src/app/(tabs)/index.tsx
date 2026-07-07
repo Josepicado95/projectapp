@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { View, Text, Pressable, ScrollView, ActivityIndicator } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useFocusEffect } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { useAuth } from "@/lib/auth-context";
 import { useDashboardData } from "@/lib/use-dashboard-data";
@@ -35,6 +35,12 @@ export default function DashboardScreen() {
   const theme = useMemo(() => getMobileMoment(new Date().getHours()), []);
   const streak = useMemo(() => computeStreak(checkIns), [checkIns]);
 
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch])
+  );
+
   if (isLoading) {
     return (
       <LinearGradient colors={[theme.gradientFrom, theme.gradientTo]} style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
@@ -65,6 +71,13 @@ export default function DashboardScreen() {
         <Text style={{ color: theme.textSecondary, fontSize: 13, marginBottom: 24 }}>
           Racha actual: {streak} {streak === 1 ? "día" : "días"}
         </Text>
+
+        <Pressable
+          onPress={() => router.push("/checkin")}
+          style={{ backgroundColor: theme.cardBg, borderRadius: 16, padding: 16, marginBottom: 24 }}
+        >
+          <Text style={{ color: theme.textPrimary, fontWeight: "700", fontSize: 15 }}>Hacer check-in</Text>
+        </Pressable>
 
         <Text style={{ color: theme.textPrimary, fontSize: 18, fontWeight: "700", marginBottom: 12 }}>
           Tus aventuras
