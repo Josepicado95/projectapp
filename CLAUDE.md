@@ -291,6 +291,18 @@ en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
      "Hacer otro check-in" — todos confirmados; el caso de servidor caído volvió a topar con
      la misma deuda del timeout de `fetch` (segunda vez, confirma que es real). Mergeado a
      `main` vía PR #10.
+  8. **Ronda C decompuesta en C1 (Progress) y C2 (CRUD)** al empezar el brainstorming —
+     piezas independientes (una de solo lectura/visual, la otra de formularios/escritura).
+     **Ronda C1 completa de punta a punta**, mismo flujo `subagent-driven-development` en
+     worktree `mobile-progress-round-c1`. Pantalla `progress.tsx` (4 tarjetas de métrica con
+     tendencia de 14 días vía barras planas — sin `react-native-svg` —, `trendArrow` portado
+     verbatim de `trendInfo()` de web incluida la inversión de `stress`, franja de 7 días,
+     racha, hasta 5 tarjetas de aventura con % completado sin listar misiones individuales) +
+     botón "Ver mi progreso" en el Dashboard. Revisión final: `Ready to merge`, 0
+     Críticos/Importantes, 3 Menores (ver abajo). Verificado en celular: navegación y
+     cruce de números contra Dashboard/Adventure Detail confirmados; servidor caído volvió a
+     topar con la misma deuda de timeout de `fetch` (tercera vez). Mergeado a `main` vía
+     PR #11. **Pendiente: Ronda C2 (CRUD), sin spec todavía.**
 - **URLs de producción:** Vercel (projectapp-6wqde3z63-josepicado95s-projects.vercel.app),
   Railway recommender (projectapp-production-164a.up.railway.app).
 - **Deuda técnica conocida:**
@@ -332,6 +344,18 @@ en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
     - `(tabs)/index.tsx`: doble fetch al montar el Dashboard (`useFocusEffect` se dispara
       también en el primer montaje, además del `useEffect` propio de `useDashboardData`) —
       inofensivo por ser `GET`s idempotentes.
+  - `apps/mobile` (Ronda C1, Progress, 2026-07-06): 3 hallazgos Menores de la revisión final,
+    ninguno bloqueante (`Ready to merge: Yes`):
+    - `progress.tsx`: deduplica los check-ins del mismo día para las tarjetas de métrica;
+      `apps/web`'s `ProgressBody.tsx` solo deduplica para su franja de 7 días, no para las
+      tarjetas — divergencia **intencional** confirmada con Jose (móvil es el más correcto de
+      los dos); si algún día se quiere paridad numérica exacta, el cambio iría del lado de
+      `apps/web`, no al revés.
+    - `progress.tsx`: import `ApiError` sin usar (el `catch` no distingue tipos de error,
+      a diferencia de `checkin.tsx`) — cosmético, no falla `tsc` porque `noUnusedLocals` no
+      está activado en este proyecto.
+    - `progress.tsx`: la barra de progreso por aventura reutiliza `theme.gradientFrom` como
+      color de track — mismo patrón de reutilización ya usado en check-in.
   - `apps/web`: el track de nivel sin completar en la mini-tarjeta de resumen de
     `CheckInBody.tsx` (los "puntitos" de energía/ánimo/estrés/sueño) sigue con un tinte
     crema fijo en vez de `theme.trackBg` — casi invisible en los momentos de día claro.
@@ -341,12 +365,11 @@ en qué fase/sesión estamos, qué falta para cerrar el checkpoint actual.)
 - **Credenciales de prueba:** jose@aventuras.com / aventuras123
 - **Pendiente para la próxima sesión:**
   1. Siguiente foco: empezar la Ronda A.5 (port de `sky-engine.ts` a React Native) o la
-     Ronda C (CRUD de aventuras/misiones + pantalla de Progress), a decidir con Jose — ambas
-     sin spec todavía, empezar por `superpowers:brainstorming`.
+     Ronda C2 (CRUD de aventuras/misiones), a decidir con Jose — ambas sin spec todavía,
+     empezar por `superpowers:brainstorming`.
   2. Deuda menor ya documentada, sin fecha fija: colores hardcodeados en `apps/mobile`, CI
-     para `apps/mobile`, timeout de `fetch` (confirmado en vivo dos veces — Rondas A y B, ver
-     deuda técnica arriba), mensaje de "sesión expiró", `AppShell` compartido en `apps/web`,
-     `handleDelete` sin revisar `res.ok`, los dos detalles cosméticos de la migración de tema
-     (track de Check-in, scrollbar de Progress), y los 5 Menores de la Ronda B (franja sin
-     refrescar tras "Hacer otro check-in", `values` con campos de más, `low`/`high` muertos,
-     `theme` sin memoizar, doble fetch al montar el Dashboard).
+     para `apps/mobile`, timeout de `fetch` (confirmado en vivo tres veces — Rondas A, B y C1,
+     ver deuda técnica arriba), mensaje de "sesión expiró", `AppShell` compartido en
+     `apps/web`, `handleDelete` sin revisar `res.ok`, los dos detalles cosméticos de la
+     migración de tema (track de Check-in, scrollbar de Progress), los 5 Menores de la
+     Ronda B, y los 3 Menores de la Ronda C1 (todos arriba, en deuda técnica).
