@@ -83,7 +83,7 @@ export default function EditAdventureScreen() {
   function confirmDelete() {
     Alert.alert(
       "Eliminar aventura",
-      "Se borrará también todas sus misiones. Esta acción no se puede deshacer.",
+      "Se borrarán también todas sus misiones. Esta acción no se puede deshacer.",
       [
         { text: "Cancelar", style: "cancel" },
         { text: "Eliminar", style: "destructive", onPress: handleDelete },
